@@ -1,46 +1,136 @@
-// ATIVAÇÃO DO PLUGIN DE TEXTOS (O motor que faz os números aparecerem)
+// js/view-overview.js
+
 Chart.register(ChartDataLabels);
 
-// VARIÁVEIS LOCAIS DO MÓDULO
 let chartInstances = {};
 let insightTimeout = null;
 
-// ESTRUTURA HTML DA PÁGINA (Injetada dinamicamente)
 export const getOverviewHTML = () => {
-    return `
-        <div id="insight-box" class="card p-5 rounded-2xl shadow-sm flex items-center gap-4 border mb-6 md:mb-8">
-            <div class="bg-[#685BC7] px-3 py-1.5 rounded-lg text-white font-black text-[10px] italic tracking-tighter">INSIGHT</div>
-            <p id="insight-text" class="text-xs md:text-base font-bold leading-tight italic"></p>
-        </div>
+    // Lógica para decidir se exibe o welcome (apenas uma vez por sessão do navegador)
+    const showWelcome = !sessionStorage.getItem('ps_welcome_shown');
 
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
-            <div class="card p-6 md:p-8 rounded-[2rem] shadow-sm border"><p class="text-muted text-[9px] md:text-[10px] font-black uppercase tracking-widest">Sessões</p><h3 id="k-sess" class="text-2xl md:text-4xl font-bold mt-2 font-numbers">0</h3></div>
-            <div class="card p-6 md:p-8 rounded-[2rem] shadow-sm border"><p class="text-muted text-[9px] md:text-[10px] font-black uppercase tracking-widest">Lojas</p><h3 id="k-sto" class="text-2xl md:text-4xl font-bold mt-2 font-numbers">0</h3></div>
+    return `
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@200;300;400;500;700;900&display=swap');
             
-            <div class="card p-6 md:p-8 rounded-[2rem] shadow-sm border group relative cursor-help">
-                <p class="text-muted text-[9px] md:text-[10px] font-black uppercase tracking-widest flex items-center gap-1">Aparelhos <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3 h-3"><path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" /></svg></p>
-                <h3 id="k-dev" class="text-2xl md:text-4xl font-bold mt-2 font-numbers">0</h3>
-                <div id="k-dev-tooltip" class="hidden group-hover:block absolute top-full left-1/2 -translate-x-1/2 mt-2 w-max max-w-xs bg-[#131417] text-white text-[10px] p-4 rounded-xl shadow-2xl z-50 border border-gray-700 whitespace-nowrap"></div>
+            #view-overview-wrapper { font-family: 'Montserrat', sans-serif; }
+            
+            /* VARIÁVEIS DE TEMA ADAPTATIVAS (Boutique BI) */
+            body.dark {
+                --glass-bg: rgba(18, 19, 23, 0.55);
+                --glass-border: rgba(255, 255, 255, 0.04);
+                --glass-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+                --text-main: #ffffff;
+                --text-muted: rgba(255, 255, 255, 0.3);
+                --text-muted-strong: rgba(255, 255, 255, 0.5);
+                --glow-shadow: 0 0 24px rgba(255, 255, 255, 0.2);
+                --glow-accent: 0 0 24px rgba(104, 91, 199, 0.4);
+                --neon-bg: radial-gradient(circle at top right, rgba(104, 91, 199, 0.15), transparent 60%);
+            }
+            body.light {
+                --glass-bg: rgba(255, 255, 255, 0.75);
+                --glass-border: rgba(0, 0, 0, 0.05);
+                --glass-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+                --text-main: #131417;
+                --text-muted: rgba(19, 20, 23, 0.4);
+                --text-muted-strong: rgba(19, 20, 23, 0.6);
+                --glow-shadow: 0 4px 12px rgba(104, 91, 199, 0.15);
+                --glow-accent: 0 4px 12px rgba(104, 91, 199, 0.25);
+                --neon-bg: radial-gradient(circle at top right, rgba(104, 91, 199, 0.06), transparent 60%);
+            }
+
+            .glass-panel { background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); }
+            .text-adaptive { color: var(--text-main); }
+            .text-adaptive-muted { color: var(--text-muted); }
+            .text-adaptive-strong { color: var(--text-muted-strong); }
+            .text-glow { text-shadow: var(--glow-shadow); }
+            .text-glow-accent { text-shadow: var(--glow-accent); }
+            .neon-accent { background: var(--neon-bg); }
+            .divide-adaptive > div { border-color: var(--glass-border); }
+
+            /* Animações de Boas-vindas */
+            @keyframes slideUpFade {
+                from { opacity: 0; transform: translateY(10px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            @keyframes fadeOutWelcome {
+                to { opacity: 0; height: 0; margin-bottom: 0; padding: 0; overflow: hidden; }
+            }
+            .welcome-msg { animation: slideUpFade 0.8s ease forwards; }
+            .welcome-msg.hide { animation: fadeOutWelcome 0.5s ease forwards; }
+        </style>
+
+        <div id="view-overview-wrapper" class="pb-10">
+            
+            ${showWelcome ? `
+            <div id="welcome-container" class="welcome-msg mb-6 px-2">
+                <h1 class="text-2xl md:text-3xl font-bold text-adaptive tracking-tight">
+                    Seja bem-vindo(a)!
+                </h1>
+                <p class="text-[10px] font-bold text-adaptive-muted uppercase tracking-[0.3em] mt-1">Sessão iniciada com sucesso.</p>
+            </div>
+            ` : ''}
+
+            <div id="insight-box" class="glass-panel p-5 md:p-6 rounded-2xl flex items-center gap-5 mb-6 md:mb-8 transition-all hover:scale-[1.01]">
+                <div class="bg-gradient-to-br from-[#685BC7] to-[#8b5cf6] px-4 py-2 rounded-xl text-white font-black text-[9px] uppercase tracking-[0.2em] shadow-lg shadow-[#685BC7]/30 shrink-0">INSIGHT</div>
+                <p id="insight-text" class="text-sm md:text-base font-medium tracking-tight text-adaptive italic"></p>
             </div>
 
-            <div class="card p-6 md:p-8 rounded-[2rem] shadow-sm border border-b-8 md:border-b-0 md:border-r-8 border-[#685BC7]"><p class="text-[#685BC7] text-[9px] md:text-[10px] font-black uppercase tracking-widest">Média/PDV</p><h3 id="k-avg" class="text-2xl md:text-4xl font-bold mt-2 font-numbers">0</h3></div>
-        </div>
+            <div class="glass-panel rounded-[2.5rem] mb-8 md:mb-10 flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-adaptive relative">
+                <div class="flex-1 p-8 md:p-10 flex flex-col justify-start relative z-10">
+                    <p class="text-[8px] font-black uppercase tracking-[0.3em] text-adaptive-muted mb-4">Volume de Sessões</p>
+                    <h3 id="k-sess" class="text-4xl md:text-5xl font-bold font-numbers text-adaptive text-glow">0</h3>
+                </div>
+                <div class="flex-1 p-8 md:p-10 flex flex-col justify-start relative z-10">
+                    <p class="text-[8px] font-black uppercase tracking-[0.3em] text-adaptive-muted mb-4">Pontos de Venda (Lojas)</p>
+                    <h3 id="k-sto" class="text-4xl md:text-5xl font-bold font-numbers text-adaptive leading-tight">0</h3>
+                </div>
+                <div class="flex-1 p-8 md:p-10 flex flex-col justify-start relative z-10 group cursor-help">
+                    <p class="text-[8px] font-black uppercase tracking-[0.3em] text-adaptive-muted mb-4 flex items-center gap-1.5">
+                        Aparelhos Demonstrados
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3 h-3 opacity-50 group-hover:opacity-100 transition-opacity"><path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" /></svg>
+                    </p>
+                    <h3 id="k-dev" class="text-4xl md:text-5xl font-bold font-numbers text-adaptive">0</h3>
+                    <div id="k-dev-tooltip" class="hidden group-hover:block absolute top-full left-1/2 -translate-x-1/2 mt-4 w-max min-w-[200px] max-w-sm bg-[rgba(18,19,23,0.95)] backdrop-blur-xl text-white text-[10px] p-5 rounded-2xl shadow-2xl z-50 border border-white/10 whitespace-nowrap font-medium"></div>
+                </div>
+                <div class="flex-1 p-8 md:p-10 flex flex-col justify-start relative neon-accent z-10 overflow-hidden rounded-r-[2.5rem]">
+                    <div class="absolute right-0 top-0 opacity-[0.02] text-9xl font-black -mt-6 -mr-4 pointer-events-none">📊</div>
+                    <p class="text-[8px] font-black uppercase tracking-[0.3em] text-[#685BC7] mb-4 relative z-10">Média por Ponto de Venda</p>
+                    <h3 id="k-avg" class="text-4xl md:text-5xl font-bold font-numbers text-adaptive text-glow-accent relative z-10">0</h3>
+                    <div class="absolute bottom-0 left-0 w-full h-1.5 bg-gradient-to-r from-transparent via-[#685BC7] to-transparent opacity-50"></div>
+                </div>
+            </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mb-6 md:mb-8">
-            <div class="card p-6 md:p-10 rounded-[2.5rem] md:rounded-[3rem] border"><h4 class="text-sm md:text-base font-black text-muted mb-6 uppercase tracking-widest">01 Interações por dia</h4><div class="chart-container" style="height: 250px;"><canvas id="c-timeline"></canvas></div></div>
-            <div class="card p-6 md:p-10 rounded-[2.5rem] md:rounded-[3rem] border"><h4 class="text-sm md:text-base font-black text-muted mb-6 uppercase tracking-widest">02 Interações por loja</h4><div class="chart-container" style="height: 250px;"><canvas id="c-store"></canvas></div></div>
-        </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mb-6 md:mb-8">
+                <div class="glass-panel p-8 md:p-10 rounded-[2.5rem]">
+                    <h4 class="text-[10px] font-black text-adaptive-muted mb-8 uppercase tracking-[0.4em]">01 Volume de Interações por Dia</h4>
+                    <div class="chart-container" style="height: 250px;"><canvas id="c-timeline"></canvas></div>
+                </div>
+                <div class="glass-panel p-8 md:p-10 rounded-[2.5rem]">
+                    <h4 class="text-[10px] font-black text-adaptive-muted mb-8 uppercase tracking-[0.4em]">02 Engajamento por Loja Física</h4>
+                    <div class="chart-container" style="height: 250px;"><canvas id="c-store"></canvas></div>
+                </div>
+            </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mb-6 md:mb-8">
-            <div class="card p-6 md:p-10 rounded-[2.5rem] md:rounded-[3rem] border"><h4 class="text-sm md:text-base font-black text-muted mb-6 uppercase tracking-widest">03 Interações por hora</h4><div class="chart-container" style="height: 250px;"><canvas id="c-time"></canvas></div></div>
-            <div class="card p-6 md:p-10 rounded-[2.5rem] md:rounded-[3rem] border"><h4 class="text-sm md:text-base font-black text-muted mb-6 uppercase tracking-widest">04 Interações por local</h4><div class="chart-container" style="height: 250px;"><canvas id="c-shop"></canvas></div></div>
-        </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mb-6 md:mb-8">
+                <div class="glass-panel p-8 md:p-10 rounded-[2.5rem]">
+                    <h4 class="text-[10px] font-black text-adaptive-muted mb-8 uppercase tracking-[0.4em]">03 Frequência de Uso por Hora</h4>
+                    <div class="chart-container" style="height: 250px;"><canvas id="c-time"></canvas></div>
+                </div>
+                <div class="glass-panel p-8 md:p-10 rounded-[2.5rem]">
+                    <h4 class="text-[10px] font-black text-adaptive-muted mb-8 uppercase tracking-[0.4em]">04 Comparativo de Tipo de Local</h4>
+                    <div class="chart-container" style="height: 250px;"><canvas id="c-shop"></canvas></div>
+                </div>
+            </div>
 
-        <div class="card p-6 md:p-10 rounded-[2.5rem] md:rounded-[3rem] border pb-8 md:pb-12"><h4 class="text-sm md:text-base font-black text-muted mb-6 uppercase tracking-widest">05 Interações por modelo</h4><div class="chart-container" style="height: 800px;"><canvas id="c-dev"></canvas></div></div>
+            <div class="glass-panel p-8 md:p-10 rounded-[2.5rem] pb-10 md:pb-12">
+                <h4 class="text-[10px] font-black text-adaptive-muted mb-8 uppercase tracking-[0.4em]">05 Distribuição Total por Modelo de Aparelho</h4>
+                <div class="chart-container" style="height: 800px;"><canvas id="c-dev"></canvas></div>
+            </div>
+        </div>
     `;
 };
 
-// LIMPEZA DE MEMÓRIA (Necessário ao trocar de tela)
 export const destroyOverviewCharts = () => {
     Object.keys(chartInstances).forEach(id => {
         if(chartInstances[id]) chartInstances[id].destroy();
@@ -49,23 +139,31 @@ export const destroyOverviewCharts = () => {
     if (insightTimeout) clearInterval(insightTimeout);
 };
 
-// LÓGICA PRINCIPAL DE RENDERIZAÇÃO
 export const renderOverviewCharts = (filteredData) => {
-    // BUG 4 FIX: Sempre destrua os gráficos antigos antes de desenhar os novos filtrados.
     destroyOverviewCharts();
+
+    // Lógica para esconder o welcome automaticamente
+    const welcome = document.getElementById('welcome-container');
+    if (welcome) {
+        sessionStorage.setItem('ps_welcome_shown', 'true');
+        setTimeout(() => {
+            welcome.classList.add('hide');
+            setTimeout(() => welcome.remove(), 500);
+        }, 5000);
+    }
 
     if(!filteredData || filteredData.length === 0) {
         document.getElementById('k-sess').innerText = '0';
         document.getElementById('k-sto').innerText = '0';
         document.getElementById('k-dev').innerText = '0';
         document.getElementById('k-avg').innerText = '0';
-        document.getElementById('insight-text').innerText = 'Sem dados para o filtro selecionado.';
+        document.getElementById('insight-text').innerText = 'Aguardando dados estruturados para processamento analítico.';
         return;
     }
     
     const parseN = v => parseFloat((v || "0").toString().replace(/\./g, '').replace(',', '.')) || 0;
     
-    // --- 1. KPIs ---
+    // KPIs
     const totalSess = filteredData.reduce((a, b) => a + parseN(b.sessions), 0);
     const stores = [...new Set(filteredData.map(d => d['store name']))].filter(x => x).length;
     const devices = [...new Set(filteredData.map(d => d['device code']))].filter(x => x).length;
@@ -79,28 +177,27 @@ export const renderOverviewCharts = (filteredData) => {
     const devSetMap = {};
     filteredData.forEach(d => {
         if(d['aparelho'] && d['tipo'] && d['device code']) {
-            const k = `${d['aparelho']} - <span class="text-gray-400 font-normal">${d['tipo']}</span>`;
+            const k = `${d['aparelho']} - <span class="text-white/40 font-normal">${d['tipo']}</span>`;
             if(!devSetMap[k]) devSetMap[k] = new Set();
             devSetMap[k].add(d['device code']);
         }
     });
     
     const sortedDevList = Object.entries(devSetMap).map(([k, set]) => [k, set.size]).sort((a, b) => b[1] - a[1]);
-    document.getElementById('k-dev-tooltip').innerHTML = '<p class="font-bold text-[#685BC7] mb-2 uppercase tracking-widest border-b border-gray-700 pb-2">Modelos Operantes</p>' + 
+    document.getElementById('k-dev-tooltip').innerHTML = '<p class="font-bold text-[#685BC7] mb-3 uppercase tracking-[0.2em] border-b border-white/10 pb-3 text-[9px]">Modelos Operantes na Rede</p>' + 
         (sortedDevList.length > 0 
-            ? sortedDevList.map(v => `<div class="mt-1 flex items-center justify-between gap-4"><span class="opacity-90">${v[0]}</span> <span class="font-black text-white bg-gray-800 px-1.5 py-0.5 rounded">${v[1]}</span></div>`).join('') 
-            : '<div>Nenhum modelo encontrado</div>');
+            ? sortedDevList.map(v => `<div class="mt-2.5 flex items-center justify-between gap-6"><span class="opacity-90 font-montserrat">${v[0]}</span> <span class="font-black font-numbers text-[#8b5cf6] bg-[#8b5cf6]/10 px-2 py-0.5 rounded-md border border-[#8b5cf6]/20">${v[1]}</span></div>`).join('') 
+            : '<div class="opacity-50 mt-2">Nenhum modelo detectado</div>');
             
-    // --- 2. Heurística (Máquina de Escrever) ---
+    // Heurística do Insight
     const devG = filteredData.reduce((a, o) => { a[o.aparelho] = (a[o.aparelho] || 0) + parseN(o.sessions); return a; }, {});
     const topDev = Object.entries(devG).sort((a,b) => b[1]-a[1])[0];
-    const textInsight = topDev ? `PROSOLUTION ANALYTICS: O modelo ${topDev[0]} gerou o maior impacto com ${Math.round(topDev[1])} interações no período selecionado.` : 'Sem dados para o período.';
+    const textInsight = topDev ? `PROSOLUTION ANALYTICS: O modelo ${topDev[0]} registrou a maior tração com ${Math.round(topDev[1]).toLocaleString('pt-BR')} interações validadas.` : 'Aguardando massa de dados.';
     
     const el = document.getElementById('insight-text'); 
     el.innerHTML = ""; 
     let i = 0;
     
-    // BUG 5 FIX: Limpar redundância extra para evitar sobreposição
     if (insightTimeout) clearInterval(insightTimeout);
     
     insightTimeout = setInterval(() => { 
@@ -110,9 +207,9 @@ export const renderOverviewCharts = (filteredData) => {
         } else {
             clearInterval(insightTimeout);
         }
-    }, 15);
+    }, 20); 
 
-    // --- 3. Preparação dos Gráficos ---
+    // Preparação dos Gráficos
     const storeAgg = {};
     filteredData.forEach(d => {
         const code = d['store code'] || 'N/A'; const name = d['store name'] || 'N/A'; const dev = d['aparelho'] || 'N/A'; const sess = parseN(d.sessions);
@@ -129,7 +226,6 @@ export const renderOverviewCharts = (filteredData) => {
     drawChart('c-dev', 'bar', aggregateWithStores(filteredData, 'aparelho', false, true), false, true);
 };
 
-// --- FUNÇÕES AUXILIARES DE CHART.JS ---
 function aggregateWithStores(data, key, isT = false, isR = false) {
     const g = data.reduce((acc, o) => { 
         const k = o[key] || 'N/A'; const sess = parseFloat((o.sessions || "0").toString().replace(/\./g, '').replace(',', '.')) || 0; const store = o['store name'] || 'N/A';
@@ -142,18 +238,50 @@ function aggregateWithStores(data, key, isT = false, isR = false) {
     return { labels: entries.map(e => e[0]), values: entries.map(e => e[1].total), tooltipData: entries.reduce((acc, e) => { acc[e[0]] = e[1].stores; return acc; }, {}) };
 }
 
+// Plugin Crosshair para gráficos de linha
+const crosshairPlugin = {
+    id: 'crosshair',
+    afterDraw: chart => {
+        if (chart.config.type !== 'line') return;
+        if (chart.tooltip && chart.tooltip._active && chart.tooltip._active.length) {
+            const isDark = document.body.classList.contains('dark');
+            const activePoint = chart.tooltip._active[0];
+            const ctx = chart.ctx;
+            const x = activePoint.element.x;
+            const topY = chart.scales.y.top;
+            const bottomY = chart.scales.y.bottom;
+
+            ctx.save();
+            ctx.beginPath();
+            ctx.moveTo(x, topY);
+            ctx.lineTo(x, bottomY);
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.15)';
+            ctx.setLineDash([4, 4]);
+            ctx.stroke();
+            ctx.restore();
+        }
+    }
+};
+
 function drawChart(id, type, data, isArea = false, isH = false) {
     const ctx = document.getElementById(id).getContext('2d');
-    
     const isDark = document.body.classList.contains('dark');
-    const textColor = isDark ? '#8e94a0' : '#475569'; 
+    
     const labelColor = isDark ? '#FFFFFF' : '#131417';
-    const gridColor = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(19, 20, 23, 0.05)';
+    const gridColor = isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.03)';
+    const tickColor = isDark ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.4)';
+    const tooltipBg = isDark ? 'rgba(18, 19, 23, 0.95)' : 'rgba(255, 255, 255, 0.95)';
+    const tooltipTitle = isDark ? '#ffffff' : '#131417';
+    const tooltipBody = isDark ? 'rgba(255, 255, 255, 0.8)' : 'rgba(19, 20, 23, 0.8)';
+    const tooltipBorder = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)';
+
+    const pluginsArray = type === 'line' ? [crosshairPlugin] : [];
     
     let bg = '#685BC7';
     if(isArea) { 
         const grad = ctx.createLinearGradient(0, 0, 0, 400); 
-        grad.addColorStop(0, 'rgba(104, 91, 199, 0.5)'); 
+        grad.addColorStop(0, 'rgba(104, 91, 199, 0.25)'); 
         grad.addColorStop(1, 'rgba(104, 91, 199, 0)'); 
         bg = grad; 
     }
@@ -169,7 +297,18 @@ function drawChart(id, type, data, isArea = false, isH = false) {
         });
     }
 
-    let tooltipConfig = { backgroundColor: '#131417', titleFont: { family: 'Chakra Petch' }, bodyFont: { family: 'Roboto' } };
+    let tooltipConfig = { 
+        backgroundColor: tooltipBg, 
+        titleColor: tooltipTitle,
+        bodyColor: tooltipBody,
+        titleFont: { family: 'Montserrat', size: 10, weight: 'bold' }, 
+        bodyFont: { family: 'Chakra Petch', size: 12 },
+        borderColor: tooltipBorder,
+        borderWidth: 1,
+        padding: 12,
+        cornerRadius: 12
+    };
+
     if (id === 'c-store' && data.tooltipData) {
         tooltipConfig.callbacks = {
             title: ctx => { const code = ctx[0].label; return data.tooltipData[code] ? data.tooltipData[code].name : code; },
@@ -177,7 +316,7 @@ function drawChart(id, type, data, isArea = false, isH = false) {
                 const code = ctx.label;
                 if(data.tooltipData[code]) {
                     const devices = data.tooltipData[code].devices;
-                    return Object.entries(devices).sort((a,b) => b[1]-a[1]).map(d => `${d[0]}: ${Math.round(d[1])}`);
+                    return Object.entries(devices).sort((a,b) => b[1]-a[1]).map(d => `${d[0]}: ${Math.round(d[1]).toLocaleString('pt-BR')}`);
                 } return ctx.formattedValue;
             }
         };
@@ -187,7 +326,7 @@ function drawChart(id, type, data, isArea = false, isH = false) {
             label: ctx => {
                 const key = typeof ctx.label === 'string' ? ctx.label.split(',')[0] : (Array.isArray(ctx.label) ? ctx.label[0] : ctx.label);
                 const stores = data.tooltipData[key];
-                if(stores) { return Object.entries(stores).sort((a,b) => b[1]-a[1]).map(s => `${s[0]}: ${Math.round(s[1])}`); }
+                if(stores) { return Object.entries(stores).sort((a,b) => b[1]-a[1]).map(s => `${s[0]}: ${Math.round(s[1]).toLocaleString('pt-BR')}`); }
                 return ctx.formattedValue;
             }
         };
@@ -202,20 +341,23 @@ function drawChart(id, type, data, isArea = false, isH = false) {
                 backgroundColor: bg, 
                 borderColor: '#685BC7', 
                 fill: isArea, 
-                tension: 0.4, 
-                borderRadius: 8, 
-                borderWidth: 3, 
-                pointRadius: isArea ? 5 : 0 
+                tension: 0.5, 
+                borderRadius: type === 'bar' ? (isH ? {topRight: 6, bottomRight: 6} : {topLeft: 6, topRight: 6}) : 0, 
+                borderWidth: type === 'bar' ? 0 : 2, 
+                pointRadius: 0, 
+                pointHoverRadius: 6 
             }] 
         },
+        plugins: pluginsArray,
         options: {
             indexAxis: isH ? 'y' : 'x', 
             responsive: true, 
             maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
             layout: {
                 padding: {
-                    top: !isH ? 25 : 0,
-                    right: isH ? 40 : 0
+                    top: !isH ? 30 : 0, 
+                    right: isH ? 50 : 0
                 }
             },
             plugins: { 
@@ -224,21 +366,11 @@ function drawChart(id, type, data, isArea = false, isH = false) {
                 datalabels: {
                     display: true,
                     font: { family: 'Chakra Petch', size: 11, weight: 'bold' },
-                    formatter: Math.round,
+                    formatter: (value) => Math.round(value).toLocaleString('pt-BR'),
                     anchor: 'end',
-                    color: (ctx) => {
-                        if (!isH) return labelColor;
-                        const val = ctx.dataset.data[ctx.dataIndex];
-                        const max = Math.max(...ctx.dataset.data) || 1;
-                        return (val / max > 0.08) ? '#FFFFFF' : labelColor;
-                    },
-                    align: (ctx) => {
-                        if (!isH) return 'top';
-                        const val = ctx.dataset.data[ctx.dataIndex];
-                        const max = Math.max(...ctx.dataset.data) || 1;
-                        return (val / max > 0.08) ? 'left' : 'right';
-                    },
-                    offset: 4
+                    align: isH ? 'right' : 'top',
+                    color: labelColor,
+                    offset: 6
                 }
             },
             scales: { 
@@ -247,7 +379,7 @@ function drawChart(id, type, data, isArea = false, isH = false) {
                     beginAtZero: true, 
                     grid: { color: isH ? 'transparent' : gridColor, drawBorder: false }, 
                     ticks: { 
-                        color: textColor, 
+                        color: tickColor, 
                         font: { family: 'Chakra Petch', size: 11 },
                         autoSkip: isH ? false : true 
                     }, 
@@ -256,7 +388,7 @@ function drawChart(id, type, data, isArea = false, isH = false) {
                 x: { 
                     grace: isH ? '15%' : '0%', 
                     grid: { display: isH ? true : false, color: gridColor, drawBorder: false }, 
-                    ticks: { color: textColor, font: { family: 'Roboto', size: 10, weight: '900' } }, 
+                    ticks: { color: tickColor, font: { family: 'Montserrat', size: 9, weight: '700' } }, 
                     border: { display: false } 
                 }
             }

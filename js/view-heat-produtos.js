@@ -1,59 +1,122 @@
 // js/view-heat-produtos.js
 
 let chartInstances = {};
-let currentProduct = null;
+let currentProduct = 'ALL'; 
+let latestFilteredData = []; // Armazena a massa de dados do último filtro global aplicado
 
 export const getHeatProdutosHTML = () => {
     return `
         <style>
-            /* Animação suave de transição de dados sem mover um pixel do lugar */
-            #html-heatmap-container {
-                transition: filter 0.3s ease, opacity 0.3s ease;
-                will-change: filter, opacity;
+            @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@200;300;400;500;700;900&display=swap');
+            
+            #view-heatmap-wrapper { font-family: 'Montserrat', sans-serif; }
+            
+            #html-heatmap-container { transition: filter 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease; will-change: filter, opacity; }
+            .data-loading { filter: blur(12px); opacity: 0.3; pointer-events: none; }
+
+            /* VARIÁVEIS DE TEMA ADAPTATIVAS */
+            body.dark {
+                --glass-bg: rgba(18, 19, 23, 0.55);
+                --glass-border: rgba(255, 255, 255, 0.04);
+                --glass-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+                --text-main: #ffffff;
+                --text-muted: rgba(255, 255, 255, 0.3);
+                --text-muted-strong: rgba(255, 255, 255, 0.5);
+                --glow-shadow: 0 0 24px rgba(255, 255, 255, 0.2);
+                --neon-bg: radial-gradient(circle at top right, rgba(104, 91, 199, 0.15), transparent 60%);
+                --input-bg: rgba(255, 255, 255, 0.05);
             }
-            .data-loading {
-                filter: blur(8px);
-                opacity: 0.4;
-                pointer-events: none;
+            body.light {
+                --glass-bg: rgba(255, 255, 255, 0.75);
+                --glass-border: rgba(0, 0, 0, 0.05);
+                --glass-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+                --text-main: #131417;
+                --text-muted: rgba(19, 20, 23, 0.4);
+                --text-muted-strong: rgba(19, 20, 23, 0.6);
+                --glow-shadow: 0 4px 12px rgba(104, 91, 199, 0.15);
+                --neon-bg: radial-gradient(circle at top right, rgba(104, 91, 199, 0.06), transparent 60%);
+                --input-bg: rgba(0, 0, 0, 0.03);
             }
+
+            .glass-panel { background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); }
+            .text-adaptive { color: var(--text-main); }
+            .text-adaptive-muted { color: var(--text-muted); }
+            .text-adaptive-strong { color: var(--text-muted-strong); }
+            .text-glow { text-shadow: var(--glow-shadow); }
+            .neon-accent { background: var(--neon-bg); }
+            .input-adaptive { background: var(--input-bg); border: 1px solid var(--glass-border); color: var(--text-main); }
+            .divide-adaptive > div { border-color: var(--glass-border); }
         </style>
 
-        <div class="card p-6 md:p-8 rounded-[2rem] border mb-6 md:mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden group">
-            <div class="absolute right-0 top-0 opacity-5 text-8xl font-black -mt-4 -mr-4 pointer-events-none group-hover:scale-110 transition-transform">🔥</div>
-            <div>
-                <p class="text-[#685BC7] text-[10px] font-black uppercase tracking-widest mb-1">Análise de Perfil de Interação</p>
-                <h2 class="text-2xl md:text-3xl font-bold">Heatmap de Produtos</h2>
+        <div id="view-heatmap-wrapper" class="pb-10">
+            <div class="glass-panel p-6 md:p-8 rounded-[2rem] mb-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden group">
+                <div class="absolute -right-6 -top-6 opacity-[0.03] text-8xl font-black pointer-events-none group-hover:scale-105 transition-transform duration-700">🔥</div>
+                <div class="relative z-10">
+                    <h2 class="text-3xl md:text-4xl font-light tracking-tighter text-adaptive">Heatmap de Produtos</h2>
+                </div>
+                <div class="w-full md:w-1/3 relative z-10">
+                    <label class="text-[8px] font-bold uppercase text-adaptive-strong tracking-[0.3em] mb-2 block">Selecione o Modelo Alvo</label>
+                    <select id="hp-master-select" class="w-full p-3 rounded-xl text-sm font-medium input-adaptive focus:border-[#685BC7] outline-none transition-colors cursor-pointer backdrop-blur-md appearance-none">
+                        <option value="ALL">Carregando produtos...</option>
+                    </select>
+                </div>
             </div>
-            <div class="w-full md:w-1/3 relative z-10">
-                <label class="text-[9px] font-black uppercase text-muted mb-2 block">Selecione o Modelo Alvo</label>
-                <select id="hp-master-select" class="w-full p-4 rounded-xl text-sm font-bold bg-[#131417] border border-[#2d3139] text-white focus:border-[#685BC7] outline-none transition-colors cursor-pointer shadow-inner">
-                    <option value="">Carregando produtos...</option>
-                </select>
+
+            <div class="glass-panel rounded-[2rem] mb-8 flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-adaptive overflow-hidden relative">
+                <div class="w-full md:w-1/4 p-6 md:p-8 flex flex-col justify-start shrink-0">
+                    <p class="text-[8px] font-black uppercase tracking-[0.3em] text-adaptive-muted mb-3">Interações Globais</p>
+                    <h3 id="hp-k-vol" class="text-2xl md:text-3xl font-bold font-numbers text-adaptive text-glow">0</h3>
+                </div>
+                <div class="w-full md:w-1/4 p-6 md:p-8 flex flex-col justify-start shrink-0">
+                    <p class="text-[8px] font-black uppercase tracking-[0.3em] text-adaptive-muted mb-3">Pico de Demanda</p>
+                    <h3 id="hp-k-peak" class="text-2xl md:text-3xl font-bold font-numbers text-adaptive leading-tight">-</h3>
+                </div>
+                <div class="flex-1 p-6 md:p-8 flex flex-col justify-start relative neon-accent">
+                    <p class="text-[8px] font-black uppercase tracking-[0.3em] text-[#685BC7] mb-3 relative z-10">PDV de Maior Interação</p>
+                    <h3 id="hp-k-top" class="text-lg md:text-xl font-bold font-numbers text-adaptive leading-tight whitespace-normal break-words relative z-10">-</h3>
+                    <div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#685BC7] to-transparent opacity-50"></div>
+                </div>
             </div>
-        </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
-            <div class="card p-6 rounded-[2rem] border"><p class="text-muted text-[9px] font-black uppercase tracking-widest">Interações (Sessões)</p><h3 id="hp-k-vol" class="text-2xl md:text-3xl font-bold mt-2 font-numbers">0</h3></div>
-            <div class="card p-6 rounded-[2rem] border"><p class="text-muted text-[9px] font-black uppercase tracking-widest">Pico de Interação</p><h3 id="hp-k-peak" class="text-lg md:text-xl font-bold mt-2 leading-tight">-</h3></div>
-            <div class="card p-6 rounded-[2rem] border border-b-8 border-r-0 md:border-b-0 md:border-r-8 border-[#685BC7]"><p class="text-muted text-[9px] font-black uppercase tracking-widest">Top PDV</p><h3 id="hp-k-top" class="text-lg md:text-xl font-bold mt-2 truncate leading-tight">-</h3></div>
-        </div>
-
-        <div class="card p-6 md:p-10 rounded-[2.5rem] border mb-6 md:mb-8">
-            <h4 class="text-sm font-black text-muted uppercase tracking-widest mb-6">Mapa de Concentração (Dia x Hora)</h4>
-            <div class="overflow-x-auto custom-scrollbar pb-4">
-                <div id="html-heatmap-container" class="min-w-[800px]">
+            <div class="glass-panel p-8 md:p-12 rounded-[2.5rem] mb-10 md:mb-12">
+                <div class="flex justify-between items-end mb-8">
+                    <h4 class="text-[10px] font-black text-adaptive-muted uppercase tracking-[0.4em]">Concentração (Dia x Hora)</h4>
+                    <div class="hidden md:flex items-center gap-3">
+                        <span class="text-[8px] font-bold text-[#8b5cf6] uppercase tracking-[0.2em]">Menor</span>
+                        <div class="w-32 h-1.5 rounded-full" style="background: linear-gradient(to right, rgba(139, 92, 246, 0.15), rgba(244, 63, 94, 1));"></div>
+                        <span class="text-[8px] font-bold text-[#f43f5e] uppercase tracking-[0.2em]">Maior</span>
                     </div>
+                </div>
+                <div class="overflow-x-auto custom-scrollbar pb-6">
+                    <div id="html-heatmap-container" class="min-w-[800px]"></div>
+                </div>
             </div>
-            <div class="flex items-center justify-end gap-2 mt-2">
-                <span class="text-[9px] font-bold text-muted uppercase tracking-wider">Menos Frequente</span>
-                <div class="w-24 h-2 rounded bg-gradient-to-r from-gray-500/10 to-[#685BC7]"></div>
-                <span class="text-[9px] font-bold text-[#685BC7] uppercase tracking-wider">Pico de Uso</span>
-            </div>
-        </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mb-8">
-            <div class="card p-6 md:p-10 rounded-[2.5rem] md:rounded-[3rem] border"><h4 class="text-sm font-black text-muted mb-6 uppercase tracking-widest">Tendência Diária</h4><div class="chart-container" style="height: 300px;"><canvas id="hp-c-trend"></canvas></div></div>
-            <div class="card p-6 md:p-10 rounded-[2.5rem] md:rounded-[3rem] border"><h4 class="text-sm font-black text-muted mb-6 uppercase tracking-widest">Distribuição por Rede</h4><div class="chart-container" style="height: 300px;"><canvas id="hp-c-rede"></canvas></div></div>
+            <div class="mb-8 px-4">
+                <h4 class="text-[9px] font-black text-adaptive-muted uppercase tracking-[0.5em] text-center md:text-left">Análise Comparativa</h4>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mb-8">
+                <div class="glass-panel p-8 md:p-10 rounded-[2rem]">
+                    <h4 class="text-[10px] font-black text-adaptive-muted mb-8 uppercase tracking-[0.4em]">Canal: Loja de Rua vs Shopping</h4>
+                    <div class="chart-container" style="height: 300px;"><canvas id="hp-c-canal"></canvas></div>
+                </div>
+                <div class="glass-panel p-8 md:p-10 rounded-[2rem]">
+                    <h4 class="text-[10px] font-black text-adaptive-muted mb-8 uppercase tracking-[0.4em]">Comportamento: Dias Úteis vs Final de Semana</h4>
+                    <div class="chart-container" style="height: 300px;"><canvas id="hp-c-semana"></canvas></div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
+                <div class="glass-panel p-8 md:p-10 rounded-[2.5rem]">
+                    <h4 class="text-[10px] font-black text-adaptive-muted mb-8 uppercase tracking-[0.4em]">Curva de Tendência Diária</h4>
+                    <div class="chart-container" style="height: 300px;"><canvas id="hp-c-trend"></canvas></div>
+                </div>
+                <div class="glass-panel p-8 md:p-10 rounded-[2.5rem]">
+                    <h4 class="text-[10px] font-black text-adaptive-muted mb-8 uppercase tracking-[0.4em]">Distribuição por Rede Parceira</h4>
+                    <div class="chart-container" style="height: 300px;"><canvas id="hp-c-rede"></canvas></div>
+                </div>
+            </div>
         </div>
     `;
 };
@@ -65,58 +128,87 @@ export const destroyHeatProdutosCharts = () => {
 
 export const renderHeatProdutos = (filteredData) => {
     if(!filteredData || filteredData.length === 0) return;
+    
+    latestFilteredData = filteredData; // Guarda a referência atualizada para o evento de change
+    
     const select = document.getElementById('hp-master-select');
     const products = [...new Set(filteredData.map(d => d.aparelho))].filter(x => x).sort();
     
-    if(!currentProduct || !products.includes(currentProduct)) currentProduct = products[0] || null;
+    // Se o produto atualmente selecionado não existe mais no filtro atual, volta para 'ALL'
+    if(!currentProduct || (currentProduct !== 'ALL' && !products.includes(currentProduct))) currentProduct = 'ALL';
 
-    if(select.options.length <= 1 || select.dataset.updated !== "true") {
-        select.innerHTML = '';
-        products.forEach(p => select.add(new Option(p, p)));
-        select.value = currentProduct;
-        select.dataset.updated = "true";
+    // Reconstrói as opções do select SEMPRE que a view for renderizada (para refletir filtros globais)
+    select.innerHTML = '';
+    select.add(new Option('🔥 VISÃO MACRO (TODOS)', 'ALL')); 
+    products.forEach(p => select.add(new Option(p, p)));
+    select.value = currentProduct;
+    
+    // Adiciona o listener apenas na primeira vez, usando latestFilteredData para garantir o contexto certo
+    if (!select.dataset.listenerAttached) {
         select.addEventListener('change', (e) => {
             currentProduct = e.target.value;
-            processHeatmapData(filteredData);
+            processHeatmapData(latestFilteredData);
         });
+        select.dataset.listenerAttached = "true";
     }
-    processHeatmapData(filteredData);
+
+    processHeatmapData(latestFilteredData);
 };
 
 function processHeatmapData(globalData) {
     if(!currentProduct) return;
     const container = document.getElementById('html-heatmap-container');
-    
-    // 1. Inicia o "Loading" visual (Blur no container todo)
     container.classList.add('data-loading');
 
     setTimeout(() => {
         destroyHeatProdutosCharts(); 
         const parseN = v => parseFloat((v || "0").toString().replace(/\./g, '').replace(',', '.')) || 0;
-        const prodData = globalData.filter(d => d.aparelho === currentProduct);
         
-        // KPIs
+        const prodData = currentProduct === 'ALL' 
+            ? globalData.filter(d => d.aparelho && d.aparelho.trim() !== '') 
+            : globalData.filter(d => d.aparelho === currentProduct);
+        
         const totalProd = prodData.reduce((a, b) => a + parseN(b.sessions), 0);
         document.getElementById('hp-k-vol').innerText = Math.round(totalProd).toLocaleString('pt-BR');
 
         const heatMapData = {}; const storeAgg = {}; const redeAgg = {}; const dateAgg = {};
+        const canalAgg = {}; const semanaAgg = {};
+        
         const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
         const horasComerciais = Array.from({length: 13}, (_, i) => i + 10); 
+        
         diasSemana.forEach(d => { heatMapData[d] = {}; horasComerciais.forEach(h => heatMapData[d][h] = 0); });
+        horasComerciais.forEach(h => {
+            canalAgg[h] = { 'Rua': 0, 'Shopping': 0 };
+            semanaAgg[h] = { 'Dias Úteis': 0, 'Fim de Semana': 0 };
+        });
 
         prodData.forEach(d => {
             const sess = parseN(d.sessions);
             const store = d['store name'] || 'N/A';
             const rede = d['rede'] || 'N/A';
             const pDate = d['pure_date'];
+            
+            const shopVal = (d['shopping'] || '').toString().trim().toUpperCase();
+            const isShopping = (shopVal === 'LOJA DE RUA') ? 'Rua' : 'Shopping';
+            
             storeAgg[store] = (storeAgg[store] || 0) + sess;
             redeAgg[rede] = (redeAgg[rede] || 0) + sess;
             if(pDate) dateAgg[pDate] = (dateAgg[pDate] || 0) + sess;
+
             if (d.datetime && d.pure_date) {
                 const dateParts = d.pure_date.split('-');
-                const dayName = diasSemana[new Date(dateParts[0], dateParts[1]-1, dateParts[2]).getDay()];
+                const dtObj = new Date(dateParts[0], dateParts[1]-1, dateParts[2]);
+                const dayName = diasSemana[dtObj.getDay()];
                 const hour = parseInt(d.datetime.split(' ')[1]?.split(':')[0], 10);
-                if (hour >= 10 && hour <= 22) heatMapData[dayName][hour] += sess;
+                
+                const isWeekend = (dtObj.getDay() === 0 || dtObj.getDay() === 6) ? 'Fim de Semana' : 'Dias Úteis';
+
+                if (hour >= 10 && hour <= 22) {
+                    heatMapData[dayName][hour] += sess;
+                    canalAgg[hour][isShopping] += sess;
+                    semanaAgg[hour][isWeekend] += sess;
+                }
             }
         });
 
@@ -126,54 +218,159 @@ function processHeatmapData(globalData) {
         document.getElementById('hp-k-peak').innerText = maxSess > 0 ? peakText : '-';
         document.getElementById('hp-k-top').innerText = Object.entries(storeAgg).sort((a,b) => b[1]-a[1])[0]?.[0] || '-';
 
-        // 2. Renderiza a tabela de forma estática (Substituição total)
         renderStaticHeatmap(container, heatMapData, diasSemana, horasComerciais, maxSess);
 
-        // 3. Gráficos
+        const labelsHoras = horasComerciais.map(h => `${h}h`);
+        const colorLow = '#8b5cf6';
+        const colorHigh = '#f43f5e';
+        
+        drawComparisonChart('hp-c-canal', labelsHoras, [
+            { label: 'Loja de Rua', data: horasComerciais.map(h => canalAgg[h]['Rua']), color: colorLow },
+            { label: 'Shopping', data: horasComerciais.map(h => canalAgg[h]['Shopping']), color: colorHigh }
+        ]);
+
+        drawComparisonChart('hp-c-semana', labelsHoras, [
+            { label: 'Dias Úteis', data: horasComerciais.map(h => semanaAgg[h]['Dias Úteis']), color: colorHigh },
+            { label: 'Final de Semana', data: horasComerciais.map(h => semanaAgg[h]['Fim de Semana']), color: colorLow }
+        ]);
+
         const sortedDates = Object.keys(dateAgg).sort();
         drawChart('hp-c-trend', 'line', { labels: sortedDates, values: sortedDates.map(k => dateAgg[k]) }, true);
         const sortedRedes = Object.entries(redeAgg).sort((a,b) => b[1]-a[1]);
         drawChart('hp-c-rede', 'bar', { labels: sortedRedes.map(e => e[0]), values: sortedRedes.map(e => e[1]) });
 
-        // 4. Remove o Blur e revela os dados novos
         container.classList.remove('data-loading');
-    }, 300); // Sincronizado com o CSS transition
+    }, 400); 
 }
 
 function renderStaticHeatmap(container, dataMap, days, hours, maxVal) {
     const isDark = document.body.classList.contains('dark');
-    const textColor = isDark ? 'text-gray-400' : 'text-gray-500';
-    const emptyBg = isDark ? 'bg-gray-800/30' : 'bg-gray-100';
+    const textColor = isDark ? 'text-white/30' : 'text-gray-400'; 
+    const emptyBg = isDark ? 'bg-white/[0.02] border-white/[0.02]' : 'bg-black/[0.03] border-black/[0.03]';
 
-    let html = `<div class="grid grid-cols-[60px_repeat(13,minmax(40px,1fr))] gap-1">`;
-    html += `<div></div>`;
-    hours.forEach(h => html += `<div class="text-center text-[10px] font-black uppercase ${textColor}">${h}h</div>`);
-
+    let html = `<div class="grid grid-cols-[60px_repeat(13,minmax(40px,1fr))] gap-1"><div></div>`;
+    hours.forEach(h => html += `<div class="text-center text-[9px] font-black uppercase tracking-widest ${textColor} pb-2">${h}h</div>`);
+    
     days.forEach(day => {
-        html += `<div class="flex items-center justify-end pr-3 text-[10px] font-black uppercase ${textColor}">${day}</div>`;
+        html += `<div class="flex items-center justify-end pr-4 text-[9px] font-black uppercase tracking-widest ${textColor}">${day}</div>`;
         hours.forEach(hour => {
             const val = dataMap[day][hour] || 0;
-            let opacity = maxVal > 0 ? (val / maxVal) : 0;
-            opacity = Math.max(0.1, opacity); 
-            let bgStyle = val > 0 ? `background-color: rgba(104, 91, 199, ${opacity});` : '';
-            let classes = val > 0 ? `text-white font-bold shadow-[0_0_8px_rgba(104,91,199,0.3)]` : `${emptyBg} text-transparent`;
-            html += `<div class="h-10 w-full rounded flex items-center justify-center text-[10px] ${classes}" style="${bgStyle}">${Math.round(val)}</div>`;
+            let bgStyle = '';
+            let classes = `border ${emptyBg} text-transparent`;
+            
+            if (val > 0) {
+                let ratio = maxVal > 0 ? (val / maxVal) : 0;
+                let alpha = 0.15 + (ratio * 0.85);
+                let hue = 260 + (ratio * 90);
+                
+                bgStyle = `background-color: hsla(${hue}, 85%, 55%, ${alpha}); box-shadow: 0 0 12px hsla(${hue}, 85%, 55%, ${alpha * 0.4}); border: 1px solid hsla(${hue}, 85%, 70%, ${alpha * 0.5});`;
+                
+                let textClass = ratio > 0.35 ? `text-white font-bold` : (isDark ? `text-white/50 font-medium` : `text-black/50 font-medium`);
+                classes = `${textClass} rounded-lg`; 
+            } else {
+                classes += ` rounded-lg`;
+            }
+            
+            html += `<div class="h-10 w-full flex items-center justify-center text-[10px] transition-all duration-300 hover:scale-110 cursor-crosshair z-10 hover:z-20 ${classes}" style="${bgStyle}">${Math.round(val)}</div>`;
         });
     });
     html += `</div>`;
     container.innerHTML = html;
 }
 
+const crosshairPlugin = {
+    id: 'crosshair',
+    afterDraw: chart => {
+        if (chart.tooltip && chart.tooltip._active && chart.tooltip._active.length) {
+            const isDark = document.body.classList.contains('dark');
+            const activePoint = chart.tooltip._active[0];
+            const ctx = chart.ctx;
+            const x = activePoint.element.x;
+            const topY = chart.scales.y.top;
+            const bottomY = chart.scales.y.bottom;
+
+            ctx.save();
+            ctx.beginPath();
+            ctx.moveTo(x, topY);
+            ctx.lineTo(x, bottomY);
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.15)';
+            ctx.setLineDash([4, 4]);
+            ctx.stroke();
+            ctx.restore();
+        }
+    }
+};
+
+function drawComparisonChart(id, labels, datasets) {
+    const ctx = document.getElementById(id).getContext('2d');
+    const isDark = document.body.classList.contains('dark');
+    
+    const gridColor = isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)';
+    const tickColor = isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.4)';
+    const legendColor = isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.6)';
+    const tooltipBg = isDark ? 'rgba(18, 19, 23, 0.9)' : 'rgba(255, 255, 255, 0.9)';
+    const tooltipTitle = isDark ? '#fff' : '#131417';
+    const tooltipBody = isDark ? '#fff' : '#131417';
+
+    chartInstances[id] = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: datasets.map(ds => ({
+                label: ds.label,
+                data: ds.data,
+                borderColor: ds.color,
+                backgroundColor: ds.color + '15', 
+                fill: true,
+                tension: 0.5, 
+                borderWidth: 2,
+                pointRadius: 0, 
+                pointHoverRadius: 6
+            }))
+        },
+        plugins: [crosshairPlugin], 
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: { 
+                legend: { display: true, position: 'top', align: 'end', labels: { color: legendColor, font: { family: 'Montserrat', size: 9, weight: 'bold' }, boxWidth: 6, usePointStyle: true } },
+                datalabels: { display: false },
+                tooltip: { backgroundColor: tooltipBg, titleColor: tooltipTitle, bodyColor: tooltipBody, titleFont: {family: 'Montserrat', size: 10}, bodyFont: {family: 'Chakra Petch', size: 12}, padding: 12, cornerRadius: 8, borderColor: gridColor, borderWidth: 1 }
+            },
+            scales: { 
+                y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: tickColor, font: { family: 'Chakra Petch', size: 10 } }, border: { display: false } },
+                x: { grid: { display: false }, ticks: { color: tickColor, font: { family: 'Montserrat', size: 9, weight: '700' } }, border: { display: false } }
+            }
+        }
+    });
+}
+
 function drawChart(id, type, data, isArea = false) {
     const ctx = document.getElementById(id).getContext('2d');
     const isDark = document.body.classList.contains('dark');
+    const pluginsArray = type === 'line' ? [crosshairPlugin] : []; 
+    
+    const gridColor = isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)';
+    const tickColor = isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.4)';
+    const tooltipBg = isDark ? 'rgba(18, 19, 23, 0.9)' : 'rgba(255, 255, 255, 0.9)';
+    const tooltipTitle = isDark ? '#fff' : '#131417';
+    const tooltipBody = isDark ? '#fff' : '#131417';
+
     chartInstances[id] = new Chart(ctx, {
         type: type,
-        data: { labels: data.labels, datasets: [{ data: data.values, backgroundColor: isArea ? 'rgba(104, 91, 199, 0.2)' : '#685BC7', borderColor: '#685BC7', fill: isArea, tension: 0.4, borderRadius: 8, borderWidth: 3 }] },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { display: false } },
+        data: { labels: data.labels, datasets: [{ data: data.values, backgroundColor: isArea ? 'rgba(104, 91, 199, 0.15)' : '#685BC7', borderColor: '#685BC7', fill: isArea, tension: 0.5, borderRadius: type === 'bar' ? 4 : 0, borderWidth: type === 'bar' ? 0 : 2, pointRadius: 0, pointHoverRadius: 6 }] },
+        plugins: pluginsArray,
+        options: { 
+            responsive: true, maintainAspectRatio: false, 
+            interaction: { mode: 'index', intersect: false },
+            plugins: { 
+                legend: { display: false }, datalabels: { display: false },
+                tooltip: { backgroundColor: tooltipBg, titleColor: tooltipTitle, bodyColor: tooltipBody, titleFont: {family: 'Montserrat', size: 10}, bodyFont: {family: 'Chakra Petch', size: 12}, padding: 12, cornerRadius: 8, borderColor: gridColor, borderWidth: 1 }
+            },
             scales: { 
-                y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: isDark ? '#8e94a0' : '#475569', font: { family: 'Chakra Petch', size: 11 } } },
-                x: { grid: { display: false }, ticks: { color: isDark ? '#8e94a0' : '#475569', font: { family: 'Roboto', size: 10, weight: '900' } } }
+                y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: tickColor, font: { family: 'Chakra Petch', size: 10 } }, border: { display: false } },
+                x: { grid: { display: false }, ticks: { color: tickColor, font: { family: 'Montserrat', size: 9, weight: '700' } }, border: { display: false } }
             }
         }
     });

@@ -28,10 +28,34 @@ let raw = [], filteredData = [];
 let isDataLoaded = false;
 let currentRoute = 'view-overview';
 
+// MAPEAMENTO DE FILTROS: Adicionado 'f-linha' referenciando a coluna 'linha de produto'
 const filterKeys = {
     'f-date': 'pure_date', 'f-shop': 'shopping', 'f-rede': 'rede', 
-    'f-store': 'store name', 'f-reg': 'regional', 'f-8020': 'p8020', 'f-vis': 'visibilidade'
+    'f-store': 'store name', 'f-linha': 'linha de produto', 'f-reg': 'regional', 
+    'f-8020': 'p8020', 'f-vis': 'visibilidade'
 };
+
+// Função para formatar a data como "WXX - DIA DD-MM-YYYY"
+function formatFilterDate(dateStr) {
+    if (!dateStr || typeof dateStr !== 'string') return dateStr;
+    const parts = dateStr.split('-');
+    if (parts.length !== 3) return dateStr;
+    
+    const d = new Date(parts[0], parts[1] - 1, parts[2]);
+    const dias = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB'];
+    const diaNome = dias[d.getDay()];
+
+    const target = new Date(d.valueOf());
+    const dayNr = (d.getDay() + 6) % 7;
+    target.setDate(target.getDate() - dayNr + 3);
+    const firstThursday = target.valueOf();
+    target.setMonth(0, 1);
+    if (target.getDay() !== 4) target.setMonth(0, 1 + ((4 - target.getDay()) + 7) % 7);
+    const weekNum = 1 + Math.ceil((firstThursday - target) / 604800000);
+
+    const padWeek = weekNum.toString().padStart(2, '0');
+    return `W${padWeek} - ${diaNome} ${parts[2]}-${parts[1]}-${parts[0]}`;
+}
 
 // --- AUTENTICAÇÃO E INICIALIZAÇÃO ---
 onAuthStateChanged(auth, (user) => {
@@ -50,17 +74,16 @@ onAuthStateChanged(auth, (user) => {
         document.getElementById('disclaimer-modal').classList.add('hidden');
     }
     document.getElementById('btn-go-about').addEventListener('click', () => {
-    const shell = document.getElementById('dash-shell');
-    // Fade out suave do dashboard
-    shell.style.transition = 'opacity 0.6s ease, filter 0.6s ease';
-    shell.style.opacity = '0';
-    shell.style.filter = 'blur(10px)';
-    
-    setTimeout(() => {
-        document.body.insertAdjacentHTML('beforeend', getAboutHTML());
-        initAbout();
-    }, 600);
-});
+        const shell = document.getElementById('dash-shell');
+        shell.style.transition = 'opacity 0.6s ease, filter 0.6s ease';
+        shell.style.opacity = '0';
+        shell.style.filter = 'blur(10px)';
+        
+        setTimeout(() => {
+            document.body.insertAdjacentHTML('beforeend', getAboutHTML());
+            initAbout();
+        }, 600);
+    });
 });
 
 // Listeners de Login
@@ -114,7 +137,6 @@ navItems.forEach(btn => {
         appContent.classList.add('view-hidden');
 
         setTimeout(() => {
-            // Limpa a memória dos gráficos de todas as abas possíveis
             destroyOverviewCharts(); 
             destroyHeatProdutosCharts();
             
@@ -190,7 +212,12 @@ function buildFilters() {
         sel.innerHTML = `<option value="">TODOS</option>`;
         if (id === 'f-date') sel.options[0].text = 'TODAS'; 
         
-        availableVals.forEach(v => sel.add(new Option(v.toUpperCase(), v)));
+        // Aplica formatação especial se for o filtro de data
+        availableVals.forEach(v => {
+            const displayLabel = (id === 'f-date') ? formatFilterDate(v) : v.toUpperCase();
+            sel.add(new Option(displayLabel, v));
+        });
+        
         if (availableVals.includes(currentSelections[id])) sel.value = currentSelections[id];
     }
 }

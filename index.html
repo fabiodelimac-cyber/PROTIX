@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ProSolution | Analytics Console</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&family=Chakra+Petch:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100;200;300;400;500;700;900&family=Chakra+Petch:wght@400;500;700;600&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -18,7 +18,7 @@
             --ps-gray-dark: #232529; 
         }
         
-        body { font-family: 'Roboto', sans-serif; overflow-x: hidden; transition: background-color 0.3s ease; }
+        body { font-family: 'Montserrat', sans-serif; overflow-x: hidden; transition: background-color 0.3s ease; }
         .font-numbers { font-family: 'Chakra Petch', sans-serif; }
         
         body.dark { background-color: var(--ps-black); color: var(--ps-white); }
@@ -38,18 +38,31 @@
         .bg-mesh { background: linear-gradient(-45deg, #131417, #1c1e22, #2a2552, #131417); background-size: 400% 400%; animation: meshGradient 10s ease infinite; }
         @keyframes meshGradient { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
 
-        .sidebar-transition { transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+        .sidebar-transition { transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
         .view-transition { transition: opacity 0.2s ease-out, transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1); }
         .view-hidden { opacity: 0; transform: scale(0.98); pointer-events: none; position: absolute; width: 100%; top: 0; left: 0; z-index: -1; }
         .view-visible { opacity: 1; transform: scale(1); pointer-events: auto; position: relative; z-index: 10; }
         
         .nav-item.active { background-color: rgba(104, 91, 199, 0.15); border-left: 4px solid var(--ps-blue); color: var(--ps-white); }
-        .nav-item { border-left: 4px solid transparent; transition: all 0.2s ease; }
+        .nav-item { border-left: 4px solid transparent; transition: all 0.2s ease; overflow: hidden; white-space: nowrap; }
 
         .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #2d3139; border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #685BC7; }
+
+        @media (min-width: 1024px) {
+            body.sidebar-mini #sidebar { width: 88px !important; }
+            body.sidebar-mini .sidebar-text { opacity: 0; display: none; }
+            body.sidebar-mini .nav-item { justify-content: center; padding-left: 0; padding-right: 0; }
+            body.sidebar-mini #btn-logout { padding: 12px 0; display: flex; justify-content: center; }
+            body.sidebar-mini #btn-logout .logout-icon { display: block; }
+            body.sidebar-mini #btn-go-about { justify-content: center; padding-left: 0; padding-right: 0; }
+            body.sidebar-mini .logo-container { display: none; }
+            body.sidebar-mini .sidebar-header { justify-content: center; padding-left: 0; padding-right: 0; }
+            body.sidebar-mini .icon-expanded { display: none; }
+            body.sidebar-mini .icon-collapsed { display: block; }
+        }
     </style>
 </head>
 <body class="antialiased relative dark">
@@ -68,86 +81,82 @@
     </div>
 
     <div id="login-screen" class="bg-mesh min-h-screen flex flex-col items-center justify-center p-6 relative z-50 transition-opacity duration-500">
-        
-        <div class="bg-white w-full max-w-4xl flex flex-col md:flex-row overflow-hidden rounded-[2.5rem] shadow-2xl min-h-[500px] z-10">
+        <div class="bg-white/95 backdrop-blur-3xl w-full max-w-4xl flex flex-col md:flex-row overflow-hidden rounded-[2.5rem] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.8)] border border-white/20 min-h-[500px] z-10">
             
-            <div class="w-full md:w-1/2 p-12 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-gray-100 bg-white">
-                <img src="login.png" alt="ProSolution Logo" class="max-w-[280px] h-auto mb-8">
+            <div class="w-full md:w-1/2 p-12 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-gray-200/60 bg-white/40">
+                <img src="login.png" alt="ProSolution Logo" class="max-w-[240px] h-auto mb-8 drop-shadow-sm">
+                <h2 class="font-numbers text-sm text-center tracking-[0.4em] text-gray-900 uppercase font-bold mb-4">Field Engagement<br>Tracker</h2>
                 
-                <h2 class="font-numbers text-sm text-center tracking-[0.4em] text-black uppercase opacity-90 mb-4">
-                    Field Engagement<br>Tracker
-                </h2>
+                <div class="w-12 h-1 bg-gradient-to-r from-[#685BC7] to-[#8b5cf6] rounded-full mb-6 shadow-sm"></div>
                 
-                <div class="w-12 h-1.5 bg-[#685BC7] rounded-full mb-5"></div>
-                
-                <div class="bg-gray-100 px-5 py-2 rounded-full border border-gray-200">
-                    <span class="text-[9px] font-black uppercase tracking-[0.2em] text-gray-500">Versão de Testes</span>
+                <div class="bg-gray-100/80 px-5 py-2 rounded-2xl border border-gray-200 shadow-sm">
+                    <span class="text-[9px] font-medium uppercase tracking-[0.3em] text-gray-500">Versão de Testes</span>
                 </div>
             </div>
             
-            <div class="w-full md:w-1/2 p-12 md:p-14 flex flex-col justify-center bg-white">
-                <h3 class="text-lg font-light text-gray-600 tracking-[0.2em] uppercase mb-8 text-center md:text-left">Credenciais</h3>
+            <div class="w-full md:w-1/2 p-12 md:p-14 flex flex-col justify-center">
+                <h3 class="text-[11px] font-black text-gray-400 tracking-[0.3em] uppercase mb-8 text-center md:text-left">Faça seu login</h3>
                 <div class="space-y-4">
-                    <button id="btn-google-login" class="w-full flex items-center justify-center gap-3 bg-white border border-gray-200 text-gray-700 py-4 rounded-xl font-bold text-[11px] uppercase tracking-widest hover:bg-gray-50 transition-all">
+                    
+                    <button id="btn-google-login" class="w-full flex items-center justify-center gap-3 bg-white border border-gray-200 text-gray-700 py-4 rounded-2xl font-bold text-[11px] uppercase tracking-widest hover:bg-gray-50 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
                         <svg class="w-5 h-5" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.73 17.74 9.5 24 9.5z"></path><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path></svg>
                         <span>Entrar com Google</span>
                     </button>
                     
-                    <div class="flex items-center justify-center my-4"><div class="border-t border-gray-200 flex-grow"></div><span class="px-3 text-[10px] text-gray-400 font-bold tracking-widest uppercase">OU</span><div class="border-t border-gray-200 flex-grow"></div></div>
+                    <div class="flex items-center justify-center my-5"><div class="border-t border-gray-200 flex-grow"></div><span class="px-4 text-[9px] text-gray-400 font-black tracking-[0.2em] uppercase">Ou</span><div class="border-t border-gray-200 flex-grow"></div></div>
                     
-                    <input type="email" id="user" placeholder="E-mail" class="w-full px-4 py-4 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 focus:border-[#685BC7] outline-none text-sm font-bold transition-all">
-                    <input type="password" id="pass" placeholder="Senha" class="w-full px-4 py-4 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 focus:border-[#685BC7] outline-none text-sm font-bold transition-all">
+                    <input type="email" id="user" placeholder="E-mail" class="w-full px-5 py-4 rounded-2xl bg-white border border-gray-200 text-gray-900 placeholder-gray-400 focus:border-[#685BC7] focus:ring-4 focus:ring-[#685BC7]/10 outline-none text-[11px] font-bold tracking-wider transition-all shadow-sm">
+                    <input type="password" id="pass" placeholder="Senha" class="w-full px-5 py-4 rounded-2xl bg-white border border-gray-200 text-gray-900 placeholder-gray-400 focus:border-[#685BC7] focus:ring-4 focus:ring-[#685BC7]/10 outline-none text-[11px] font-bold tracking-wider transition-all shadow-sm">
                     
-                    <button id="btn-email-login" class="w-full bg-[#131417] text-white py-4 rounded-xl font-black text-xs uppercase tracking-[0.3em] hover:bg-[#685BC7] transition-all shadow-lg">Autenticar</button>
+                    <button id="btn-email-login" class="w-full bg-[#131417] text-white py-4 rounded-2xl font-black text-xs uppercase tracking-[0.3em] hover:bg-[#685BC7] hover:shadow-lg hover:shadow-[#685BC7]/30 hover:-translate-y-0.5 transition-all duration-300 mt-2">Autenticar</button>
                     
-                    <div class="pt-4 flex justify-center items-center gap-2 opacity-60 hover:opacity-100 transition-opacity cursor-default">
+                    <div class="pt-6 flex justify-center items-center gap-2 opacity-50 hover:opacity-100 transition-opacity cursor-default">
                         <img src="https://www.gstatic.com/mobilesdk/160503_mobilesdk/logo/2x/firebase_28dp.png" class="h-4" alt="Firebase">
-                        <span class="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Powered By Google Firebase</span>
+                        <span class="text-[8px] font-bold text-gray-500 uppercase tracking-widest">Powered By Google Firebase</span>
                     </div>
                 </div>
             </div>
         </div>
-
+        
         <div class="absolute bottom-8 left-0 w-full flex justify-center z-0">
-            <p class="text-[10px] font-medium text-white/50 uppercase tracking-[0.3em] text-center">
-                Desenvolvido por <span class="text-white/80 font-bold">ProSolution Marketing</span>
-            </p>
+            <p class="text-[10px] font-medium text-white/50 uppercase tracking-[0.3em] text-center drop-shadow-md">Desenvolvido por <span class="text-white/90 font-bold">ProSolution Marketing</span></p>
         </div>
     </div>
 
     <div id="dash-shell" class="hidden min-h-screen flex w-full">
-        
         <aside id="sidebar" class="sidebar-transition fixed inset-y-0 left-0 z-40 w-[260px] bg-[#1c1e22] border-r border-[#2d3139] transform -translate-x-full lg:translate-x-0 lg:sticky lg:top-0 flex flex-col h-screen text-white">
-            
-            <div class="h-[88px] px-6 flex items-center justify-between border-b border-[#2d3139] shrink-0">
-                <div class="flex items-center gap-3">
-                    <img src="header.png" alt="Logo" class="h-12 w-auto object-contain">
-                    <span class="font-numbers font-bold text-xl tracking-[0.2em] text-white opacity-90 uppercase">Beta</span>
+            <div class="sidebar-header h-[88px] px-6 flex items-center justify-between border-b border-[#2d3139] shrink-0 transition-all">
+                <div class="logo-container flex items-center gap-3 overflow-hidden">
+                    <div class="logo-full flex items-center gap-3">
+                        <img src="header.png" alt="Logo" class="h-12 w-auto object-contain">
+                        <span class="sidebar-text font-numbers font-bold text-xl tracking-[0.2em] text-white opacity-90 uppercase">Beta</span>
+                    </div>
                 </div>
-                <button id="btn-close-sidebar" class="lg:hidden text-gray-400 p-2">✕</button>
+                <button id="desktop-sidebar-toggle" class="hidden lg:flex text-gray-400 hover:text-white transition-colors p-2 rounded-lg hover:bg-white/5 shrink-0" title="Recolher/Expandir Menu">
+                    <svg class="icon-expanded w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
+                    <svg class="icon-collapsed w-6 h-6 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12" /></svg>
+                </button>
+                <button id="btn-close-sidebar" class="lg:hidden text-gray-400 p-2 shrink-0">✕</button>
             </div>
-            
-            <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
-                <p class="text-[9px] font-black tracking-widest text-gray-500 uppercase px-4 mb-4 mt-2">Visões de Análise</p>
-                <button data-target="view-overview" class="nav-item active w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-[#2d3139] text-left text-xs font-bold uppercase tracking-wider"><span>📊</span> Visão Geral</button>
-                <button data-target="view-positivacao" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-[#2d3139] text-left text-xs font-bold uppercase tracking-wider"><span>📍</span> Mapa Positivação</button>
-                <button data-target="view-heat-produtos" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-[#2d3139] text-left text-xs font-bold uppercase tracking-wider"><span>🔥</span> Heatmap Produtos</button>
-                <button data-target="view-heat-lojas" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-[#2d3139] text-left text-xs font-bold uppercase tracking-wider"><span>🏬</span> Heatmap Lojas</button>
-
+            <nav class="flex-1 p-4 space-y-2 overflow-y-auto custom-scrollbar">
+                <p class="sidebar-text text-[9px] font-black tracking-widest text-gray-500 uppercase px-4 mb-4 mt-2">Visões de Análise</p>
+                <button data-target="view-overview" class="nav-item active w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-[#2d3139] text-left text-xs font-bold uppercase tracking-wider"><span class="shrink-0 text-lg">📊</span> <span class="sidebar-text">Visão Geral</span></button>
+                <button data-target="view-positivacao" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-[#2d3139] text-left text-xs font-bold uppercase tracking-wider"><span class="shrink-0 text-lg">📍</span> <span class="sidebar-text">Mapa Positivação</span></button>
+                <button data-target="view-heat-produtos" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-[#2d3139] text-left text-xs font-bold uppercase tracking-wider"><span class="shrink-0 text-lg">🔥</span> <span class="sidebar-text">Heatmap Produtos</span></button>
+                <button data-target="view-heat-lojas" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-[#2d3139] text-left text-xs font-bold uppercase tracking-wider"><span class="shrink-0 text-lg">🏬</span> <span class="sidebar-text">Heatmap Lojas</span></button>
                 <div class="mt-8 pt-8 border-t border-[#2d3139]/50">
-                    <button id="btn-go-about" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 hover:text-[#685BC7] text-left text-[10px] font-black uppercase tracking-[0.2em] transition-all group">
-                        <span class="group-hover:scale-125 transition-transform">⚙️</span> Sobre o Sistema
-                    </button>
+                    <button id="btn-go-about" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 hover:text-[#685BC7] text-left text-[10px] font-black uppercase tracking-[0.2em] transition-all group"><span class="shrink-0 group-hover:scale-125 transition-transform text-base">⚙️</span> <span class="sidebar-text">Sobre o Sistema</span></button>
                 </div>
             </nav>
-
             <div class="p-4 border-t border-[#2d3139] mt-auto">
-                <button id="btn-logout" class="w-full bg-red-500/10 text-red-500 py-3 rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-red-500 hover:text-white transition-colors">Encerrar Sessão</button>
+                <button id="btn-logout" class="w-full bg-red-500/10 text-red-500 py-3 rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-red-500 hover:text-white transition-colors flex items-center justify-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5 shrink-0 logout-icon hidden"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" /></svg>
+                    <span class="sidebar-text">Encerrar Sessão</span>
+                </button>
             </div>
         </aside>
 
-        <div class="flex-1 flex flex-col min-w-0 min-h-screen">
-            
+        <div id="main-content" class="flex-1 flex flex-col min-w-0 min-h-screen sidebar-transition">
             <header class="header-bg sticky top-0 z-30 transition-colors duration-300 shrink-0">
                 <div class="px-4 py-3 flex items-center justify-between lg:hidden">
                     <button id="btn-open-sidebar" class="font-bold text-sm">☰ Menu</button>
@@ -156,29 +165,43 @@
                         <button id="btn-toggle-filters" class="bg-[#685BC7] text-white px-3 py-1.5 rounded text-[10px] font-black uppercase tracking-widest">Filtros</button>
                     </div>
                 </div>
-                
                 <div id="filter-drawer" class="hidden lg:flex lg:h-[88px] items-center p-4 lg:px-6 lg:py-0 header-bg transition-colors duration-300">
                     <div class="max-w-[1700px] mx-auto flex flex-col lg:flex-row items-center gap-4 w-full">
-                        <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-3 w-full flex-1">
+                        <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-3 w-full flex-1">
                             <div class="flex flex-col gap-1"><label class="text-[9px] font-black uppercase opacity-70">Data</label><select id="f-date" class="p-2 rounded-xl text-xs font-bold w-full"></select></div>
                             <div class="flex flex-col gap-1"><label class="text-[9px] font-black uppercase opacity-70">Shopping</label><select id="f-shop" class="p-2 rounded-xl text-xs font-bold w-full"></select></div>
                             <div class="flex flex-col gap-1"><label class="text-[9px] font-black uppercase opacity-70">Rede</label><select id="f-rede" class="p-2 rounded-xl text-xs font-bold w-full"></select></div>
                             <div class="flex flex-col gap-1"><label class="text-[9px] font-black uppercase opacity-70">PDV</label><select id="f-store" class="p-2 rounded-xl text-xs font-bold w-full"></select></div>
+                            <div class="flex flex-col gap-1"><label class="text-[9px] font-black uppercase opacity-70">Linha</label><select id="f-linha" class="p-2 rounded-xl text-xs font-bold w-full"></select></div>
                             <div class="flex flex-col gap-1"><label class="text-[9px] font-black uppercase opacity-70">Regional</label><select id="f-reg" class="p-2 rounded-xl text-xs font-bold w-full"></select></div>
                             <div class="flex flex-col gap-1"><label class="text-[9px] font-black uppercase opacity-70">80/20</label><select id="f-8020" class="p-2 rounded-xl text-xs font-bold w-full"></select></div>
                             <div class="flex flex-col gap-1"><label class="text-[9px] font-black uppercase opacity-70">Visibilidade</label><select id="f-vis" class="p-2 rounded-xl text-xs font-bold w-full"></select></div>
                         </div>
-                        <button class="btn-theme-toggle hidden lg:flex bg-[#1c1e22] text-white p-2.5 rounded-full border border-[#2d3139] hover:border-[#685BC7] transition-all items-center justify-center text-lg h-10 w-10 shrink-0">🌙</button>
+                        <div class="flex items-center gap-2">
+                            <button class="btn-theme-toggle hidden lg:flex bg-[#1c1e22] text-white p-2.5 rounded-full border border-[#2d3139] hover:border-[#685BC7] transition-all items-center justify-center text-lg h-10 w-10 shrink-0">🌙</button>
+                        </div>
                     </div>
                 </div>
             </header>
-
             <main id="app-content" class="flex-1 relative overflow-x-hidden p-4 md:p-6 max-w-[1700px] mx-auto w-full"></main>
         </div>
     </div>
 
     <div id="sidebar-overlay" class="hidden fixed inset-0 bg-black/60 z-30 lg:hidden backdrop-blur-sm transition-opacity"></div>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggleBtn = document.getElementById('desktop-sidebar-toggle');
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', () => {
+                    document.body.classList.toggle('sidebar-mini');
+                    setTimeout(() => {
+                        window.dispatchEvent(new Event('resize'));
+                    }, 400); 
+                });
+            }
+        });
+    </script>
     <script type="module" src="./js/app.js"></script>
 </body>
 </html>
