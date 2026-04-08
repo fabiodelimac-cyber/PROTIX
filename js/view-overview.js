@@ -10,7 +10,7 @@ export const getOverviewHTML = () => {
 
     return `
         <style>
-            #view-overview-wrapper { font-family: 'Montserrat', sans-serif; }
+            #view-overview-wrapper { font-family: 'Archivo', sans-serif; }
             
             .glass-panel { background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); }
             .text-adaptive { color: var(--text-main); }
@@ -20,6 +20,7 @@ export const getOverviewHTML = () => {
             .neon-accent { background: var(--neon-bg); }
             .divide-adaptive > div { border-color: var(--glass-border); }
 
+            /* EYE CANDY: Animações de Entrada Supremas */
             @keyframes slideUpFade {
                 from { opacity: 0; transform: translateY(10px); }
                 to { opacity: 1; transform: translateY(0); }
@@ -27,11 +28,24 @@ export const getOverviewHTML = () => {
             @keyframes fadeOutWelcome {
                 to { opacity: 0; height: 0; margin-bottom: 0; padding: 0; overflow: hidden; }
             }
+            
+            @keyframes smoothEntrance {
+                from { opacity: 0; transform: translateY(30px); filter: blur(5px); }
+                to { opacity: 1; transform: translateY(0); filter: blur(0); }
+            }
+            
             .welcome-msg { animation: slideUpFade 0.8s ease forwards; }
             .welcome-msg.hide { animation: fadeOutWelcome 0.5s ease forwards; }
+            
+            /* Classes de cascata para os cards */
+            .anim-cascade { opacity: 0; animation: smoothEntrance 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+            .delay-1 { animation-delay: 0.1s; }
+            .delay-2 { animation-delay: 0.2s; }
+            .delay-3 { animation-delay: 0.3s; }
+            .delay-4 { animation-delay: 0.4s; }
         </style>
 
-        <div id="view-overview-wrapper" class="pb-10">
+        <div id="view-overview-wrapper" class="pb-10 overflow-hidden">
             
             ${showWelcome ? `
             <div id="welcome-container" class="welcome-msg mb-6 px-2">
@@ -42,12 +56,12 @@ export const getOverviewHTML = () => {
             </div>
             ` : ''}
 
-            <div id="insight-box" class="glass-panel p-5 md:p-6 rounded-2xl flex items-center gap-5 mb-6 md:mb-8 transition-all hover:scale-[1.01]">
+            <div id="insight-box" class="anim-cascade delay-1 glass-panel p-5 md:p-6 rounded-2xl flex items-center gap-5 mb-6 md:mb-8 transition-all hover:scale-[1.01]">
                 <div class="bg-gradient-to-br from-[#685BC7] to-[#8b5cf6] px-4 py-2 rounded-xl text-white font-black text-[9px] uppercase tracking-[0.2em] shadow-lg shadow-[#685BC7]/30 shrink-0">INSIGHT</div>
                 <p id="insight-text" class="text-sm md:text-base font-medium tracking-tight text-adaptive italic"></p>
             </div>
 
-            <div class="glass-panel rounded-[2.5rem] mb-8 md:mb-10 flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-adaptive relative z-50">
+            <div class="anim-cascade delay-2 glass-panel rounded-[2.5rem] mb-8 md:mb-10 flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-adaptive relative z-50">
                 <div class="flex-1 p-8 md:p-10 flex flex-col justify-start relative z-10">
                     <p class="ds-kpi-label mb-4">Volume de Sessões</p>
                     <h3 id="k-sess" class="ds-kpi-value text-4xl md:text-5xl text-glow">0</h3>
@@ -73,30 +87,38 @@ export const getOverviewHTML = () => {
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mb-6 md:mb-8">
-                <div class="glass-panel p-8 md:p-10 rounded-[2.5rem] relative z-10">
-                    <h4 class="ds-chart-title mb-8">01 Volume de Interações por Dia</h4>
+                <div class="anim-cascade delay-3 glass-panel p-8 md:p-10 rounded-[2.5rem] relative z-10 hover:-translate-y-1 transition-transform duration-300">
+                    <h4 class="ds-chart-title mb-8">Volume de Interações por Dia</h4>
                     <div class="chart-container" style="height: 250px;"><canvas id="c-timeline"></canvas></div>
                 </div>
-                <div class="glass-panel p-8 md:p-10 rounded-[2.5rem] relative z-10">
-                    <h4 class="ds-chart-title mb-8">02 Engajamento por Loja Física</h4>
-                    <div class="chart-container" style="height: 250px;"><canvas id="c-store"></canvas></div>
+                <div class="anim-cascade delay-3 glass-panel p-8 md:p-10 rounded-[2.5rem] relative z-10 hover:-translate-y-1 transition-transform duration-300">
+                    <h4 class="ds-chart-title mb-8">Frequência de Uso por Hora</h4>
+                    <div class="chart-container" style="height: 250px;"><canvas id="c-time"></canvas></div>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mb-6 md:mb-8">
-                <div class="glass-panel p-8 md:p-10 rounded-[2.5rem] relative z-10">
-                    <h4 class="ds-chart-title mb-8">03 Frequência de Uso por Hora</h4>
-                    <div class="chart-container" style="height: 250px;"><canvas id="c-time"></canvas></div>
+                <div class="anim-cascade delay-4 glass-panel p-8 md:p-10 rounded-[2.5rem] relative z-10 hover:-translate-y-1 transition-transform duration-300">
+                    <h4 class="ds-chart-title mb-8">Engajamento por Rede</h4>
+                    <div class="chart-container" style="height: 280px;"><canvas id="c-rede"></canvas></div>
                 </div>
-                <div class="glass-panel p-8 md:p-10 rounded-[2.5rem] relative z-10">
-                    <h4 class="ds-chart-title mb-8">04 Comparativo de Tipo de Local</h4>
-                    <div class="chart-container" style="height: 250px;"><canvas id="c-shop"></canvas></div>
+                
+                <div class="anim-cascade delay-4 glass-panel p-6 md:p-8 rounded-[2.5rem] relative z-10 hover:-translate-y-1 transition-transform duration-300">
+                    <div class="flex flex-col md:flex-row gap-6 h-full">
+                        <div class="flex-1 flex flex-col">
+                            <h4 class="ds-chart-title mb-2 text-center md:text-left">Interações por Local</h4>
+                            <div class="chart-container relative flex-1 min-h-[220px]">
+                                <canvas id="c-shop"></canvas>
+                            </div>
+                        </div>
+                        <div class="flex-1 flex flex-col border-t md:border-t-0 md:border-l border-[var(--glass-border)] pt-6 md:pt-0 md:pl-6">
+                            <h4 class="ds-chart-title mb-2 text-center md:text-left">Interações por Linha</h4>
+                            <div class="chart-container relative flex-1 min-h-[220px]">
+                                <canvas id="c-linha"></canvas>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
-
-            <div class="glass-panel p-8 md:p-10 rounded-[2.5rem] pb-10 md:pb-12 relative z-10">
-                <h4 class="ds-chart-title mb-8">05 Distribuição Total por Modelo de Aparelho</h4>
-                <div class="chart-container" style="height: 800px;"><canvas id="c-dev"></canvas></div>
             </div>
         </div>
     `;
@@ -156,7 +178,7 @@ export const renderOverviewCharts = (filteredData) => {
     const sortedDevList = Object.entries(devSetMap).map(([k, set]) => [k, set.size]).sort((a, b) => b[1] - a[1]);
     document.getElementById('k-dev-tooltip').innerHTML = '<p class="ds-sidebar-title text-[#685BC7] mb-3 border-b border-white/10 pb-3">Modelos Operantes na Rede</p>' + 
         (sortedDevList.length > 0 
-            ? sortedDevList.map(v => `<div class="mt-2.5 flex items-center justify-between gap-6"><span class="opacity-90 font-montserrat">${v[0]}</span> <span class="font-black font-numbers text-[#8b5cf6] bg-[#8b5cf6]/10 px-2 py-0.5 rounded-md border border-[#8b5cf6]/20">${v[1]}</span></div>`).join('') 
+            ? sortedDevList.map(v => `<div class="mt-2.5 flex items-center justify-between gap-6"><span class="opacity-90">${v[0]}</span> <span class="font-black font-numbers text-[#8b5cf6] bg-[#8b5cf6]/10 px-2 py-0.5 rounded-md border border-[#8b5cf6]/20">${v[1]}</span></div>`).join('') 
             : '<div class="opacity-50 mt-2">Nenhum modelo detectado</div>');
             
     // Heurística do Insight
@@ -179,21 +201,32 @@ export const renderOverviewCharts = (filteredData) => {
         }
     }, 20); 
 
-    // Preparação dos Gráficos
-    const storeAgg = {};
-    filteredData.forEach(d => {
-        const code = d['store code'] || 'N/A'; const name = d['store name'] || 'N/A'; const dev = d['aparelho'] || 'N/A'; const sess = parseN(d.sessions);
-        if(!storeAgg[code]) storeAgg[code] = { name: name, total: 0, devices: {} };
-        storeAgg[code].total += sess; storeAgg[code].devices[dev] = (storeAgg[code].devices[dev] || 0) + sess;
-    });
-    const sortedCodes = Object.keys(storeAgg).sort((a,b) => storeAgg[b].total - storeAgg[a].total);
-    const storeData = { labels: sortedCodes, values: sortedCodes.map(c => storeAgg[c].total), tooltipData: storeAgg };
+    // BINÁRIO: Loja de Rua vs Shopping
+    let ruaTotal = 0, shopTotal = 0;
+    
+    // LINHA: Agrupamento
+    const linhaAgg = {};
 
+    filteredData.forEach(d => {
+        const sess = parseN(d.sessions);
+        
+        const tipoOriginal = (d.shopping || '').toUpperCase().trim();
+        if (tipoOriginal === 'LOJA DE RUA') ruaTotal += sess;
+        else shopTotal += sess;
+        
+        const linha = (d['linha de produto'] || 'N/A').toUpperCase().trim();
+        linhaAgg[linha] = (linhaAgg[linha] || 0) + sess;
+    });
+
+    const sortedLinhas = Object.keys(linhaAgg).sort((a,b) => linhaAgg[b] - linhaAgg[a]);
+
+    // Renderizando os gráficos na nova ordem
     drawChart('c-timeline', 'line', aggregateWithStores(filteredData, 'pure_date', true), true);
-    drawChart('c-store', 'bar', storeData);
     drawChart('c-time', 'line', aggregateWithStores(filteredData, 'faixa', true), true);
-    drawChart('c-shop', 'bar', aggregateWithStores(filteredData, 'shopping'));
-    drawChart('c-dev', 'bar', aggregateWithStores(filteredData, 'aparelho', false, true), false, true);
+    drawChart('c-rede', 'bar', aggregateWithStores(filteredData, 'rede', false, true));
+    
+    drawChart('c-shop', 'doughnut', { labels: ['Loja de Rua', 'Shopping'], values: [ruaTotal, shopTotal] });
+    drawChart('c-linha', 'doughnut', { labels: sortedLinhas, values: sortedLinhas.map(l => linhaAgg[l]) });
 };
 
 function aggregateWithStores(data, key, isT = false, isR = false) {
@@ -238,7 +271,6 @@ function drawChart(id, type, data, isArea = false, isH = false) {
     const ctx = document.getElementById(id).getContext('2d');
     const isDark = document.body.classList.contains('dark');
     
-    // Cores Adaptativas
     const labelColor = isDark ? '#FFFFFF' : '#131417';
     const gridColor = isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.03)';
     const tickColor = isDark ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.4)';
@@ -249,12 +281,27 @@ function drawChart(id, type, data, isArea = false, isH = false) {
 
     const pluginsArray = type === 'line' ? [crosshairPlugin] : [];
     
-    let bg = '#685BC7';
-    if(isArea) { 
-        const grad = ctx.createLinearGradient(0, 0, 0, 400); 
-        grad.addColorStop(0, 'rgba(104, 91, 199, 0.25)'); 
-        grad.addColorStop(1, 'rgba(104, 91, 199, 0)'); 
-        bg = grad; 
+    let bg;
+    let borderColor = '#685BC7';
+    let borderWidth = type === 'bar' ? 0 : 2;
+
+    if (type === 'doughnut') {
+        bg = data.labels.map((_, i) => {
+            if (id === 'c-shop') return i === 0 ? '#685BC7' : (isDark ? '#3B455E' : '#B2BECE');
+            const colorsDark = ['#685BC7', '#526082', '#3B455E', '#242A38'];
+            const colorsLight = ['#685BC7', '#8B9BB4', '#B2BECE', '#E2E8F0'];
+            return isDark ? colorsDark[i % colorsDark.length] : colorsLight[i % colorsLight.length];
+        });
+        borderColor = isDark ? '#1c1e22' : '#ffffff'; 
+        borderWidth = 3;
+    } else {
+        bg = '#685BC7';
+        if(isArea) { 
+            const grad = ctx.createLinearGradient(0, 0, 0, 400); 
+            grad.addColorStop(0, 'rgba(104, 91, 199, 0.25)'); 
+            grad.addColorStop(1, 'rgba(104, 91, 199, 0)'); 
+            bg = grad; 
+        }
     }
 
     let xLabels = data.labels;
@@ -272,23 +319,22 @@ function drawChart(id, type, data, isArea = false, isH = false) {
         backgroundColor: tooltipBg, 
         titleColor: tooltipTitle,
         bodyColor: tooltipBody,
-        titleFont: { family: 'Montserrat', size: 10, weight: 'bold' }, 
-        bodyFont: { family: 'Chakra Petch', size: 12 },
+        titleFont: { family: 'Archivo', size: 10, weight: 800 }, 
+        bodyFont: { family: 'Archivo', size: 11, weight: 500 },
         borderColor: tooltipBorder,
         borderWidth: 1,
         padding: 12,
-        cornerRadius: 12,
-        animation: false // Remove animação de entrada/saída da tooltip para zero lag
+        cornerRadius: 12
     };
 
-    if (id === 'c-store' && data.tooltipData) {
+    if ((id === 'c-store' || id === 'c-rede') && data.tooltipData) {
         tooltipConfig.callbacks = {
-            title: ctx => { const code = ctx[0].label; return data.tooltipData[code] ? data.tooltipData[code].name : code; },
+            title: ctx => { const code = ctx[0].label; return data.tooltipData[code] ? data.tooltipData[code].name || code : code; },
             label: ctx => {
                 const code = ctx.label;
                 if(data.tooltipData[code]) {
-                    const devices = data.tooltipData[code].devices;
-                    return Object.entries(devices).sort((a,b) => b[1]-a[1]).map(d => `${d[0]}: ${Math.round(d[1]).toLocaleString('pt-BR')}`);
+                    const devices = data.tooltipData[code].devices || data.tooltipData[code].stores;
+                    if(devices) return Object.entries(devices).sort((a,b) => b[1]-a[1]).map(d => `${d[0]}: ${Math.round(d[1]).toLocaleString('pt-BR')}`);
                 } return ctx.formattedValue;
             }
         };
@@ -303,21 +349,22 @@ function drawChart(id, type, data, isArea = false, isH = false) {
             }
         };
     }
-    
-    chartInstances[id] = new Chart(ctx, {
+
+    const chartConfig = {
         type: type,
         data: { 
             labels: xLabels, 
             datasets: [{ 
                 data: data.values, 
                 backgroundColor: bg, 
-                borderColor: '#685BC7', 
+                borderColor: borderColor, 
                 fill: isArea, 
                 tension: 0.5, 
                 borderRadius: type === 'bar' ? (isH ? {topRight: 6, bottomRight: 6} : {topLeft: 6, topRight: 6}) : 0, 
-                borderWidth: type === 'bar' ? 0 : 2, 
+                borderWidth: borderWidth, 
                 pointRadius: 0, 
-                pointHoverRadius: 6 
+                pointHoverRadius: 6,
+                hoverOffset: type === 'doughnut' ? 8 : 0
             }] 
         },
         plugins: pluginsArray,
@@ -325,57 +372,70 @@ function drawChart(id, type, data, isArea = false, isH = false) {
             indexAxis: isH ? 'y' : 'x', 
             responsive: true, 
             maintainAspectRatio: false,
+            cutout: type === 'doughnut' ? '65%' : undefined, 
             
-            // --- OTIMIZAÇÃO DE PERFORMANCE (Foco no Gráfico 05) ---
             interaction: { 
-                mode: isH ? 'nearest' : 'index', // Nearest é ultra-rápido para gráficos com dezenas de barras horizontais
-                intersect: isH ? true : false,   // Exige colisão exata com o mouse no horizontal
-                axis: isH ? 'y' : 'x'
+                mode: isH ? 'nearest' : (type === 'doughnut' ? 'nearest' : 'index'), 
+                intersect: isH || type === 'doughnut' ? true : false,   
+                axis: isH ? 'y' : (type === 'doughnut' ? 'xy' : 'x')
             },
-            events: ['mousemove', 'mouseout', 'click', 'touchstart', 'touchmove'], // Reduz listeners inúteis
-            transitions: {
-                active: { animation: { duration: 0 } } // Mata o lag visual de redraw no hover
-            },
-            // ------------------------------------------------------
 
             layout: {
                 padding: {
-                    top: !isH ? 30 : 0, 
-                    right: isH ? 50 : 0
+                    top: type === 'doughnut' ? 35 : (!isH ? 30 : 0), 
+                    right: type === 'doughnut' ? 30 : (isH ? 50 : 0),
+                    bottom: type === 'doughnut' ? 25 : 0,
+                    left: type === 'doughnut' ? 30 : 0
                 }
             },
             plugins: { 
-                legend: { display: false }, 
+                legend: { 
+                    display: type === 'doughnut', 
+                    position: 'bottom',
+                    // A cor da legenda agora usa o tickColor (o mesmo cinza dos eixos)
+                    labels: { color: tickColor, font: { family: 'Archivo', size: 10, weight: 700 }, usePointStyle: true, boxWidth: 6, padding: 15 }
+                }, 
                 tooltip: tooltipConfig,
                 datalabels: {
-                    display: true,
-                    font: { family: 'Chakra Petch', size: 11, weight: 'bold' },
-                    formatter: (value) => Math.round(value).toLocaleString('pt-BR'),
+                    display: true, 
+                    font: { family: 'Archivo', size: type === 'doughnut' ? 13 : 10, weight: type === 'doughnut' ? 900 : 800 },
+                    formatter: (value, ctx) => {
+                        if (type === 'doughnut') {
+                            let sum = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                            if (sum === 0) return '0%';
+                            return (value * 100 / sum).toFixed(1).replace('.', ',') + '%';
+                        }
+                        return Math.round(value).toLocaleString('pt-BR');
+                    },
                     anchor: 'end',
-                    align: isH ? 'right' : 'top',
+                    align: type === 'doughnut' ? 'end' : (isH ? 'right' : 'top'),
                     color: labelColor,
-                    offset: 6
+                    offset: type === 'doughnut' ? 5 : 6
                 }
             },
             scales: { 
                 y: { 
+                    display: type !== 'doughnut',
                     grace: isH ? '0%' : '15%', 
                     beginAtZero: true, 
                     grid: { color: isH ? 'transparent' : gridColor, drawBorder: false }, 
                     ticks: { 
                         color: tickColor, 
-                        font: { family: 'Chakra Petch', size: 11 },
+                        font: { family: 'Archivo', size: 10, weight: 600 },
                         autoSkip: isH ? false : true 
                     }, 
                     border: { display: false } 
                 },
                 x: { 
+                    display: type !== 'doughnut',
                     grace: isH ? '15%' : '0%', 
                     grid: { display: isH ? true : false, color: gridColor, drawBorder: false }, 
-                    ticks: { color: tickColor, font: { family: 'Montserrat', size: 9, weight: '700' } }, 
+                    ticks: { color: tickColor, font: { family: 'Archivo', size: 9, weight: 700 } }, 
                     border: { display: false } 
                 }
             }
         }
-    });
+    };
+
+    chartInstances[id] = new Chart(ctx, chartConfig);
 }
