@@ -2,41 +2,15 @@
 
 let chartInstances = {};
 let currentProduct = 'ALL'; 
-let latestFilteredData = []; // Armazena a massa de dados do último filtro global aplicado
+let latestFilteredData = []; 
 
 export const getHeatProdutosHTML = () => {
     return `
         <style>
-            @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@200;300;400;500;700;900&display=swap');
-            
             #view-heatmap-wrapper { font-family: 'Montserrat', sans-serif; }
             
             #html-heatmap-container { transition: filter 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease; will-change: filter, opacity; }
             .data-loading { filter: blur(12px); opacity: 0.3; pointer-events: none; }
-
-            /* VARIÁVEIS DE TEMA ADAPTATIVAS */
-            body.dark {
-                --glass-bg: rgba(18, 19, 23, 0.55);
-                --glass-border: rgba(255, 255, 255, 0.04);
-                --glass-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-                --text-main: #ffffff;
-                --text-muted: rgba(255, 255, 255, 0.3);
-                --text-muted-strong: rgba(255, 255, 255, 0.5);
-                --glow-shadow: 0 0 24px rgba(255, 255, 255, 0.2);
-                --neon-bg: radial-gradient(circle at top right, rgba(104, 91, 199, 0.15), transparent 60%);
-                --input-bg: rgba(255, 255, 255, 0.05);
-            }
-            body.light {
-                --glass-bg: rgba(255, 255, 255, 0.75);
-                --glass-border: rgba(0, 0, 0, 0.05);
-                --glass-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
-                --text-main: #131417;
-                --text-muted: rgba(19, 20, 23, 0.4);
-                --text-muted-strong: rgba(19, 20, 23, 0.6);
-                --glow-shadow: 0 4px 12px rgba(104, 91, 199, 0.15);
-                --neon-bg: radial-gradient(circle at top right, rgba(104, 91, 199, 0.06), transparent 60%);
-                --input-bg: rgba(0, 0, 0, 0.03);
-            }
 
             .glass-panel { background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); }
             .text-adaptive { color: var(--text-main); }
@@ -52,11 +26,11 @@ export const getHeatProdutosHTML = () => {
             <div class="glass-panel p-6 md:p-8 rounded-[2rem] mb-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden group">
                 <div class="absolute -right-6 -top-6 opacity-[0.03] text-8xl font-black pointer-events-none group-hover:scale-105 transition-transform duration-700">🔥</div>
                 <div class="relative z-10">
-                    <h2 class="text-3xl md:text-4xl font-light tracking-tighter text-adaptive">Heatmap de Produtos</h2>
+                    <h2 class="ds-title">Heatmap de Produtos</h2>
                 </div>
                 <div class="w-full md:w-1/3 relative z-10">
-                    <label class="text-[8px] font-bold uppercase text-adaptive-strong tracking-[0.3em] mb-2 block">Selecione o Modelo Alvo</label>
-                    <select id="hp-master-select" class="w-full p-3 rounded-xl text-sm font-medium input-adaptive focus:border-[#685BC7] outline-none transition-colors cursor-pointer backdrop-blur-md appearance-none">
+                    <label class="ds-filter-label mb-2 block">Selecione o Modelo Alvo</label>
+                    <select id="hp-master-select" class="w-full p-3 rounded-xl ds-filter-input input-adaptive focus:border-[#685BC7] outline-none transition-colors cursor-pointer backdrop-blur-md appearance-none">
                         <option value="ALL">Carregando produtos...</option>
                     </select>
                 </div>
@@ -64,23 +38,23 @@ export const getHeatProdutosHTML = () => {
 
             <div class="glass-panel rounded-[2rem] mb-8 flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-adaptive overflow-hidden relative">
                 <div class="w-full md:w-1/4 p-6 md:p-8 flex flex-col justify-start shrink-0">
-                    <p class="text-[8px] font-black uppercase tracking-[0.3em] text-adaptive-muted mb-3">Interações Globais</p>
-                    <h3 id="hp-k-vol" class="text-2xl md:text-3xl font-bold font-numbers text-adaptive text-glow">0</h3>
+                    <p class="ds-kpi-label mb-3">Interações Globais</p>
+                    <h3 id="hp-k-vol" class="ds-kpi-value text-2xl md:text-3xl text-glow">0</h3>
                 </div>
                 <div class="w-full md:w-1/4 p-6 md:p-8 flex flex-col justify-start shrink-0">
-                    <p class="text-[8px] font-black uppercase tracking-[0.3em] text-adaptive-muted mb-3">Pico de Demanda</p>
-                    <h3 id="hp-k-peak" class="text-2xl md:text-3xl font-bold font-numbers text-adaptive leading-tight">-</h3>
+                    <p class="ds-kpi-label mb-3">Pico de Demanda</p>
+                    <h3 id="hp-k-peak" class="ds-kpi-value text-2xl md:text-3xl leading-tight">-</h3>
                 </div>
                 <div class="flex-1 p-6 md:p-8 flex flex-col justify-start relative neon-accent">
-                    <p class="text-[8px] font-black uppercase tracking-[0.3em] text-[#685BC7] mb-3 relative z-10">PDV de Maior Interação</p>
-                    <h3 id="hp-k-top" class="text-lg md:text-xl font-bold font-numbers text-adaptive leading-tight whitespace-normal break-words relative z-10">-</h3>
+                    <p class="ds-kpi-label mb-3 relative z-10 text-[#685BC7]">PDV de Maior Interação</p>
+                    <h3 id="hp-k-top" class="ds-kpi-value text-lg md:text-xl leading-tight whitespace-normal break-words relative z-10">-</h3>
                     <div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#685BC7] to-transparent opacity-50"></div>
                 </div>
             </div>
 
             <div class="glass-panel p-8 md:p-12 rounded-[2.5rem] mb-10 md:mb-12">
                 <div class="flex justify-between items-end mb-8">
-                    <h4 class="text-[10px] font-black text-adaptive-muted uppercase tracking-[0.4em]">Concentração (Dia x Hora)</h4>
+                    <h4 class="ds-chart-title">Concentração (Dia x Hora)</h4>
                     <div class="hidden md:flex items-center gap-3">
                         <span class="text-[8px] font-bold text-[#8b5cf6] uppercase tracking-[0.2em]">Menor</span>
                         <div class="w-32 h-1.5 rounded-full" style="background: linear-gradient(to right, rgba(139, 92, 246, 0.15), rgba(244, 63, 94, 1));"></div>
@@ -92,28 +66,28 @@ export const getHeatProdutosHTML = () => {
                 </div>
             </div>
 
-            <div class="mb-8 px-4">
-                <h4 class="text-[9px] font-black text-adaptive-muted uppercase tracking-[0.5em] text-center md:text-left">Análise Comparativa</h4>
+            <div class="mb-8 px-4 text-center md:text-left">
+                <h4 class="ds-chart-title text-center md:text-left">Análise Comparativa</h4>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mb-8">
                 <div class="glass-panel p-8 md:p-10 rounded-[2rem]">
-                    <h4 class="text-[10px] font-black text-adaptive-muted mb-8 uppercase tracking-[0.4em]">Canal: Loja de Rua vs Shopping</h4>
+                    <h4 class="ds-chart-title mb-8">Canal: Loja de Rua vs Shopping</h4>
                     <div class="chart-container" style="height: 300px;"><canvas id="hp-c-canal"></canvas></div>
                 </div>
                 <div class="glass-panel p-8 md:p-10 rounded-[2rem]">
-                    <h4 class="text-[10px] font-black text-adaptive-muted mb-8 uppercase tracking-[0.4em]">Comportamento: Dias Úteis vs Final de Semana</h4>
+                    <h4 class="ds-chart-title mb-8">Comportamento: Dias Úteis vs Final de Semana</h4>
                     <div class="chart-container" style="height: 300px;"><canvas id="hp-c-semana"></canvas></div>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
                 <div class="glass-panel p-8 md:p-10 rounded-[2.5rem]">
-                    <h4 class="text-[10px] font-black text-adaptive-muted mb-8 uppercase tracking-[0.4em]">Curva de Tendência Diária</h4>
+                    <h4 class="ds-chart-title mb-8">Curva de Tendência Diária</h4>
                     <div class="chart-container" style="height: 300px;"><canvas id="hp-c-trend"></canvas></div>
                 </div>
                 <div class="glass-panel p-8 md:p-10 rounded-[2.5rem]">
-                    <h4 class="text-[10px] font-black text-adaptive-muted mb-8 uppercase tracking-[0.4em]">Distribuição por Rede Parceira</h4>
+                    <h4 class="ds-chart-title mb-8">Distribuição por Rede Parceira</h4>
                     <div class="chart-container" style="height: 300px;"><canvas id="hp-c-rede"></canvas></div>
                 </div>
             </div>
@@ -129,21 +103,18 @@ export const destroyHeatProdutosCharts = () => {
 export const renderHeatProdutos = (filteredData) => {
     if(!filteredData || filteredData.length === 0) return;
     
-    latestFilteredData = filteredData; // Guarda a referência atualizada para o evento de change
+    latestFilteredData = filteredData; 
     
     const select = document.getElementById('hp-master-select');
     const products = [...new Set(filteredData.map(d => d.aparelho))].filter(x => x).sort();
     
-    // Se o produto atualmente selecionado não existe mais no filtro atual, volta para 'ALL'
     if(!currentProduct || (currentProduct !== 'ALL' && !products.includes(currentProduct))) currentProduct = 'ALL';
 
-    // Reconstrói as opções do select SEMPRE que a view for renderizada (para refletir filtros globais)
     select.innerHTML = '';
     select.add(new Option('🔥 VISÃO MACRO (TODOS)', 'ALL')); 
     products.forEach(p => select.add(new Option(p, p)));
     select.value = currentProduct;
     
-    // Adiciona o listener apenas na primeira vez, usando latestFilteredData para garantir o contexto certo
     if (!select.dataset.listenerAttached) {
         select.addEventListener('change', (e) => {
             currentProduct = e.target.value;

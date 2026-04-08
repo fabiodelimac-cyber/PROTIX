@@ -6,49 +6,20 @@ let chartInstances = {};
 let insightTimeout = null;
 
 export const getOverviewHTML = () => {
-    // Lógica para decidir se exibe o welcome (apenas uma vez por sessão do navegador)
     const showWelcome = !sessionStorage.getItem('ps_welcome_shown');
 
     return `
         <style>
-            @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@200;300;400;500;700;900&display=swap');
-            
             #view-overview-wrapper { font-family: 'Montserrat', sans-serif; }
             
-            /* VARIÁVEIS DE TEMA ADAPTATIVAS (Boutique BI) */
-            body.dark {
-                --glass-bg: rgba(18, 19, 23, 0.55);
-                --glass-border: rgba(255, 255, 255, 0.04);
-                --glass-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-                --text-main: #ffffff;
-                --text-muted: rgba(255, 255, 255, 0.3);
-                --text-muted-strong: rgba(255, 255, 255, 0.5);
-                --glow-shadow: 0 0 24px rgba(255, 255, 255, 0.2);
-                --glow-accent: 0 0 24px rgba(104, 91, 199, 0.4);
-                --neon-bg: radial-gradient(circle at top right, rgba(104, 91, 199, 0.15), transparent 60%);
-            }
-            body.light {
-                --glass-bg: rgba(255, 255, 255, 0.75);
-                --glass-border: rgba(0, 0, 0, 0.05);
-                --glass-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
-                --text-main: #131417;
-                --text-muted: rgba(19, 20, 23, 0.4);
-                --text-muted-strong: rgba(19, 20, 23, 0.6);
-                --glow-shadow: 0 4px 12px rgba(104, 91, 199, 0.15);
-                --glow-accent: 0 4px 12px rgba(104, 91, 199, 0.25);
-                --neon-bg: radial-gradient(circle at top right, rgba(104, 91, 199, 0.06), transparent 60%);
-            }
-
             .glass-panel { background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); }
             .text-adaptive { color: var(--text-main); }
             .text-adaptive-muted { color: var(--text-muted); }
-            .text-adaptive-strong { color: var(--text-muted-strong); }
             .text-glow { text-shadow: var(--glow-shadow); }
             .text-glow-accent { text-shadow: var(--glow-accent); }
             .neon-accent { background: var(--neon-bg); }
             .divide-adaptive > div { border-color: var(--glass-border); }
 
-            /* Animações de Boas-vindas */
             @keyframes slideUpFade {
                 from { opacity: 0; transform: translateY(10px); }
                 to { opacity: 1; transform: translateY(0); }
@@ -64,10 +35,10 @@ export const getOverviewHTML = () => {
             
             ${showWelcome ? `
             <div id="welcome-container" class="welcome-msg mb-6 px-2">
-                <h1 class="text-2xl md:text-3xl font-bold text-adaptive tracking-tight">
+                <h1 class="ds-title mb-1">
                     Seja bem-vindo(a)!
                 </h1>
-                <p class="text-[10px] font-bold text-adaptive-muted uppercase tracking-[0.3em] mt-1">Sessão iniciada com sucesso.</p>
+                <p class="ds-helper-text text-adaptive-muted">Sessão iniciada com sucesso.</p>
             </div>
             ` : ''}
 
@@ -76,55 +47,55 @@ export const getOverviewHTML = () => {
                 <p id="insight-text" class="text-sm md:text-base font-medium tracking-tight text-adaptive italic"></p>
             </div>
 
-            <div class="glass-panel rounded-[2.5rem] mb-8 md:mb-10 flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-adaptive relative">
+            <div class="glass-panel rounded-[2.5rem] mb-8 md:mb-10 flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-adaptive relative z-50">
                 <div class="flex-1 p-8 md:p-10 flex flex-col justify-start relative z-10">
-                    <p class="text-[8px] font-black uppercase tracking-[0.3em] text-adaptive-muted mb-4">Volume de Sessões</p>
-                    <h3 id="k-sess" class="text-4xl md:text-5xl font-bold font-numbers text-adaptive text-glow">0</h3>
+                    <p class="ds-kpi-label mb-4">Volume de Sessões</p>
+                    <h3 id="k-sess" class="ds-kpi-value text-4xl md:text-5xl text-glow">0</h3>
                 </div>
                 <div class="flex-1 p-8 md:p-10 flex flex-col justify-start relative z-10">
-                    <p class="text-[8px] font-black uppercase tracking-[0.3em] text-adaptive-muted mb-4">Pontos de Venda (Lojas)</p>
-                    <h3 id="k-sto" class="text-4xl md:text-5xl font-bold font-numbers text-adaptive leading-tight">0</h3>
+                    <p class="ds-kpi-label mb-4">Pontos de Venda (Lojas)</p>
+                    <h3 id="k-sto" class="ds-kpi-value text-4xl md:text-5xl leading-tight">0</h3>
                 </div>
                 <div class="flex-1 p-8 md:p-10 flex flex-col justify-start relative z-10 group cursor-help">
-                    <p class="text-[8px] font-black uppercase tracking-[0.3em] text-adaptive-muted mb-4 flex items-center gap-1.5">
+                    <p class="ds-kpi-label mb-4 flex items-center gap-1.5">
                         Aparelhos Demonstrados
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3 h-3 opacity-50 group-hover:opacity-100 transition-opacity"><path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" /></svg>
                     </p>
-                    <h3 id="k-dev" class="text-4xl md:text-5xl font-bold font-numbers text-adaptive">0</h3>
+                    <h3 id="k-dev" class="ds-kpi-value text-4xl md:text-5xl">0</h3>
                     <div id="k-dev-tooltip" class="hidden group-hover:block absolute top-full left-1/2 -translate-x-1/2 mt-4 w-max min-w-[200px] max-w-sm bg-[rgba(18,19,23,0.95)] backdrop-blur-xl text-white text-[10px] p-5 rounded-2xl shadow-2xl z-50 border border-white/10 whitespace-nowrap font-medium"></div>
                 </div>
                 <div class="flex-1 p-8 md:p-10 flex flex-col justify-start relative neon-accent z-10 overflow-hidden rounded-r-[2.5rem]">
                     <div class="absolute right-0 top-0 opacity-[0.02] text-9xl font-black -mt-6 -mr-4 pointer-events-none">📊</div>
-                    <p class="text-[8px] font-black uppercase tracking-[0.3em] text-[#685BC7] mb-4 relative z-10">Média por Ponto de Venda</p>
-                    <h3 id="k-avg" class="text-4xl md:text-5xl font-bold font-numbers text-adaptive text-glow-accent relative z-10">0</h3>
+                    <p class="ds-kpi-label mb-4 relative z-10 text-[#685BC7]">Média por Ponto de Venda</p>
+                    <h3 id="k-avg" class="ds-kpi-value text-4xl md:text-5xl text-glow-accent relative z-10">0</h3>
                     <div class="absolute bottom-0 left-0 w-full h-1.5 bg-gradient-to-r from-transparent via-[#685BC7] to-transparent opacity-50"></div>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mb-6 md:mb-8">
-                <div class="glass-panel p-8 md:p-10 rounded-[2.5rem]">
-                    <h4 class="text-[10px] font-black text-adaptive-muted mb-8 uppercase tracking-[0.4em]">01 Volume de Interações por Dia</h4>
+                <div class="glass-panel p-8 md:p-10 rounded-[2.5rem] relative z-10">
+                    <h4 class="ds-chart-title mb-8">01 Volume de Interações por Dia</h4>
                     <div class="chart-container" style="height: 250px;"><canvas id="c-timeline"></canvas></div>
                 </div>
-                <div class="glass-panel p-8 md:p-10 rounded-[2.5rem]">
-                    <h4 class="text-[10px] font-black text-adaptive-muted mb-8 uppercase tracking-[0.4em]">02 Engajamento por Loja Física</h4>
+                <div class="glass-panel p-8 md:p-10 rounded-[2.5rem] relative z-10">
+                    <h4 class="ds-chart-title mb-8">02 Engajamento por Loja Física</h4>
                     <div class="chart-container" style="height: 250px;"><canvas id="c-store"></canvas></div>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mb-6 md:mb-8">
-                <div class="glass-panel p-8 md:p-10 rounded-[2.5rem]">
-                    <h4 class="text-[10px] font-black text-adaptive-muted mb-8 uppercase tracking-[0.4em]">03 Frequência de Uso por Hora</h4>
+                <div class="glass-panel p-8 md:p-10 rounded-[2.5rem] relative z-10">
+                    <h4 class="ds-chart-title mb-8">03 Frequência de Uso por Hora</h4>
                     <div class="chart-container" style="height: 250px;"><canvas id="c-time"></canvas></div>
                 </div>
-                <div class="glass-panel p-8 md:p-10 rounded-[2.5rem]">
-                    <h4 class="text-[10px] font-black text-adaptive-muted mb-8 uppercase tracking-[0.4em]">04 Comparativo de Tipo de Local</h4>
+                <div class="glass-panel p-8 md:p-10 rounded-[2.5rem] relative z-10">
+                    <h4 class="ds-chart-title mb-8">04 Comparativo de Tipo de Local</h4>
                     <div class="chart-container" style="height: 250px;"><canvas id="c-shop"></canvas></div>
                 </div>
             </div>
 
-            <div class="glass-panel p-8 md:p-10 rounded-[2.5rem] pb-10 md:pb-12">
-                <h4 class="text-[10px] font-black text-adaptive-muted mb-8 uppercase tracking-[0.4em]">05 Distribuição Total por Modelo de Aparelho</h4>
+            <div class="glass-panel p-8 md:p-10 rounded-[2.5rem] pb-10 md:pb-12 relative z-10">
+                <h4 class="ds-chart-title mb-8">05 Distribuição Total por Modelo de Aparelho</h4>
                 <div class="chart-container" style="height: 800px;"><canvas id="c-dev"></canvas></div>
             </div>
         </div>
@@ -142,7 +113,6 @@ export const destroyOverviewCharts = () => {
 export const renderOverviewCharts = (filteredData) => {
     destroyOverviewCharts();
 
-    // Lógica para esconder o welcome automaticamente
     const welcome = document.getElementById('welcome-container');
     if (welcome) {
         sessionStorage.setItem('ps_welcome_shown', 'true');
@@ -184,7 +154,7 @@ export const renderOverviewCharts = (filteredData) => {
     });
     
     const sortedDevList = Object.entries(devSetMap).map(([k, set]) => [k, set.size]).sort((a, b) => b[1] - a[1]);
-    document.getElementById('k-dev-tooltip').innerHTML = '<p class="font-bold text-[#685BC7] mb-3 uppercase tracking-[0.2em] border-b border-white/10 pb-3 text-[9px]">Modelos Operantes na Rede</p>' + 
+    document.getElementById('k-dev-tooltip').innerHTML = '<p class="ds-sidebar-title text-[#685BC7] mb-3 border-b border-white/10 pb-3">Modelos Operantes na Rede</p>' + 
         (sortedDevList.length > 0 
             ? sortedDevList.map(v => `<div class="mt-2.5 flex items-center justify-between gap-6"><span class="opacity-90 font-montserrat">${v[0]}</span> <span class="font-black font-numbers text-[#8b5cf6] bg-[#8b5cf6]/10 px-2 py-0.5 rounded-md border border-[#8b5cf6]/20">${v[1]}</span></div>`).join('') 
             : '<div class="opacity-50 mt-2">Nenhum modelo detectado</div>');
@@ -238,7 +208,7 @@ function aggregateWithStores(data, key, isT = false, isR = false) {
     return { labels: entries.map(e => e[0]), values: entries.map(e => e[1].total), tooltipData: entries.reduce((acc, e) => { acc[e[0]] = e[1].stores; return acc; }, {}) };
 }
 
-// Plugin Crosshair para gráficos de linha
+// Plugin Crosshair
 const crosshairPlugin = {
     id: 'crosshair',
     afterDraw: chart => {
@@ -268,6 +238,7 @@ function drawChart(id, type, data, isArea = false, isH = false) {
     const ctx = document.getElementById(id).getContext('2d');
     const isDark = document.body.classList.contains('dark');
     
+    // Cores Adaptativas
     const labelColor = isDark ? '#FFFFFF' : '#131417';
     const gridColor = isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.03)';
     const tickColor = isDark ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.4)';
@@ -306,7 +277,8 @@ function drawChart(id, type, data, isArea = false, isH = false) {
         borderColor: tooltipBorder,
         borderWidth: 1,
         padding: 12,
-        cornerRadius: 12
+        cornerRadius: 12,
+        animation: false // Remove animação de entrada/saída da tooltip para zero lag
     };
 
     if (id === 'c-store' && data.tooltipData) {
@@ -353,7 +325,19 @@ function drawChart(id, type, data, isArea = false, isH = false) {
             indexAxis: isH ? 'y' : 'x', 
             responsive: true, 
             maintainAspectRatio: false,
-            interaction: { mode: 'index', intersect: false },
+            
+            // --- OTIMIZAÇÃO DE PERFORMANCE (Foco no Gráfico 05) ---
+            interaction: { 
+                mode: isH ? 'nearest' : 'index', // Nearest é ultra-rápido para gráficos com dezenas de barras horizontais
+                intersect: isH ? true : false,   // Exige colisão exata com o mouse no horizontal
+                axis: isH ? 'y' : 'x'
+            },
+            events: ['mousemove', 'mouseout', 'click', 'touchstart', 'touchmove'], // Reduz listeners inúteis
+            transitions: {
+                active: { animation: { duration: 0 } } // Mata o lag visual de redraw no hover
+            },
+            // ------------------------------------------------------
+
             layout: {
                 padding: {
                     top: !isH ? 30 : 0, 
