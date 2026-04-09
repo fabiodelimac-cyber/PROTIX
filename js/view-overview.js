@@ -1,9 +1,11 @@
 // js/view-overview.js
+import { appData } from './services/dataManager.js';
 
 Chart.register(ChartDataLabels);
 
 let chartInstances = {};
 let insightTimeout = null;
+let unsubscribeData = null; // Variável para controlar a inscrição no DataManager
 
 export const getOverviewHTML = () => {
     const showWelcome = !sessionStorage.getItem('ps_welcome_shown');
@@ -130,11 +132,16 @@ export const destroyOverviewCharts = () => {
     });
     chartInstances = {};
     if (insightTimeout) clearInterval(insightTimeout);
+
+    // MATA A INSCRIÇÃO AO SAIR DA TELA
+    if (unsubscribeData) {
+        unsubscribeData();
+        unsubscribeData = null;
+    }
 };
 
-export const renderOverviewCharts = (filteredData) => {
-    destroyOverviewCharts();
-
+export const renderOverviewCharts = () => {
+    // 1. Lida com a animação de boas vindas
     const welcome = document.getElementById('welcome-container');
     if (welcome) {
         sessionStorage.setItem('ps_welcome_shown', 'true');
@@ -143,6 +150,24 @@ export const renderOverviewCharts = (filteredData) => {
             setTimeout(() => welcome.remove(), 500);
         }, 5000);
     }
+
+    // 2. Se inscreve no DataManager. Sempre que os filtros mudarem, essa função roda.
+    unsubscribeData = appData.subscribe((filteredData) => {
+        executeRenderLogic(filteredData);
+    });
+
+    // 3. Força a primeira execução para desenhar com os dados atuais ao abrir a tela
+    executeRenderLogic(appData.getFilteredData());
+};
+
+// Nova função interna que contém a antiga lógica do renderOverviewCharts
+function executeRenderLogic(filteredData) {
+    // Destrói os gráficos antigos antes de recriar (necessário para o update reativo funcionar sem sobrepor canvas)
+    Object.keys(chartInstances).forEach(id => {
+        if(chartInstances[id]) chartInstances[id].destroy();
+    });
+    chartInstances = {};
+    if (insightTimeout) clearInterval(insightTimeout);
 
     if(!filteredData || filteredData.length === 0) {
         document.getElementById('k-sess').innerText = '0';
@@ -190,8 +215,6 @@ export const renderOverviewCharts = (filteredData) => {
     el.innerHTML = ""; 
     let i = 0;
     
-    if (insightTimeout) clearInterval(insightTimeout);
-    
     insightTimeout = setInterval(() => { 
         if (i < textInsight.length) {
             el.innerHTML += textInsight.charAt(i); 
@@ -227,7 +250,7 @@ export const renderOverviewCharts = (filteredData) => {
     
     drawChart('c-shop', 'doughnut', { labels: ['Loja de Rua', 'Shopping'], values: [ruaTotal, shopTotal] });
     drawChart('c-linha', 'doughnut', { labels: sortedLinhas, values: sortedLinhas.map(l => linhaAgg[l]) });
-};
+}
 
 function aggregateWithStores(data, key, isT = false, isR = false) {
     const g = data.reduce((acc, o) => { 
@@ -392,7 +415,6 @@ function drawChart(id, type, data, isArea = false, isH = false) {
                 legend: { 
                     display: type === 'doughnut', 
                     position: 'bottom',
-                    // A cor da legenda agora usa o tickColor (o mesmo cinza dos eixos)
                     labels: { color: tickColor, font: { family: 'Archivo', size: 10, weight: 700 }, usePointStyle: true, boxWidth: 6, padding: 15 }
                 }, 
                 tooltip: tooltipConfig,

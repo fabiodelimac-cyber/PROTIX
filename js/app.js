@@ -1,5 +1,9 @@
+// js/app.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+
+// Importando o "Cérebro"
+import { appData } from './services/dataManager.js';
 
 // Importando os Módulos das Páginas
 import { getOverviewHTML, renderOverviewCharts, destroyOverviewCharts } from "./view-overview.js";
@@ -22,41 +26,10 @@ const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
 getRedirectResult(auth).catch(error => console.error("Erro no retorno do redirect:", error));
 
-// --- VARIÁVEIS GLOBAIS DE ESTADO ---
+// --- VARIÁVEIS GLOBAIS DE ESTADO (Apenas UI e Rotas) ---
 const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTKgLMbTRcpWPS4Pzd6lSW1f8TaxWL2K89ZYTe29LQcdHKB3LbvBgemmp2IdLONNu5gyS4f81TZ9SZJ/pub?output=csv';
-let raw = [], filteredData = [];
 let isDataLoaded = false;
 let currentRoute = 'view-overview';
-
-// Controle Exclusivo do Slicer de Data (Árvore de Hierarquia)
-let selectedDates = new Set();
-let allDatesArray = [];
-const monthNames = { '01':'Janeiro', '02':'Fevereiro', '03':'Março', '04':'Abril', '05':'Maio', '06':'Junho', '07':'Julho', '08':'Agosto', '09':'Setembro', '10':'Outubro', '11':'Novembro', '12':'Dezembro' };
-
-// Mapeamento dos OUTROS filtros
-const filterKeys = {
-    'f-shop': 'shopping', 'f-rede': 'rede', 'f-store': 'store name', 
-    'f-linha': 'linha de produto', 'f-reg': 'regional', 'f-8020': 'p8020', 'f-vis': 'visibilidade'
-};
-
-// Formatação para nível de data final
-function formatFilterDate(dateStr) {
-    if (!dateStr || typeof dateStr !== 'string') return dateStr;
-    const parts = dateStr.split('-');
-    if (parts.length !== 3) return dateStr;
-    const d = new Date(parts[0], parts[1] - 1, parts[2]);
-    const dias = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB'];
-    const diaNome = dias[d.getDay()];
-    const target = new Date(d.valueOf());
-    const dayNr = (d.getDay() + 6) % 7;
-    target.setDate(target.getDate() - dayNr + 3);
-    const firstThursday = target.valueOf();
-    target.setMonth(0, 1);
-    if (target.getDay() !== 4) target.setMonth(0, 1 + ((4 - target.getDay()) + 7) % 7);
-    const weekNum = 1 + Math.ceil((firstThursday - target) / 604800000);
-    const padWeek = weekNum.toString().padStart(2, '0');
-    return `W${padWeek} - ${diaNome} ${parts[2]}/${parts[1]}`;
-}
 
 // --- AUTENTICAÇÃO E INICIALIZAÇÃO ---
 onAuthStateChanged(auth, (user) => {
@@ -114,12 +87,14 @@ const appContent = document.getElementById('app-content');
 const navItems = document.querySelectorAll('.nav-item');
 
 function renderActiveView() {
+    // As views agora não recebem os dados por argumento, 
+    // elas consultam o appData internamente.
     if(currentRoute === 'view-overview') {
-        renderOverviewCharts(filteredData);
+        renderOverviewCharts(); 
     } else if (currentRoute === 'view-positivacao') {
-        renderPositivacao(filteredData);
+        renderPositivacao();
     } else if (currentRoute === 'view-heat-produtos') {
-        renderHeatProdutos(filteredData);
+        renderHeatProdutos();
     }
 }
 
@@ -136,8 +111,9 @@ navItems.forEach(btn => {
         appContent.classList.add('view-hidden');
 
         setTimeout(() => {
-            destroyOverviewCharts(); 
-            destroyHeatProdutosCharts();
+            // Limpa gráficos anteriores
+            try { destroyOverviewCharts(); } catch(e){}
+            try { destroyHeatProdutosCharts(); } catch(e){}
             
             if(target === 'view-overview') {
                 appContent.innerHTML = getOverviewHTML();
@@ -175,7 +151,7 @@ document.getElementById('btn-toggle-filters').addEventListener('click', () => {
     filterDrawer.classList.toggle('hidden');
 });
 
-// --- DADOS, HIERARQUIA DE DATA E FILTROS ---
+// --- CARGA DE DADOS INICIAL ---
 async function initData() {
     isDataLoaded = true;
     
@@ -186,206 +162,86 @@ async function initData() {
         download: true, header: true, skipEmptyLines: true, 
         transformHeader: h => h.trim().toLowerCase().replace('80/20', 'p8020').replace('date/time', 'datetime'),
         complete: res => { 
-            raw = res.data; 
-            raw.forEach(row => { if(row.datetime) row.pure_date = row.datetime.split(' ')[0]; });
+            let rawData = res.data; 
+            rawData.forEach(row => { if(row.datetime) row.pure_date = row.datetime.split(' ')[0]; });
             
-            initDateSlicer(); 
-            buildFilters();   
-            applyFilters();   
+            // Envia tudo para o DataManager (Ele cuida do resto)
+            appData.setRawData(rawData);
+            
+            // Configura os ouvintes dos selects
+            setupGlobalFilters();
+            
+            // Renderiza a tela inicial
+            renderActiveView();
         } 
     });
 }
 
-function initDateSlicer() {
-    allDatesArray = [...new Set(raw.map(d => d.pure_date))].filter(x => x).sort((a,b) => b.localeCompare(a));
-    selectedDates = new Set(allDatesArray);
+// --- CONEXÃO DOS FILTROS DA UI COM O DATAMANAGER ---
+const filterKeys = {
+    'f-shop': 'shopping', 'f-rede': 'rede', 'f-store': 'store name', 
+    'f-linha': 'linha de produto', 'f-reg': 'regional', 'f-8020': 'p8020', 'f-vis': 'visibilidade'
+};
 
-    const hier = {};
-    allDatesArray.forEach(d => {
-        const [y, m, day] = d.split('-');
-        if(!hier[y]) hier[y] = {};
-        if(!hier[y][m]) hier[y][m] = [];
-        hier[y][m].push(d);
-    });
-
-    let html = `<div class="space-y-1 pb-2">
-        <div class="flex items-center gap-2 mb-2 pb-3 border-b border-gray-200 dark:border-white/10 hover:bg-gray-500/5 p-1 rounded transition-colors">
-            <input type="checkbox" id="chk-all-dates" checked class="w-4 h-4 accent-[#685BC7] cursor-pointer shrink-0 ml-1"> 
-            <label for="chk-all-dates" class="ds-helper-text font-black cursor-pointer text-adaptive w-full">Selecionar Todos</label>
-        </div>`;
-
-    Object.keys(hier).sort((a,b) => b-a).forEach((y, yIndex) => {
-        const isYExpanded = yIndex === 0; 
-        const yIconClass = isYExpanded ? "rotate-90" : "";
-        const yContentClass = isYExpanded ? "" : "hidden";
-
-        html += `<div class="tree-group">
-            <div class="flex items-center gap-1.5 mb-1 hover:bg-gray-500/10 p-1 rounded transition-colors">
-                <button class="toggle-btn w-5 h-5 flex items-center justify-center text-gray-400 hover:text-[#685BC7] transition-transform duration-200 ${yIconClass}" data-target="content-${y}">
-                    <svg class="w-3 h-3 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
-                </button>
-                <input type="checkbox" data-type="year" data-val="${y}" checked class="w-3.5 h-3.5 accent-[#685BC7] cursor-pointer chk-node shrink-0"> 
-                <span class="ds-filter-input text-adaptive cursor-pointer select-none expand-label w-full" data-target="content-${y}">${y}</span>
-            </div>
-            <div id="content-${y}" class="pl-4 ml-2.5 border-l border-gray-200 dark:border-white/10 space-y-1 mb-2 ${yContentClass}">`;
-        
-        Object.keys(hier[y]).sort((a,b) => b-a).forEach((m, mIndex) => {
-            const isMExpanded = yIndex === 0 && mIndex === 0; 
-            const mIconClass = isMExpanded ? "rotate-90" : "";
-            const mContentClass = isMExpanded ? "" : "hidden";
-
-            html += `<div class="tree-group">
-                <div class="flex items-center gap-1.5 mb-0.5 hover:bg-gray-500/10 p-1 rounded transition-colors">
-                    <button class="toggle-btn w-4 h-4 flex items-center justify-center text-gray-500 hover:text-[#685BC7] transition-transform duration-200 ${mIconClass}" data-target="content-${y}-${m}">
-                        <svg class="w-2.5 h-2.5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
-                    </button>
-                    <input type="checkbox" data-type="month" data-val="${y}-${m}" data-parent="${y}" checked class="w-3 h-3 accent-[#685BC7] cursor-pointer chk-node shrink-0"> 
-                    <span class="ds-helper-text font-bold text-adaptive-muted cursor-pointer select-none expand-label w-full" data-target="content-${y}-${m}">${monthNames[m]}</span>
-                </div>
-                <div id="content-${y}-${m}" class="pl-4 ml-2 border-l border-gray-200 dark:border-white/10 space-y-0.5 mt-1 mb-2 ${mContentClass}">`;
-            
-            hier[y][m].forEach(d => {
-                html += `<div class="flex items-center gap-2 py-1 hover:bg-gray-500/10 px-1 rounded transition-colors group">
-                    <input type="checkbox" data-type="date" data-val="${d}" data-parent="${y}-${m}" data-grandparent="${y}" checked class="w-3 h-3 accent-[#685BC7] cursor-pointer chk-node chk-date shrink-0 ml-4"> 
-                    <label class="ds-filter-label text-adaptive-strong whitespace-nowrap cursor-pointer select-none w-full group-hover:text-[#685BC7] transition-colors" onclick="this.previousElementSibling.click()">${formatFilterDate(d)}</label>
-                </div>`;
+function setupGlobalFilters() {
+    // 1. Ouve as ações do usuário e envia para o Cérebro
+    Object.keys(filterKeys).forEach(id => {
+        const selectElement = document.getElementById(id);
+        if (selectElement) {
+            selectElement.addEventListener('change', (e) => {
+                appData.setFilter(filterKeys[id], e.target.value);
             });
-            html += `</div></div>`;
-        });
-        html += `</div></div>`;
-    });
-    html += '</div>';
-
-    document.getElementById('date-slicer-panel').innerHTML = html;
-
-    const btn = document.getElementById('btn-date-slicer');
-    const panel = document.getElementById('date-slicer-panel');
-    btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        panel.classList.toggle('hidden');
-    });
-    document.addEventListener('click', (e) => {
-        if(!panel.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
-            panel.classList.add('hidden');
         }
     });
-    panel.addEventListener('click', e => e.stopPropagation());
 
-    document.querySelectorAll('.toggle-btn, .expand-label').forEach(elem => {
-        elem.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const targetId = elem.getAttribute('data-target');
-            const contentDiv = document.getElementById(targetId);
-            const toggleBtn = elem.classList.contains('toggle-btn') ? elem : elem.parentElement.querySelector('.toggle-btn');
-            
-            if (contentDiv.classList.contains('hidden')) {
-                contentDiv.classList.remove('hidden');
-                toggleBtn.classList.add('rotate-90');
-            } else {
-                contentDiv.classList.add('hidden');
-                toggleBtn.classList.remove('rotate-90');
-            }
-        });
+    // 2. A MÁGICA: Ouve o Cérebro para atualizar as opções disponíveis (Cascata)
+    appData.subscribe(() => {
+        updateDropdownUI();
     });
 
-    const chkAll = document.getElementById('chk-all-dates');
-    const chkNodes = document.querySelectorAll('.chk-node');
+    // 3. Popula os selects na carga inicial
+    updateDropdownUI();
+}
 
-    chkAll.addEventListener('change', (e) => {
-        chkNodes.forEach(c => c.checked = e.target.checked);
-        syncDates();
-    });
+function updateDropdownUI() {
+    const raw = appData.rawData;
+    const currentFilters = appData.currentFilters;
 
-    chkNodes.forEach(chk => {
-        chk.addEventListener('change', (e) => {
-            const t = e.target;
-            const type = t.dataset.type;
-            const val = t.dataset.val;
-            
-            if (type === 'year') {
-                document.querySelectorAll(`.chk-node[data-parent="${val}"], .chk-node[data-grandparent="${val}"]`).forEach(c => c.checked = t.checked);
-            } else if (type === 'month') {
-                document.querySelectorAll(`.chk-node[data-parent="${val}"]`).forEach(c => c.checked = t.checked);
-            }
+    Object.keys(filterKeys).forEach(id => {
+        const key = filterKeys[id];
+        const selectElement = document.getElementById(id);
+        if (!selectElement) return;
 
-            if (!t.checked) {
-                chkAll.checked = false;
-                if(type === 'date' || type === 'month') {
-                    const mParent = document.querySelector(`.chk-node[data-type="month"][data-val="${t.dataset.parent}"]`);
-                    if(mParent) mParent.checked = false;
-                    const gpVal = t.dataset.grandparent || t.dataset.parent; 
-                    const yParent = document.querySelector(`.chk-node[data-type="year"][data-val="${gpVal}"]`);
-                    if(yParent) yParent.checked = false;
+        // Guarda o valor que o usuário tinha selecionado
+        const currentVal = currentFilters[key] || "";
+
+        // Pega as opções válidas ignorando o próprio filtro atual 
+        // (Para o select não esvaziar suas próprias opções após o clique)
+        let dataForThisFilter = raw.filter(item => {
+            let matches = true;
+            for (const fKey in currentFilters) {
+                if (fKey === key) continue; // Pula o próprio filtro
+                if (item[fKey] && item[fKey] !== currentFilters[fKey]) {
+                    matches = false;
+                    break;
                 }
             }
-            syncDates();
+            return matches;
         });
+
+        const availableVals = [...new Set(dataForThisFilter.map(d => d[key]))]
+                                .filter(x => x && x.toString().trim() !== '' && x !== 'N/A')
+                                .sort();
+
+        selectElement.innerHTML = `<option value="">TODOS</option>`;
+        availableVals.forEach(v => selectElement.add(new Option(v.toUpperCase(), v)));
+
+        // Devolve a seleção se ela ainda for válida no novo contexto
+        if (currentVal && availableVals.includes(currentVal)) {
+            selectElement.value = currentVal;
+        }
     });
 }
-
-function syncDates() {
-    selectedDates.clear();
-    document.querySelectorAll('.chk-date:checked').forEach(c => selectedDates.add(c.dataset.val));
-    
-    const lbl = document.getElementById('date-slicer-label');
-    if (selectedDates.size === allDatesArray.length) {
-        lbl.innerText = 'TODAS';
-    } else if (selectedDates.size === 0) {
-        lbl.innerText = 'NENHUMA';
-    } else if (selectedDates.size === 1) {
-        const d = Array.from(selectedDates)[0].split('-');
-        lbl.innerText = `${d[2]}/${d[1]}/${d[0]}`;
-    } else {
-        lbl.innerText = `${selectedDates.size} DIAS SEL.`;
-    }
-
-    applyFilters();
-}
-
-function buildFilters() {
-    const currentSelections = {};
-    for (let id in filterKeys) currentSelections[id] = document.getElementById(id).value;
-    
-    for (let id in filterKeys) {
-        const key = filterKeys[id]; const sel = document.getElementById(id);
-        
-        let dataForThisFilter = raw.filter(d => {
-            if(!selectedDates.has(d.pure_date)) return false;
-
-            return Object.keys(filterKeys).every(otherId => {
-                if (otherId === id) return true;
-                const selectedVal = currentSelections[otherId]; 
-                return !selectedVal || d[filterKeys[otherId]] == selectedVal;
-            });
-        });
-        
-        const availableVals = [...new Set(dataForThisFilter.map(d => d[key] || 'N/A'))].filter(x => x !== 'N/A').sort();
-        
-        sel.innerHTML = `<option value="">TODOS</option>`;
-        availableVals.forEach(v => sel.add(new Option(v.toUpperCase(), v)));
-        
-        if (availableVals.includes(currentSelections[id])) sel.value = currentSelections[id];
-    }
-}
-
-function applyFilters() {
-    buildFilters();
-    
-    filteredData = raw.filter(d => {
-        if (!selectedDates.has(d.pure_date)) return false;
-
-        return Object.keys(filterKeys).every(id => {
-            const selectValue = document.getElementById(id).value; 
-            return !selectValue || d[filterKeys[id]] == selectValue;
-        });
-    });
-
-    renderActiveView(); 
-}
-
-document.querySelectorAll('#filter-drawer select').forEach(sel => {
-    sel.addEventListener('change', applyFilters);
-});
 
 // --- CONTROLE DE TEMA ---
 document.querySelectorAll('.btn-theme-toggle').forEach(btn => {
@@ -398,13 +254,14 @@ document.querySelectorAll('.btn-theme-toggle').forEach(btn => {
         const icon = isDark ? '☀️' : '🌙';
         document.querySelectorAll('.btn-theme-toggle').forEach(b => b.innerHTML = icon);
         
-        if(filteredData.length > 0) {
+        // Se já tiver dados carregados, manda a view se redesenhar com o novo tema
+        if(appData.getFilteredData().length > 0) {
             appContent.classList.remove('view-visible');
             appContent.classList.add('view-hidden');
             
             setTimeout(() => {
-                destroyOverviewCharts();
-                destroyHeatProdutosCharts();
+                try { destroyOverviewCharts(); } catch(e){}
+                try { destroyHeatProdutosCharts(); } catch(e){}
                 
                 if (currentRoute === 'view-overview') {
                     appContent.innerHTML = getOverviewHTML();

@@ -1,10 +1,11 @@
 // js/view-heat-produtos.js
+import { appData } from './services/dataManager.js';
 
 Chart.register(ChartDataLabels);
 
 let chartInstances = {};
 let currentProduct = 'ALL'; 
-let latestFilteredData = []; 
+let unsubscribeData = null; // Controle da inscrição
 
 export const getHeatProdutosHTML = () => {
     return `
@@ -91,7 +92,7 @@ export const getHeatProdutosHTML = () => {
                         </button>
                     </div>
                     <div id="hp-drill-list" class="flex-1 overflow-y-auto custom-scrollbar pr-4 space-y-2">
-                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -120,32 +121,32 @@ export const getHeatProdutosHTML = () => {
     `;
 };
 
-export const destroyHeatProdutosCharts = () => {
+// Separa a limpeza de gráficos da limpeza de memória
+function clearLocalCharts() {
     Object.keys(chartInstances).forEach(id => { if(chartInstances[id]) chartInstances[id].destroy(); });
     chartInstances = {};
-    
     const tooltip = document.getElementById('hp-global-tooltip');
     if (tooltip) tooltip.remove();
+}
+
+export const destroyHeatProdutosCharts = () => {
+    clearLocalCharts();
+    
+    // Mata a inscrição ao sair da tela
+    if (unsubscribeData) {
+        unsubscribeData();
+        unsubscribeData = null;
+    }
 };
 
-export const renderHeatProdutos = (filteredData) => {
-    if(!filteredData || filteredData.length === 0) return;
-    latestFilteredData = filteredData; 
-    
+export const renderHeatProdutos = () => {
+    // 1. Configura Listeners Locais (Dropdown do Heatmap e Botão Voltar)
     const select = document.getElementById('hp-master-select');
-    const products = [...new Set(filteredData.map(d => d.aparelho))].filter(x => x).sort();
-    
-    if(!currentProduct || (currentProduct !== 'ALL' && !products.includes(currentProduct))) currentProduct = 'ALL';
-
-    select.innerHTML = '';
-    select.add(new Option('VISÃO MACRO (TODOS)', 'ALL')); 
-    products.forEach(p => select.add(new Option(p, p)));
-    select.value = currentProduct;
-    
-    if (!select.dataset.listenerAttached) {
+    if (select && !select.dataset.listenerAttached) {
         select.addEventListener('change', (e) => {
             currentProduct = e.target.value;
-            processHeatmapData(latestFilteredData);
+            // Pede para reprocessar usando a foto atual do estado global
+            processHeatmapData(appData.getFilteredData());
         });
         select.dataset.listenerAttached = "true";
     }
@@ -156,17 +157,53 @@ export const renderHeatProdutos = (filteredData) => {
         btnVoltar.dataset.listenerAttached = "true";
     }
 
-    processHeatmapData(latestFilteredData);
+    // 2. Limpa inscrições passadas
+    if (unsubscribeData) {
+        unsubscribeData();
+    }
+
+    // 3. Assina as mudanças globais
+    unsubscribeData = appData.subscribe((filteredData) => {
+        executeRenderLogic(filteredData);
+    });
+
+    // 4. Força a primeira execução
+    executeRenderLogic(appData.getFilteredData());
 };
+
+function executeRenderLogic(filteredData) {
+    if(!filteredData || filteredData.length === 0) {
+        // Fallback visual rápido caso não haja dados
+        document.getElementById('hp-k-vol').innerText = '0';
+        document.getElementById('hp-k-peak').innerText = '-';
+        document.getElementById('hp-k-top').innerText = '-';
+        clearLocalCharts();
+        return;
+    }
+
+    const select = document.getElementById('hp-master-select');
+    const products = [...new Set(filteredData.map(d => d.aparelho))].filter(x => x).sort();
+    
+    if(!currentProduct || (currentProduct !== 'ALL' && !products.includes(currentProduct))) currentProduct = 'ALL';
+
+    if (select) {
+        select.innerHTML = '';
+        select.add(new Option('VISÃO MACRO (TODOS)', 'ALL')); 
+        products.forEach(p => select.add(new Option(p, p)));
+        select.value = currentProduct;
+    }
+
+    processHeatmapData(filteredData);
+}
 
 function processHeatmapData(globalData) {
     if(!currentProduct) return;
     const container = document.getElementById('html-heatmap-container');
-    container.classList.add('data-loading');
+    if(container) container.classList.add('data-loading');
     closeDrilldown(); 
 
     setTimeout(() => {
-        destroyHeatProdutosCharts(); 
+        clearLocalCharts(); 
         const parseN = v => parseFloat((v || "0").toString().replace(/\./g, '').replace(',', '.')) || 0;
         
         const prodData = currentProduct === 'ALL' 
@@ -176,7 +213,8 @@ function processHeatmapData(globalData) {
         const categoryData = globalData.filter(d => d.aparelho && d.aparelho !== currentProduct);
 
         const totalProd = prodData.reduce((a, b) => a + parseN(b.sessions), 0);
-        document.getElementById('hp-k-vol').innerText = Math.round(totalProd).toLocaleString('pt-BR');
+        const elVol = document.getElementById('hp-k-vol');
+        if(elVol) elVol.innerText = Math.round(totalProd).toLocaleString('pt-BR');
 
         const heatMapData = {}; 
         const catDataMap = {}; 
@@ -248,10 +286,13 @@ function processHeatmapData(globalData) {
         let maxSess = 0, peakText = '-';
         for(let d in heatMapData) for(let h in heatMapData[d]) if(heatMapData[d][h] > maxSess) { maxSess = heatMapData[d][h]; peakText = `${d}, ${h}h`; }
         
-        document.getElementById('hp-k-peak').innerText = maxSess > 0 ? peakText : '-';
-        document.getElementById('hp-k-top').innerText = Object.entries(storeAgg).sort((a,b) => b[1]-a[1])[0]?.[0] || '-';
+        const elPeak = document.getElementById('hp-k-peak');
+        if(elPeak) elPeak.innerText = maxSess > 0 ? peakText : '-';
+        
+        const elTop = document.getElementById('hp-k-top');
+        if(elTop) elTop.innerText = Object.entries(storeAgg).sort((a,b) => b[1]-a[1])[0]?.[0] || '-';
 
-        renderStaticHeatmap(container, heatMapData, catDataMap, drillDataMap, diasSemana, horasComerciais, maxSess);
+        if(container) renderStaticHeatmap(container, heatMapData, catDataMap, drillDataMap, diasSemana, horasComerciais, maxSess);
 
         const labelsHoras = horasComerciais.map(h => `${h}h`);
         
@@ -269,7 +310,7 @@ function processHeatmapData(globalData) {
         const labelsSemana = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
         drawChart('hp-c-trend', 'bar', { labels: labelsSemana, values: labelsSemana.map(d => diaSemanaAgg[d]) }, false, true);
 
-        container.classList.remove('data-loading');
+        if(container) container.classList.remove('data-loading');
     }, 400); 
 }
 
@@ -417,7 +458,7 @@ function openDrilldown(day, hour, total, drillData) {
     const subtitle = document.getElementById('hp-drill-subtitle');
     const listContainer = document.getElementById('hp-drill-list');
 
-    subtitle.innerText = `${day} às ${hour}h • Total: ${total}`;
+    if(subtitle) subtitle.innerText = `${day} às ${hour}h • Total: ${total}`;
     
     const items = Object.entries(drillData).sort((a,b) => b[1] - a[1]);
     let html = '';
@@ -431,11 +472,13 @@ function openDrilldown(day, hour, total, drillData) {
         `;
     });
 
-    listContainer.innerHTML = html;
+    if(listContainer) listContainer.innerHTML = html;
 
-    container.classList.add('heatmap-blurred');
-    overlay.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-8');
-    overlay.classList.add('opacity-100', 'pointer-events-auto', 'translate-y-0');
+    if(container) container.classList.add('heatmap-blurred');
+    if(overlay) {
+        overlay.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-8');
+        overlay.classList.add('opacity-100', 'pointer-events-auto', 'translate-y-0');
+    }
 }
 
 function closeDrilldown() {
@@ -450,7 +493,9 @@ function closeDrilldown() {
 }
 
 function drawRadarChart(id, labels, prodData, catData) {
-    const ctx = document.getElementById(id).getContext('2d');
+    const ctxElement = document.getElementById(id);
+    if (!ctxElement) return;
+    const ctx = ctxElement.getContext('2d');
     const isDark = document.body.classList.contains('dark');
     
     const maxProd = Math.max(...prodData) || 1;
@@ -505,8 +550,11 @@ function drawRadarChart(id, labels, prodData, catData) {
 }
 
 function drawComparisonChart(id, labels, datasets) {
-    const ctx = document.getElementById(id).getContext('2d');
+    const ctxElement = document.getElementById(id);
+    if (!ctxElement) return;
+    const ctx = ctxElement.getContext('2d');
     const isDark = document.body.classList.contains('dark');
+    
     chartInstances[id] = new Chart(ctx, {
         type: 'line',
         data: {
@@ -532,8 +580,11 @@ function drawComparisonChart(id, labels, datasets) {
 }
 
 function drawChart(id, type, data, isArea = false, showPercentage = false) {
-    const ctx = document.getElementById(id).getContext('2d');
+    const ctxElement = document.getElementById(id);
+    if (!ctxElement) return;
+    const ctx = ctxElement.getContext('2d');
     const isDark = document.body.classList.contains('dark');
+    
     const totalData = showPercentage ? data.values.reduce((a, b) => a + b, 0) : 0;
     chartInstances[id] = new Chart(ctx, {
         type: type,
