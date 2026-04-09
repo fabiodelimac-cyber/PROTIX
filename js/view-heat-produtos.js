@@ -40,7 +40,7 @@ export const getHeatProdutosHTML = () => {
         <div id="view-heatmap-wrapper" class="pb-10">
             <div class="anim-cascade delay-1 glass-panel p-6 md:p-8 rounded-[2rem] mb-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden group">
                 <div class="relative z-10">
-                    <h2 class="ds-title">Heatmap de Produtos</h2>
+                    <h2 class="ds-title">Heatmap Operacional</h2>
                 </div>
                 <div class="w-full md:w-1/3 relative z-10">
                     <label class="ds-filter-label mb-2 block">Selecione o Modelo Alvo</label>
@@ -150,7 +150,6 @@ export const renderHeatProdutos = (filteredData) => {
         select.dataset.listenerAttached = "true";
     }
 
-    // Listener do Botão Voltar do Drilldown
     const btnVoltar = document.getElementById('btn-close-drilldown');
     if(btnVoltar && !btnVoltar.dataset.listenerAttached) {
         btnVoltar.addEventListener('click', closeDrilldown);
@@ -164,7 +163,7 @@ function processHeatmapData(globalData) {
     if(!currentProduct) return;
     const container = document.getElementById('html-heatmap-container');
     container.classList.add('data-loading');
-    closeDrilldown(); // Garante que recalcular os dados feche o overlay se estiver aberto
+    closeDrilldown(); 
 
     setTimeout(() => {
         destroyHeatProdutosCharts(); 
@@ -180,8 +179,8 @@ function processHeatmapData(globalData) {
         document.getElementById('hp-k-vol').innerText = Math.round(totalProd).toLocaleString('pt-BR');
 
         const heatMapData = {}; 
-        const catDataMap = {}; // Para o Tooltip (Linha de Produto)
-        const drillDataMap = {}; // Novo: Para o Drilldown (Aparelho específico)
+        const catDataMap = {}; 
+        const drillDataMap = {}; 
         const storeAgg = {}; 
         const canalAgg = {}; const semanaAgg = {};
         const diaSemanaAgg = { 'Seg': 0, 'Ter': 0, 'Qua': 0, 'Qui': 0, 'Sex': 0, 'Sáb': 0, 'Dom': 0 };
@@ -397,7 +396,6 @@ function renderStaticHeatmap(container, dataMap, catDataMap, drillDataMap, days,
             tooltip.style.display = 'none';
         });
 
-        // AÇÃO DO DRILL-DOWN
         cell.addEventListener('click', () => {
             if (total === 0) return;
             
@@ -419,7 +417,6 @@ function openDrilldown(day, hour, total, drillData) {
     const subtitle = document.getElementById('hp-drill-subtitle');
     const listContainer = document.getElementById('hp-drill-list');
 
-    // Popula Dados
     subtitle.innerText = `${day} às ${hour}h • Total: ${total}`;
     
     const items = Object.entries(drillData).sort((a,b) => b[1] - a[1]);
@@ -436,7 +433,6 @@ function openDrilldown(day, hour, total, drillData) {
 
     listContainer.innerHTML = html;
 
-    // Transição de Estado
     container.classList.add('heatmap-blurred');
     overlay.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-8');
     overlay.classList.add('opacity-100', 'pointer-events-auto', 'translate-y-0');
