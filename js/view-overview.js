@@ -133,7 +133,6 @@ export const destroyOverviewCharts = () => {
     chartInstances = {};
     if (insightTimeout) clearInterval(insightTimeout);
 
-    // MATA A INSCRIÇÃO AO SAIR DA TELA
     if (unsubscribeData) {
         unsubscribeData();
         unsubscribeData = null;
@@ -141,7 +140,6 @@ export const destroyOverviewCharts = () => {
 };
 
 export const renderOverviewCharts = () => {
-    // 1. Lida com a animação de boas vindas
     const welcome = document.getElementById('welcome-container');
     if (welcome) {
         sessionStorage.setItem('ps_welcome_shown', 'true');
@@ -151,18 +149,14 @@ export const renderOverviewCharts = () => {
         }, 5000);
     }
 
-    // 2. Se inscreve no DataManager. Sempre que os filtros mudarem, essa função roda.
     unsubscribeData = appData.subscribe((filteredData) => {
         executeRenderLogic(filteredData);
     });
 
-    // 3. Força a primeira execução para desenhar com os dados atuais ao abrir a tela
     executeRenderLogic(appData.getFilteredData());
 };
 
-// Nova função interna que contém a antiga lógica do renderOverviewCharts
 function executeRenderLogic(filteredData) {
-    // Destrói os gráficos antigos antes de recriar (necessário para o update reativo funcionar sem sobrepor canvas)
     Object.keys(chartInstances).forEach(id => {
         if(chartInstances[id]) chartInstances[id].destroy();
     });
@@ -178,12 +172,13 @@ function executeRenderLogic(filteredData) {
         return;
     }
     
-    const parseN = v => parseFloat((v || "0").toString().replace(/\./g, '').replace(',', '.')) || 0;
+    // Simplificado pois o DataManager já garante que é número
+    const parseN = v => Number(v) || 0;
     
     // KPIs
     const totalSess = filteredData.reduce((a, b) => a + parseN(b.sessions), 0);
-    const stores = [...new Set(filteredData.map(d => d['store name']))].filter(x => x).length;
-    const devices = [...new Set(filteredData.map(d => d['device code']))].filter(x => x).length;
+    const stores = [...new Set(filteredData.map(d => d.store_name))].filter(x => x).length;
+    const devices = [...new Set(filteredData.map(d => d.device_code))].filter(x => x).length;
     
     document.getElementById('k-sess').innerText = Math.round(totalSess).toLocaleString('pt-BR');
     document.getElementById('k-sto').innerText = stores;
@@ -193,10 +188,10 @@ function executeRenderLogic(filteredData) {
     // Tooltip do Aparelho
     const devSetMap = {};
     filteredData.forEach(d => {
-        if(d['aparelho'] && d['tipo'] && d['device code']) {
-            const k = `${d['aparelho']} - <span class="text-white/40 font-normal">${d['tipo']}</span>`;
+        if(d.aparelho && d.tipo && d.device_code) {
+            const k = `${d.aparelho} - <span class="text-white/40 font-normal">${d.tipo}</span>`;
             if(!devSetMap[k]) devSetMap[k] = new Set();
-            devSetMap[k].add(d['device code']);
+            devSetMap[k].add(d.device_code);
         }
     });
     
@@ -237,7 +232,7 @@ function executeRenderLogic(filteredData) {
         if (tipoOriginal === 'LOJA DE RUA') ruaTotal += sess;
         else shopTotal += sess;
         
-        const linha = (d['linha de produto'] || 'N/A').toUpperCase().trim();
+        const linha = (d.linha_de_produto || 'N/A').toUpperCase().trim();
         linhaAgg[linha] = (linhaAgg[linha] || 0) + sess;
     });
 
@@ -254,7 +249,10 @@ function executeRenderLogic(filteredData) {
 
 function aggregateWithStores(data, key, isT = false, isR = false) {
     const g = data.reduce((acc, o) => { 
-        const k = o[key] || 'N/A'; const sess = parseFloat((o.sessions || "0").toString().replace(/\./g, '').replace(',', '.')) || 0; const store = o['store name'] || 'N/A';
+        const k = o[key] || 'N/A'; 
+        // Como o DataManager já tratou, usamos o Number() direto:
+        const sess = Number(o.sessions) || 0; 
+        const store = o.store_name || 'N/A';
         if (!acc[k]) acc[k] = { total: 0, stores: {} };
         acc[k].total += sess; acc[k].stores[store] = (acc[k].stores[store] || 0) + sess; return acc; 
     }, {});

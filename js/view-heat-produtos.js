@@ -5,7 +5,8 @@ Chart.register(ChartDataLabels);
 
 let chartInstances = {};
 let currentProduct = 'ALL'; 
-let unsubscribeData = null; // Controle da inscrição
+let latestFilteredData = []; 
+let unsubscribeData = null; // Controle da inscrição no Cérebro
 
 export const getHeatProdutosHTML = () => {
     return `
@@ -92,7 +93,7 @@ export const getHeatProdutosHTML = () => {
                         </button>
                     </div>
                     <div id="hp-drill-list" class="flex-1 overflow-y-auto custom-scrollbar pr-4 space-y-2">
-                    </div>
+                        </div>
                 </div>
             </div>
 
@@ -121,18 +122,14 @@ export const getHeatProdutosHTML = () => {
     `;
 };
 
-// Separa a limpeza de gráficos da limpeza de memória
-function clearLocalCharts() {
+// Esta função agora é usada APENAS quando mudamos de aba no menu lateral
+export const destroyHeatProdutosCharts = () => {
     Object.keys(chartInstances).forEach(id => { if(chartInstances[id]) chartInstances[id].destroy(); });
     chartInstances = {};
+    
     const tooltip = document.getElementById('hp-global-tooltip');
     if (tooltip) tooltip.remove();
-}
 
-export const destroyHeatProdutosCharts = () => {
-    clearLocalCharts();
-    
-    // Mata a inscrição ao sair da tela
     if (unsubscribeData) {
         unsubscribeData();
         unsubscribeData = null;
@@ -140,71 +137,67 @@ export const destroyHeatProdutosCharts = () => {
 };
 
 export const renderHeatProdutos = () => {
-    // 1. Configura Listeners Locais (Dropdown do Heatmap e Botão Voltar)
     const select = document.getElementById('hp-master-select');
+    const btnVoltar = document.getElementById('btn-close-drilldown');
+
+    // 1. Configura os Listeners da UI apenas uma vez
     if (select && !select.dataset.listenerAttached) {
         select.addEventListener('change', (e) => {
             currentProduct = e.target.value;
-            // Pede para reprocessar usando a foto atual do estado global
-            processHeatmapData(appData.getFilteredData());
+            processHeatmapData(latestFilteredData);
         });
         select.dataset.listenerAttached = "true";
     }
 
-    const btnVoltar = document.getElementById('btn-close-drilldown');
     if(btnVoltar && !btnVoltar.dataset.listenerAttached) {
         btnVoltar.addEventListener('click', closeDrilldown);
         btnVoltar.dataset.listenerAttached = "true";
     }
 
-    // 2. Limpa inscrições passadas
-    if (unsubscribeData) {
-        unsubscribeData();
-    }
-
-    // 3. Assina as mudanças globais
+    // 2. Conecta ao Cérebro (DataManager) - Fica ouvindo ativamente
+    if (unsubscribeData) unsubscribeData();
     unsubscribeData = appData.subscribe((filteredData) => {
-        executeRenderLogic(filteredData);
+        updateSelectOptions(filteredData);
+        processHeatmapData(filteredData);
     });
 
-    // 4. Força a primeira execução
-    executeRenderLogic(appData.getFilteredData());
+    // 3. Primeira Carga
+    const initialData = appData.getFilteredData();
+    updateSelectOptions(initialData);
+    processHeatmapData(initialData);
 };
 
-function executeRenderLogic(filteredData) {
-    if(!filteredData || filteredData.length === 0) {
-        // Fallback visual rápido caso não haja dados
-        document.getElementById('hp-k-vol').innerText = '0';
-        document.getElementById('hp-k-peak').innerText = '-';
-        document.getElementById('hp-k-top').innerText = '-';
-        clearLocalCharts();
-        return;
-    }
-
+function updateSelectOptions(filteredData) {
+    if (!filteredData) return;
     const select = document.getElementById('hp-master-select');
+    if (!select) return;
+
     const products = [...new Set(filteredData.map(d => d.aparelho))].filter(x => x).sort();
     
     if(!currentProduct || (currentProduct !== 'ALL' && !products.includes(currentProduct))) currentProduct = 'ALL';
 
-    if (select) {
-        select.innerHTML = '';
-        select.add(new Option('VISÃO MACRO (TODOS)', 'ALL')); 
-        products.forEach(p => select.add(new Option(p, p)));
-        select.value = currentProduct;
-    }
-
-    processHeatmapData(filteredData);
+    select.innerHTML = '';
+    select.add(new Option('VISÃO MACRO (TODOS)', 'ALL')); 
+    products.forEach(p => select.add(new Option(p, p)));
+    select.value = currentProduct;
 }
 
 function processHeatmapData(globalData) {
-    if(!currentProduct) return;
+    if(!currentProduct || !globalData) return;
+    latestFilteredData = globalData;
+    
     const container = document.getElementById('html-heatmap-container');
-    if(container) container.classList.add('data-loading');
+    if(!container) return;
+
+    container.classList.add('data-loading');
     closeDrilldown(); 
 
     setTimeout(() => {
-        clearLocalCharts(); 
-        const parseN = v => parseFloat((v || "0").toString().replace(/\./g, '').replace(',', '.')) || 0;
+        // CORREÇÃO AQUI: Limpamos o Chart.js na marra, SEM chamar a função que mata o subscribe
+        Object.keys(chartInstances).forEach(id => { if(chartInstances[id]) chartInstances[id].destroy(); });
+        chartInstances = {};
+        
+        const parseN = v => Number(v) || 0;
         
         const prodData = currentProduct === 'ALL' 
             ? globalData.filter(d => d.aparelho && d.aparelho.trim() !== '') 
@@ -213,8 +206,7 @@ function processHeatmapData(globalData) {
         const categoryData = globalData.filter(d => d.aparelho && d.aparelho !== currentProduct);
 
         const totalProd = prodData.reduce((a, b) => a + parseN(b.sessions), 0);
-        const elVol = document.getElementById('hp-k-vol');
-        if(elVol) elVol.innerText = Math.round(totalProd).toLocaleString('pt-BR');
+        document.getElementById('hp-k-vol').innerText = Math.round(totalProd).toLocaleString('pt-BR');
 
         const heatMapData = {}; 
         const catDataMap = {}; 
@@ -247,10 +239,10 @@ function processHeatmapData(globalData) {
 
         prodData.forEach(d => {
             const sess = parseN(d.sessions);
-            const store = d['store name'] || 'N/A';
-            const cat = d['linha de produto'] || 'N/A';
+            const store = d.store_name || 'N/A'; 
+            const cat = d.linha_de_produto || 'N/A'; 
             const aparelho = d.aparelho || 'N/A';
-            const shopVal = (d['shopping'] || '').toString().trim().toUpperCase();
+            const shopVal = (d.shopping || '').toString().trim().toUpperCase(); 
             const isShopping = (shopVal === 'LOJA DE RUA') ? 'Rua' : 'Shopping';
             storeAgg[store] = (storeAgg[store] || 0) + sess;
 
@@ -286,13 +278,14 @@ function processHeatmapData(globalData) {
         let maxSess = 0, peakText = '-';
         for(let d in heatMapData) for(let h in heatMapData[d]) if(heatMapData[d][h] > maxSess) { maxSess = heatMapData[d][h]; peakText = `${d}, ${h}h`; }
         
-        const elPeak = document.getElementById('hp-k-peak');
-        if(elPeak) elPeak.innerText = maxSess > 0 ? peakText : '-';
-        
-        const elTop = document.getElementById('hp-k-top');
-        if(elTop) elTop.innerText = Object.entries(storeAgg).sort((a,b) => b[1]-a[1])[0]?.[0] || '-';
+        document.getElementById('hp-k-peak').innerText = maxSess > 0 ? peakText : '-';
+        document.getElementById('hp-k-top').innerText = Object.entries(storeAgg).sort((a,b) => b[1]-a[1])[0]?.[0] || '-';
 
-        if(container) renderStaticHeatmap(container, heatMapData, catDataMap, drillDataMap, diasSemana, horasComerciais, maxSess);
+        if (globalData.length === 0) {
+            container.innerHTML = '<div class="p-10 text-center opacity-50 text-adaptive w-full">Nenhum dado encontrado para os filtros atuais.</div>';
+        } else {
+            renderStaticHeatmap(container, heatMapData, catDataMap, drillDataMap, diasSemana, horasComerciais, maxSess);
+        }
 
         const labelsHoras = horasComerciais.map(h => `${h}h`);
         
@@ -310,7 +303,7 @@ function processHeatmapData(globalData) {
         const labelsSemana = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
         drawChart('hp-c-trend', 'bar', { labels: labelsSemana, values: labelsSemana.map(d => diaSemanaAgg[d]) }, false, true);
 
-        if(container) container.classList.remove('data-loading');
+        container.classList.remove('data-loading');
     }, 400); 
 }
 
@@ -458,7 +451,7 @@ function openDrilldown(day, hour, total, drillData) {
     const subtitle = document.getElementById('hp-drill-subtitle');
     const listContainer = document.getElementById('hp-drill-list');
 
-    if(subtitle) subtitle.innerText = `${day} às ${hour}h • Total: ${total}`;
+    subtitle.innerText = `${day} às ${hour}h • Total: ${total}`;
     
     const items = Object.entries(drillData).sort((a,b) => b[1] - a[1]);
     let html = '';
@@ -472,13 +465,11 @@ function openDrilldown(day, hour, total, drillData) {
         `;
     });
 
-    if(listContainer) listContainer.innerHTML = html;
+    listContainer.innerHTML = html;
 
-    if(container) container.classList.add('heatmap-blurred');
-    if(overlay) {
-        overlay.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-8');
-        overlay.classList.add('opacity-100', 'pointer-events-auto', 'translate-y-0');
-    }
+    container.classList.add('heatmap-blurred');
+    overlay.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-8');
+    overlay.classList.add('opacity-100', 'pointer-events-auto', 'translate-y-0');
 }
 
 function closeDrilldown() {
@@ -493,9 +484,7 @@ function closeDrilldown() {
 }
 
 function drawRadarChart(id, labels, prodData, catData) {
-    const ctxElement = document.getElementById(id);
-    if (!ctxElement) return;
-    const ctx = ctxElement.getContext('2d');
+    const ctx = document.getElementById(id).getContext('2d');
     const isDark = document.body.classList.contains('dark');
     
     const maxProd = Math.max(...prodData) || 1;
@@ -550,11 +539,8 @@ function drawRadarChart(id, labels, prodData, catData) {
 }
 
 function drawComparisonChart(id, labels, datasets) {
-    const ctxElement = document.getElementById(id);
-    if (!ctxElement) return;
-    const ctx = ctxElement.getContext('2d');
+    const ctx = document.getElementById(id).getContext('2d');
     const isDark = document.body.classList.contains('dark');
-    
     chartInstances[id] = new Chart(ctx, {
         type: 'line',
         data: {
@@ -580,11 +566,8 @@ function drawComparisonChart(id, labels, datasets) {
 }
 
 function drawChart(id, type, data, isArea = false, showPercentage = false) {
-    const ctxElement = document.getElementById(id);
-    if (!ctxElement) return;
-    const ctx = ctxElement.getContext('2d');
+    const ctx = document.getElementById(id).getContext('2d');
     const isDark = document.body.classList.contains('dark');
-    
     const totalData = showPercentage ? data.values.reduce((a, b) => a + b, 0) : 0;
     chartInstances[id] = new Chart(ctx, {
         type: type,

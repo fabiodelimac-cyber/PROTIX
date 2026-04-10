@@ -1,9 +1,6 @@
 // js/view-positivacao.js
 import { appData } from './services/dataManager.js';
 
-let currentMode = 'store';
-let unsubscribeData = null; // Variável para controlar a inscrição no DataManager
-
 export const getPositivacaoHTML = () => {
     return `
         <style>
@@ -20,8 +17,8 @@ export const getPositivacaoHTML = () => {
             
             /* Tabela Ajustada para Escala 1080p */
             .table-border { border-color: var(--glass-border); }
-            .bg-sticky { background-color: var(--glass-bg); backdrop-filter: blur(10px); }
-            .hover-row:hover td { background-color: var(--glass-border); }
+            .bg-sticky { background-color: var(--bg-sticky); backdrop-filter: blur(10px); }
+            .hover-row:hover td { background-color: var(--hover-table); }
 
             /* EYE CANDY: Animações de Entrada em Cascata */
             @keyframes smoothEntrance {
@@ -59,7 +56,7 @@ export const getPositivacaoHTML = () => {
                     <h4 class="ds-chart-title">Distribuição Total por Modelo</h4>
                 </div>
                 
-                <div class="overflow-auto w-full border border-[var(--glass-border)] rounded-2xl custom-scrollbar relative bg-[var(--input-bg)] max-h-[500px]">
+                <div class="overflow-auto w-full border border-[var(--glass-border)] rounded-2xl custom-scrollbar relative bg-[var(--table-wrapper-bg)] max-h-[500px]">
                     <table id="product-table" class="w-full text-left border-collapse"></table>
                 </div>
             </div>
@@ -78,7 +75,7 @@ export const getPositivacaoHTML = () => {
                     </div>
                 </div>
                 
-                <div class="overflow-auto w-full border border-[var(--glass-border)] rounded-2xl custom-scrollbar relative bg-[var(--input-bg)] max-h-[800px]">
+                <div class="overflow-auto w-full border border-[var(--glass-border)] rounded-2xl custom-scrollbar relative bg-[var(--table-wrapper-bg)] max-h-[800px]">
                     <table id="matrix-table" class="w-full text-left border-collapse"></table>
                 </div>
             </div>
@@ -86,46 +83,81 @@ export const getPositivacaoHTML = () => {
     `;
 };
 
+// Variáveis de controle de estado
+let currentMode = 'store';
+let unsubscribeData = null;
 
 export const renderPositivacao = () => {
-    // 1. Limpeza de inscrições passadas (se houver)
+    // 1. Configura os botões de alternância de visão UMA vez ao entrar na tela
+    const btnStore = document.getElementById('mode-store');
+    const btnDevice = document.getElementById('mode-device');
+
+    const setActive = (btn) => {
+        btn.classList.add('bg-[#685BC7]', 'text-white', 'shadow-lg');
+        btn.classList.remove('text-adaptive-strong', 'hover:text-adaptive', 'bg-transparent');
+    };
+
+    const setInactive = (btn) => {
+        btn.classList.remove('bg-[#685BC7]', 'text-white', 'shadow-lg');
+        btn.classList.add('text-adaptive-strong', 'hover:text-adaptive', 'bg-transparent');
+    };
+
+    if (btnStore && btnDevice) {
+        btnStore.onclick = () => {
+            if(currentMode === 'store') return;
+            currentMode = 'store';
+            setActive(btnStore); setInactive(btnDevice);
+            executeRenderLogic(appData.getFilteredData()); // Força redesenho
+        };
+
+        btnDevice.onclick = () => {
+            if(currentMode === 'device') return;
+            currentMode = 'device';
+            setActive(btnDevice); setInactive(btnStore);
+            executeRenderLogic(appData.getFilteredData()); // Força redesenho
+        };
+
+        // Estado inicial dos botões
+        if (currentMode === 'store') { setActive(btnStore); setInactive(btnDevice); } 
+        else { setActive(btnDevice); setInactive(btnStore); }
+    }
+
+    // 2. Conecta a tela ao Cérebro (DataManager)
     if (unsubscribeData) {
         unsubscribeData();
     }
-
-    // 2. Inscrição no DataManager
     unsubscribeData = appData.subscribe((filteredData) => {
         executeRenderLogic(filteredData);
     });
 
-    // 3. Força a primeira renderização com os dados atuais
+    // 3. Primeira renderização com os dados já filtrados
     executeRenderLogic(appData.getFilteredData());
 };
 
-
-// Nova função interna que contém a lógica de desenho
 function executeRenderLogic(data) {
     const matrixTable = document.getElementById('matrix-table');
-    if (!matrixTable || !data || !data.length) {
-        // Zera KPIs se não houver dados
+    if (!matrixTable) return;
+
+    if (!data || data.length === 0) {
+        matrixTable.innerHTML = '<tr><td class="p-8 text-center opacity-50 text-adaptive">Nenhum dado encontrado para os filtros atuais.</td></tr>';
+        document.getElementById('product-table').innerHTML = '';
         document.getElementById('kp-lojas').innerText = '0';
         document.getElementById('kp-mod').innerText = '0';
-        document.getElementById('kp-cap').innerHTML = '-';
-        if (matrixTable) matrixTable.innerHTML = '';
-        const prodTable = document.getElementById('product-table');
-        if (prodTable) prodTable.innerHTML = '';
+        document.getElementById('kp-cap').innerText = '-';
         return;
     }
 
+    // Renderiza a nova tabela de produtos
     renderProductTable(data);
 
+    // Preparação para a matriz usando as chaves do Supabase
     const aparelhos = [...new Set(data.map(d => d.aparelho))].filter(x => x).sort();
-    const lojas = [...new Set(data.map(d => d['store name']))].filter(x => x).sort();
+    const lojas = [...new Set(data.map(d => d.store_name))].filter(x => x).sort();
 
     const presenceMap = {};
     data.forEach(d => {
-        if(d['store name'] && d.aparelho) {
-            const key = `${d['store name']}|${d.aparelho}`;
+        if(d.store_name && d.aparelho) {
+            const key = `${d.store_name}|${d.aparelho}`;
             presenceMap[key] = true;
         }
     });
@@ -137,11 +169,10 @@ function executeRenderLogic(data) {
     }
 
     calculateKPIs(lojas, aparelhos, presenceMap);
-    setupToggles();
 }
 
 // ==========================================
-// NOVA TABELA DE PRODUTOS
+// TABELA DE PRODUTOS
 // ==========================================
 function renderProductTable(data) {
     const table = document.getElementById('product-table');
@@ -149,23 +180,23 @@ function renderProductTable(data) {
 
     const prodMap = {};
     
-    // Agrupa dados
+    // Agrupa dados usando as chaves do Supabase
     data.forEach(d => {
         const prod = d.aparelho;
         if (!prod) return;
         
         if (!prodMap[prod]) {
             prodMap[prod] = {
-                linha: d['linha de produto'] || '-',
+                linha: d.linha_de_produto || '-',
                 devices: new Set(),
                 stores: new Set()
             };
         }
         
         // Conta devices únicos (Aparelhos operantes reais)
-        if (d['device code']) prodMap[prod].devices.add(d['device code']);
+        if (d.device_code) prodMap[prod].devices.add(d.device_code);
         // Conta lojas únicas (Capilaridade)
-        if (d['store name']) prodMap[prod].stores.add(d['store name']);
+        if (d.store_name) prodMap[prod].stores.add(d.store_name);
     });
 
     // Converte para array e ordena por maior qtd de ativos
@@ -258,48 +289,4 @@ function calculateKPIs(lojas, aparelhos, map) {
     document.getElementById('kp-cap').innerHTML = topDev 
         ? `${topDev[0]} <span class="ds-helper-text text-adaptive-muted ml-2 block md:inline">(${topDev[1]} Lojas)</span>` 
         : '-';
-}
-
-function setupToggles() {
-    const btnStore = document.getElementById('mode-store');
-    const btnDevice = document.getElementById('mode-device');
-    
-    // Evita acumular event listeners caso a função seja chamada múltiplas vezes
-    if(btnStore.dataset.listener) return;
-
-    const setActive = (btn) => {
-        btn.classList.add('bg-[#685BC7]', 'text-white', 'shadow-lg');
-        btn.classList.remove('text-adaptive-strong', 'hover:text-adaptive', 'bg-transparent');
-    };
-
-    const setInactive = (btn) => {
-        btn.classList.remove('bg-[#685BC7]', 'text-white', 'shadow-lg');
-        btn.classList.add('text-adaptive-strong', 'hover:text-adaptive', 'bg-transparent');
-    };
-
-    if (currentMode === 'store') {
-        setActive(btnStore);
-        setInactive(btnDevice);
-    } else {
-        setActive(btnDevice);
-        setInactive(btnStore);
-    }
-
-    btnStore.onclick = () => {
-        if(currentMode === 'store') return;
-        currentMode = 'store';
-        setActive(btnStore);
-        setInactive(btnDevice);
-        executeRenderLogic(appData.getFilteredData()); // Refaz a view com o estado global
-    };
-
-    btnDevice.onclick = () => {
-        if(currentMode === 'device') return;
-        currentMode = 'device';
-        setActive(btnDevice);
-        setInactive(btnStore);
-        executeRenderLogic(appData.getFilteredData()); // Refaz a view com o estado global
-    };
-    
-    btnStore.dataset.listener = "true";
 }
