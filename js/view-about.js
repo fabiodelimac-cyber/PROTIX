@@ -1,141 +1,91 @@
 // js/view-about.js
 
-export const getAboutHTML = () => {
+export function getAboutHTML() {
     return `
-        <style>
-            @keyframes float {
-                0%, 100% { transform: translateY(0px); }
-                50% { transform: translateY(-15px); }
-            }
-            .about-overlay {
-                position: fixed; 
-                top: 0; 
-                left: 0; 
-                width: 100vw; 
-                height: 100vh; 
-                z-index: 9999;
-                background-color: #131417;
-                display: flex !important; 
-                flex-direction: column !important; 
-                align-items: center !important; 
-                justify-content: center !important;
-                text-align: center !important;
-                animation: fadeIn 0.5s ease-out forwards;
-            }
-            .logo-about {
-                width: 280px; 
-                height: auto;
-                animation: float 5s ease-in-out infinite;
-                filter: drop-shadow(0 0 20px rgba(104, 91, 199, 0.2));
-            }
-            .tech-grid {
-                display: flex; 
-                flex-wrap: wrap;
-                justify-content: center;
-                gap: 12px; 
-                margin-top: 20px;
-                width: 100%;
-                max-w-xl;
-            }
-            .badge-tech {
-                background: rgba(255,255,255,0.02);
-                border: 1px solid rgba(255,255,255,0.08);
-                padding: 8px 16px; 
-                border-radius: 100px;
-                font-size: 9px; 
-                font-weight: 700; 
-                color: #777;
-                text-transform: uppercase; 
-                letter-spacing: 2px;
-                white-space: nowrap;
-                transition: all 0.3s ease;
-            }
-            .badge-tech:hover {
-                border-color: #685BC7; 
-                color: white; 
-                background: rgba(104, 91, 199, 0.1);
-            }
-            @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        </style>
-
-        <div id="about-screen" class="about-overlay">
-            <div class="flex flex-col items-center justify-center w-full max-w-3xl px-6">
-                
-                <img src="pros_white.png" alt="ProSolution" class="logo-about mb-12 pointer-events-none">
-                
-                <h1 class="text-xl md:text-2xl font-light tracking-[0.6em] text-white uppercase mb-16 opacity-90">
-                    Field Engagement Tracker
-                </h1>
-
-                <div class="w-full mb-20 flex flex-col items-center">
-                    <p class="text-[9px] font-black uppercase tracking-[0.3em] text-gray-600 mb-6">Tecnologias Usadas</p>
-                    <div class="tech-grid">
-                        <span class="badge-tech">Vanilla JS</span>
-                        <span class="badge-tech">Tailwind 3</span>
-                        <span class="badge-tech">Chart.js 4</span>
-                        <span class="badge-tech">Firebase</span>
-                        <span class="badge-tech">PapaParse</span>
-                        <span class="badge-tech">ES6 Modules</span>
+    <div id="about-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-4 transition-opacity duration-300 opacity-0">
+        <div class="bg-white dark:bg-[#1c1e22] border border-gray-200 dark:border-[#2d3139] rounded-[2rem] w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col transform scale-95 transition-transform duration-300">
+            
+            <div class="p-8 border-b border-gray-100 dark:border-[#2d3139] flex justify-between items-center bg-gray-50 dark:bg-[#131417]">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-[#685BC7]/10 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="#685BC7" class="w-6 h-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 class="font-['Archivo',_sans-serif] text-xl font-bold text-gray-900 dark:text-white uppercase tracking-wider">Sobre o Sistema</h2>
+                        <p class="font-['Archivo',_sans-serif] text-xs text-gray-500 dark:text-gray-400 uppercase tracking-widest mt-1">Field Engagement Tracker</p>
                     </div>
                 </div>
+            </div>
 
-                <div class="flex flex-col items-center w-full">
-                    
-                    <p class="text-[11px] font-medium text-white leading-relaxed uppercase tracking-[0.2em] opacity-80 mb-2 max-w-lg">
-                        Sistema em desenvolvimento, build estável para validação. Erros podem ocorrer.
-                    </p>
-                    
-                    <p class="text-[10px] text-[#685BC7] font-bold uppercase tracking-[0.2em] mb-12">
-                        Software fornecido para uso exclusivo de Motorola Mobility do Brasil
-                    </p>
-                    
-                    <button id="btn-about-close" class="relative z-50 px-12 py-4 border border-white/20 bg-white/5 rounded-full text-[10px] font-black uppercase tracking-[0.4em] text-white hover:bg-white hover:text-black transition-all mb-16 cursor-pointer shadow-lg hover:shadow-white/20">
-                        Fechar Detalhes
-                    </button>
+            <div class="p-8 overflow-y-auto max-h-[60vh] custom-scrollbar space-y-6">
+                
+                <img src="pros_white.png" alt="ProSolution Logo" class="h-8 mx-auto mb-8 object-contain opacity-90 dark:opacity-100 invert dark:invert-0">
 
-                    <footer class="flex flex-col items-center text-center">
-                        <span class="text-white text-base md:text-lg font-bold uppercase tracking-[0.3em] mb-1">
-                            ProSolution Marketing • 2026
-                        </span>
-                        <span class="text-white/60 text-[10px] uppercase tracking-[0.2em] mb-10">
-                            Todos os direitos reservados
-                        </span>
-                        
-                        <span class="text-gray-600 text-[9px] uppercase tracking-widest font-black">
-                            Desenvolvido com carinho pelo time de Business Intelligence da ProSolution Marketing!
-                        </span>
-                    </footer>
+                <p class="font-['Archivo',_sans-serif] text-sm leading-relaxed text-gray-700 dark:text-gray-300" style="font-stretch: 100%;">
+                    FIELD ENGAGEMENT TRACKER é um aplicativo corporativo desenvolvido pela ProSolution Marketing para uso exclusivo da Motorola Mobility do Brasil. A solução foi projetada para apoiar decisões táticas, monitoramento de atividades e visualização de indicadores estratégicos, garantindo eficiência operacional, rastreabilidade e acesso confiável às informações necessárias para a tomada de decisão.
+                </p>
+                <p class="font-['Archivo',_sans-serif] text-sm leading-relaxed text-gray-700 dark:text-gray-300" style="font-stretch: 100%;">
+                    Todo o código-fonte proprietário, arquitetura, lógica de negócio, integrações e elementos visuais exclusivos deste aplicativo constituem propriedade intelectual da ProSolution Marketing, sendo protegidos pelas legislações aplicáveis de direitos autorais e propriedade intelectual. O uso, reprodução, modificação ou distribuição deste software, total ou parcial, sem autorização formal da ProSolution Marketing, é estritamente proibido.
+                </p>
+                <p class="font-['Archivo',_sans-serif] text-sm leading-relaxed text-gray-700 dark:text-gray-300" style="font-stretch: 100%;">
+                    Este aplicativo foi desenvolvido utilizando tecnologias modernas e amplamente adotadas no mercado, incluindo JavaScript (ES6) para estruturação da lógica de aplicação, Tailwind CSS para estilização e construção de interfaces responsivas, Chart.js 4 para geração de gráficos e visualizações de dados, e Supabase como plataforma para serviços de backend e persistência de dados. Essas tecnologias incluem componentes distribuídos sob licenças open source, utilizados em conformidade com suas respectivas condições de uso, conforme definido em suas documentações oficiais e termos de licenciamento aplicáveis.
+                </p>
+                
+                <div class="pt-4">
+                    <p class="font-['Archivo',_sans-serif] text-sm font-bold text-[#685BC7] uppercase tracking-wide text-center" style="font-stretch: 110%;">
+                        Desenvolvido com carinho pelo time de Business Intelligence
+                    </p>
+                    <p class="font-['Archivo',_sans-serif] mt-3 text-center text-[10px] font-thin tracking-[0.2em] text-gray-500 dark:text-white uppercase">
+                        Build 0.4.7.260411351
+                    </p>
                 </div>
             </div>
-        </div>
+
+            <div class="p-6 border-t border-gray-100 dark:border-[#2d3139] bg-gray-50 dark:bg-[#131417] flex justify-end">
+                <button id="btn-close-about" class="font-['Archivo',_sans-serif] px-8 py-3 bg-[#131417] dark:bg-white text-white dark:text-[#131417] text-xs font-bold uppercase tracking-widest rounded-xl hover:bg-[#685BC7] dark:hover:bg-[#685BC7] hover:text-white dark:hover:text-white transition-colors shadow-sm">
+                    Fechar Detalhes
+                </button>
+            </div>
+            </div>
+    </div>
     `;
-};
+}
 
-export const initAbout = () => {
-    const closeBtn = document.getElementById('btn-about-close');
+export function initAbout() {
+    const overlay = document.getElementById('about-overlay');
+    const modal = overlay.querySelector('div');
+    const btnClose = document.getElementById('btn-close-about');
+
+    // Animação de Entrada
+    requestAnimationFrame(() => {
+        overlay.classList.remove('opacity-0');
+        modal.classList.remove('scale-95');
+    });
+
+    const closeAbout = () => {
+        overlay.classList.add('opacity-0');
+        modal.classList.add('scale-95');
+        
+        // Restaura o foco e retira o blur do Dashboard
+        const shell = document.getElementById('dash-shell');
+        if(shell) {
+            shell.style.transition = 'opacity 0.6s ease, filter 0.6s ease';
+            shell.style.filter = 'none';
+            shell.style.opacity = '1';
+        }
+
+        // Aguarda a animação para remover do DOM
+        setTimeout(() => {
+            overlay.remove();
+        }, 300);
+    };
+
+    btnClose.addEventListener('click', closeAbout);
     
-    // Usando event listener robusto com prevenção de propagação
-    if (closeBtn) {
-        closeBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation(); // Impede que elementos abaixo roubem o clique
-            
-            const about = document.getElementById('about-screen');
-            const shell = document.getElementById('dash-shell');
-
-            if (about) {
-                about.style.transition = 'opacity 0.4s ease';
-                about.style.opacity = '0';
-                
-                // Restaura o dashboard
-                if (shell) {
-                    shell.style.filter = 'none';
-                    shell.style.opacity = '1';
-                }
-
-                // Remove do DOM após a animação de fade
-                setTimeout(() => { about.remove(); }, 400);
-            }
-        });
-    }
-};
+    // Fecha ao clicar fora do modal
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) closeAbout();
+    });
+}

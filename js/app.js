@@ -11,6 +11,62 @@ import { getPositivacaoHTML, renderPositivacao } from "./view-positivacao.js";
 import { getHeatProdutosHTML, renderHeatProdutos, destroyHeatProdutosCharts } from "./view-heat-produtos.js";
 import { getAboutHTML, initAbout } from "./view-about.js";
 
+const viewSocial = document.getElementById('login-social-view');
+const viewEmail = document.getElementById('login-email-view');
+const btnShowEmail = document.getElementById('btn-show-email');
+const btnBackSocial = document.getElementById('btn-back-social');
+
+if (btnShowEmail && btnBackSocial) {
+    btnShowEmail.addEventListener('click', () => {
+        // Esconde o Social
+        viewSocial.classList.remove('opacity-100', 'translate-x-0', 'pointer-events-auto');
+        viewSocial.classList.add('opacity-0', '-translate-x-8', 'pointer-events-none');
+        // Mostra o Email
+        viewEmail.classList.remove('opacity-0', 'translate-x-8', 'pointer-events-none');
+        viewEmail.classList.add('opacity-100', 'translate-x-0', 'pointer-events-auto');
+    });
+
+    btnBackSocial.addEventListener('click', () => {
+        // Esconde o Email
+        viewEmail.classList.remove('opacity-100', 'translate-x-0', 'pointer-events-auto');
+        viewEmail.classList.add('opacity-0', 'translate-x-8', 'pointer-events-none');
+        // Mostra o Social
+        viewSocial.classList.remove('opacity-0', '-translate-x-8', 'pointer-events-none');
+        viewSocial.classList.add('opacity-100', 'translate-x-0', 'pointer-events-auto');
+    });
+}
+
+// --- TEMA: LIGHT / DARK MODE ---
+const themeToggles = document.querySelectorAll('.btn-theme-toggle');
+
+// 1. Checa a preferência salva ao carregar a página
+if (localStorage.getItem('theme') === 'light') {
+    document.body.classList.remove('dark');
+    themeToggles.forEach(btn => btn.innerText = '☀️');
+}
+
+// 2. Escuta o clique nos botões de tema (Mobile e Desktop)
+themeToggles.forEach(btn => {
+    btn.addEventListener('click', () => {
+        // Alterna a classe no body
+        document.body.classList.toggle('dark');
+        const isDark = document.body.classList.contains('dark');
+        
+        // Salva a preferência no navegador do usuário
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        
+        // Atualiza o ícone de todos os botões (se houver mais de um)
+        themeToggles.forEach(b => b.innerText = isDark ? '🌙' : '☀️');
+
+        // Se o usuário já passou do login, redesenha os gráficos com as novas cores
+        if (isDataLoaded) {
+            try { destroyOverviewCharts(); } catch(e){}
+            try { destroyHeatProdutosCharts(); } catch(e){}
+            renderActiveView();
+        }
+    });
+});
+
 // --- CONFIGURAÇÃO SUPABASE ---
 // Lembre-se de colocar as suas chaves aqui (Project URL e Publishable Key)
 const supabaseUrl = 'https://zkxzjrlhuyjqikzszrjx.supabase.co';
@@ -38,6 +94,12 @@ supabase.auth.onAuthStateChange(async (event, session) => {
                 document.getElementById('login-screen').classList.add('opacity-0', 'pointer-events-none');
                 setTimeout(() => document.getElementById('login-screen').classList.add('hidden'), 500);
                 document.getElementById('dash-shell').classList.remove('hidden');
+                const emailDisplay = document.getElementById('sidebar-user-email');
+                if (emailDisplay) emailDisplay.innerText = session.user.email;
+                // -------------------------------
+
+                document.getElementById('login-screen').classList.add('opacity-0', 'pointer-events-none');
+                setTimeout(() => document.getElementById('login-screen').classList.add('hidden'), 500);
                 
                 if (!sessionStorage.getItem('disclaimerAccepted')) {
                     document.getElementById('disclaimer-modal').classList.remove('hidden');
@@ -89,6 +151,26 @@ document.getElementById('btn-google-login').addEventListener('click', async () =
         alert('Falha ao iniciar autenticação com Google.'); 
     }
 });
+
+// Listener para o botão da Microsoft
+const btnMicrosoftLogin = document.getElementById('btn-microsoft-login');
+if (btnMicrosoftLogin) {
+    btnMicrosoftLogin.addEventListener('click', async () => {
+        try {
+            // No Supabase, o provedor Microsoft é identificado como 'azure'
+            const { error } = await supabase.auth.signInWithOAuth({
+                provider: 'azure',
+                options: {
+                    scopes: 'email profile' // Escopos básicos para pegar o usuário
+                }
+            });
+            if (error) throw error;
+        } catch (err) {
+            console.error("Erro no login Microsoft:", err);
+            alert("Erro ao conectar com Microsoft: " + err.message);
+        }
+    });
+}
 
 document.getElementById('btn-logout').addEventListener('click', async () => {
     await supabase.auth.signOut();
