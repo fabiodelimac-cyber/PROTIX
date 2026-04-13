@@ -9,6 +9,7 @@ export const getPositivacaoHTML = () => {
             .glass-panel { background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); }
             .text-adaptive { color: var(--text-main); }
             .text-adaptive-muted { color: var(--text-muted); }
+            .text-adaptive-strong { color: var(--text-muted-strong); } /* Classe adicionada para correção do dark mode */
             .text-glow { text-shadow: var(--glow-shadow); }
             .text-glow-accent { text-shadow: var(--glow-accent); }
             .text-glow-green { text-shadow: var(--glow-green); }
@@ -21,10 +22,11 @@ export const getPositivacaoHTML = () => {
             .hover-row:hover td { background-color: var(--hover-table); }
 
             /* EYE CANDY: Animações de Entrada em Cascata */
-            @keyframes smoothEntrance {
-                from { opacity: 0; transform: translateY(30px); filter: blur(5px); }
-                to { opacity: 1; transform: translateY(0); filter: blur(0); }
-            }
+          @keyframes smoothEntrance {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+.anim-cascade { opacity: 0; animation: smoothEntrance 0.3s ease-in-out forwards; }
             .anim-cascade { opacity: 0; animation: smoothEntrance 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
             .delay-1 { animation-delay: 0.1s; }
             .delay-2 { animation-delay: 0.2s; }

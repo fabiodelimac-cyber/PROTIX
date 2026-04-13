@@ -32,9 +32,10 @@ export const getOverviewHTML = () => {
             }
             
             @keyframes smoothEntrance {
-                from { opacity: 0; transform: translateY(30px); filter: blur(5px); }
-                to { opacity: 1; transform: translateY(0); filter: blur(0); }
-            }
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+.anim-cascade { opacity: 0; animation: smoothEntrance 0.3s ease-in-out forwards; }
             
             .welcome-msg { animation: slideUpFade 0.8s ease forwards; }
             .welcome-msg.hide { animation: fadeOutWelcome 0.5s ease forwards; }
@@ -106,15 +107,15 @@ export const getOverviewHTML = () => {
                 </div>
                 
                 <div class="anim-cascade delay-4 glass-panel p-6 md:p-8 rounded-[2.5rem] relative z-10 hover:-translate-y-1 transition-transform duration-300">
-                    <div class="flex flex-col md:flex-row gap-6 h-full">
+                    <div class="flex flex-col xl:flex-row gap-6 h-full">
                         <div class="flex-1 flex flex-col">
-                            <h4 class="ds-chart-title mb-2 text-center md:text-left">Interações por Local</h4>
+                            <h4 class="ds-chart-title mb-2 text-center xl:text-left">Interações por Local</h4>
                             <div class="chart-container relative flex-1 min-h-[220px]">
                                 <canvas id="c-shop"></canvas>
                             </div>
                         </div>
-                        <div class="flex-1 flex flex-col border-t md:border-t-0 md:border-l border-[var(--glass-border)] pt-6 md:pt-0 md:pl-6">
-                            <h4 class="ds-chart-title mb-2 text-center md:text-left">Interações por Linha</h4>
+                        <div class="flex-1 flex flex-col border-t xl:border-t-0 xl:border-l border-[var(--glass-border)] pt-6 xl:pt-0 xl:pl-6">
+                            <h4 class="ds-chart-title mb-2 text-center xl:text-left">Interações por Linha</h4>
                             <div class="chart-container relative flex-1 min-h-[220px]">
                                 <canvas id="c-linha"></canvas>
                             </div>

@@ -42,7 +42,7 @@ const themeToggles = document.querySelectorAll('.btn-theme-toggle');
 // 1. Checa a preferência salva ao carregar a página
 if (localStorage.getItem('theme') === 'light') {
     document.body.classList.remove('dark');
-    themeToggles.forEach(btn => btn.innerText = '☀️');
+    // ícones gerenciados pelo syncThemeIcons no index.html
 }
 
 // 2. Escuta o clique nos botões de tema (Mobile e Desktop)
@@ -55,8 +55,7 @@ themeToggles.forEach(btn => {
         // Salva a preferência no navegador do usuário
         localStorage.setItem('theme', isDark ? 'dark' : 'light');
         
-        // Atualiza o ícone de todos os botões (se houver mais de um)
-        themeToggles.forEach(b => b.innerText = isDark ? '🌙' : '☀️');
+        // Atualiza os ícones (gerenciado pelo syncThemeIcons no index.html via MutationObserver)
 
         // Se o usuário já passou do login, redesenha os gráficos com as novas cores
         if (isDataLoaded) {
@@ -91,16 +90,20 @@ supabase.auth.onAuthStateChange(async (event, session) => {
 
             if (data && data.status === 'approved') {
                 // FLUXO LIBERADO: Usuário está aprovado
-                document.getElementById('login-screen').classList.add('opacity-0', 'pointer-events-none');
-                setTimeout(() => document.getElementById('login-screen').classList.add('hidden'), 500);
-                document.getElementById('dash-shell').classList.remove('hidden');
-                const emailDisplay = document.getElementById('sidebar-user-email');
-                if (emailDisplay) emailDisplay.innerText = session.user.email;
-                // -------------------------------
+                const loginScreen = document.getElementById('login-screen');
+                loginScreen.style.opacity = '0';
+                loginScreen.style.pointerEvents = 'none';
+                setTimeout(() => { loginScreen.style.display = 'none'; }, 500);
 
-                document.getElementById('login-screen').classList.add('opacity-0', 'pointer-events-none');
-                setTimeout(() => document.getElementById('login-screen').classList.add('hidden'), 500);
-                
+                const dashShell = document.getElementById('dash-shell');
+                dashShell.style.display = 'flex';
+                dashShell.style.flexDirection = 'column';
+                dashShell.style.flex = '1';
+                dashShell.style.minHeight = '0';
+
+                const emailDisplay = document.getElementById('topbar-user-email');
+                if (emailDisplay) emailDisplay.innerText = session.user.email;
+
                 if (!sessionStorage.getItem('disclaimerAccepted')) {
                     document.getElementById('disclaimer-modal').classList.remove('hidden');
                 }
@@ -118,8 +121,11 @@ supabase.auth.onAuthStateChange(async (event, session) => {
         }
     } else {
         // FLUXO DE SAÍDA (LOGOUT NORMAL)
-        document.getElementById('login-screen').classList.remove('hidden', 'opacity-0', 'pointer-events-none');
-        document.getElementById('dash-shell').classList.add('hidden');
+        const loginScreen = document.getElementById('login-screen');
+        loginScreen.style.display = 'flex';
+        loginScreen.style.opacity = '1';
+        loginScreen.style.pointerEvents = 'auto';
+        document.getElementById('dash-shell').style.display = 'none';
         document.getElementById('disclaimer-modal').classList.add('hidden');
     }
 });
@@ -184,7 +190,7 @@ document.getElementById('btn-accept-beta').addEventListener('click', () => {
 
 // --- ROTEAMENTO (NAVEGAÇÃO) - INTACTO ---
 const appContent = document.getElementById('app-content');
-const navItems = document.querySelectorAll('.nav-item');
+const navItems = document.querySelectorAll('.nav-pill');
 
 function renderActiveView() {
     if(currentRoute === 'view-overview') {
@@ -233,20 +239,8 @@ navItems.forEach(btn => {
     });
 });
 
-const sidebar = document.getElementById('sidebar');
-const overlay = document.getElementById('sidebar-overlay');
-const filterDrawer = document.getElementById('filter-drawer');
-
-function openSidebarMobile() { sidebar.classList.remove('-translate-x-full'); overlay.classList.remove('hidden'); }
-function closeSidebarMobile() { sidebar.classList.add('-translate-x-full'); overlay.classList.add('hidden'); }
-
-document.getElementById('btn-open-sidebar').addEventListener('click', openSidebarMobile);
-document.getElementById('btn-close-sidebar').addEventListener('click', closeSidebarMobile);
-overlay.addEventListener('click', closeSidebarMobile);
-
-document.getElementById('btn-toggle-filters').addEventListener('click', () => {
-    filterDrawer.classList.toggle('hidden');
-});
+// Sidebar removida - substituída por topbar (nav pills)
+function closeSidebarMobile() { /* noop - sem sidebar */ }
 
 document.getElementById('btn-go-about').addEventListener('click', () => {
     const shell = document.getElementById('dash-shell');
@@ -254,11 +248,16 @@ document.getElementById('btn-go-about').addEventListener('click', () => {
     shell.style.opacity = '0';
     shell.style.filter = 'blur(10px)';
     setTimeout(() => {
-        document.body.insertAdjacentHTML('beforeend', getAboutHTML());
+        document.getElementById('app-box').insertAdjacentHTML('beforeend', getAboutHTML());
         initAbout();
     }, 600);
 });
 
+
+// --- BYPASS LOGIN (modo teste) ---
+window.addEventListener('bypass-login', () => {
+    if (!isDataLoaded) initData();
+});
 // --- CARGA DE DADOS INICIAL (SUPABASE) ---
 async function initData() {
     isDataLoaded = true;

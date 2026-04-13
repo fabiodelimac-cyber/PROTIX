@@ -28,10 +28,11 @@ export const getHeatProdutosHTML = () => {
             .input-adaptive { background: var(--input-bg); border: 1px solid var(--glass-border); color: var(--text-main); }
             .divide-adaptive > div { border-color: var(--glass-border); }
 
-            @keyframes smoothEntrance {
-                from { opacity: 0; transform: translateY(30px); filter: blur(5px); }
-                to { opacity: 1; transform: translateY(0); filter: blur(0); }
-            }
+          @keyframes smoothEntrance {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+.anim-cascade { opacity: 0; animation: smoothEntrance 0.3s ease-in-out forwards; }
             .anim-cascade { opacity: 0; animation: smoothEntrance 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
             .delay-1 { animation-delay: 0.1s; }
             .delay-2 { animation-delay: 0.2s; }
