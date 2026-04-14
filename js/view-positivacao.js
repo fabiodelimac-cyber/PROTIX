@@ -116,6 +116,33 @@ let currentMode = 'store';
 let unsubscribeData = null;
 let currentRenderToken = 0;
 
+// Helper para aplicar fade suave nos KPIs
+function updateKPIWithFade(elementId, newContent, isHTML = false) {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+    
+    // Fade out
+    el.classList.add('kpi-fade-out');
+    
+    setTimeout(() => {
+        // Atualiza o conteúdo
+        if (isHTML) {
+            el.innerHTML = newContent;
+        } else {
+            el.innerText = newContent;
+        }
+        
+        // Remove fade-out e adiciona fade-in
+        el.classList.remove('kpi-fade-out');
+        el.classList.add('kpi-fade-in');
+        
+        // Remove a classe de fade-in após a animação
+        setTimeout(() => {
+            el.classList.remove('kpi-fade-in');
+        }, 200);
+    }, 150);
+}
+
 export const renderPositivacao = () => {
     const btnStore = document.getElementById('mode-store');
     const btnDevice = document.getElementById('mode-device');
@@ -176,10 +203,11 @@ async function executeRenderLogic() {
     const productTable = document.getElementById('product-table');
     if (!matrixTable) return;
 
-    // Mostra loading nos KPIs
-    document.getElementById('kp-lojas').innerHTML = '<div class="skeleton-pulse">...</div>';
-    document.getElementById('kp-cap').innerHTML = '<div class="skeleton-pulse">...</div>';
-    document.getElementById('kp-mod').innerHTML = '<div class="skeleton-pulse">...</div>';
+    // Mostra loading nos KPIs com fade
+    const kpiSpinner = '<div class="flex items-center justify-center"><div class="kpi-spinner"></div></div>';
+    updateKPIWithFade('kp-lojas', kpiSpinner, true);
+    updateKPIWithFade('kp-cap', kpiSpinner, true);
+    updateKPIWithFade('kp-mod', kpiSpinner, true);
 
     // Mostra spinner nas tabelas
     matrixTable.innerHTML = `<tr><td class="p-8 text-center"><div class="table-loading"><div class="spinner"></div></div></td></tr>`;
@@ -210,18 +238,18 @@ async function executeRenderLogic() {
         if (!kpis.total_lojas || kpis.total_lojas === 0) {
             matrixTable.innerHTML = `<tr><td class="p-8 text-center opacity-50 text-adaptive">Nenhum dado encontrado para os filtros atuais.</td></tr>`;
             if (productTable) productTable.innerHTML = '';
-            document.getElementById('kp-lojas').innerText = '0';
-            document.getElementById('kp-mod').innerText = '0';
-            document.getElementById('kp-cap').innerText = '-';
+            updateKPIWithFade('kp-lojas', '0');
+            updateKPIWithFade('kp-mod', '0');
+            updateKPIWithFade('kp-cap', '-');
             return;
         }
 
         // KPIs
-        document.getElementById('kp-lojas').innerText = kpis.total_lojas;
-        document.getElementById('kp-mod').innerText = kpis.total_aparelhos;
-        document.getElementById('kp-cap').innerHTML = kpis.top_capilaridade
+        updateKPIWithFade('kp-lojas', kpis.total_lojas.toString());
+        updateKPIWithFade('kp-mod', kpis.total_aparelhos.toString());
+        updateKPIWithFade('kp-cap', kpis.top_capilaridade
             ? `${kpis.top_capilaridade} <span class="ds-helper-text text-adaptive-muted ml-2 block md:inline">(${kpis.top_capilaridade_lojas} Lojas)</span>`
-            : '-';
+            : '-', true);
 
         // Tabela de produtos
         renderProductTable(productTable, produtos);

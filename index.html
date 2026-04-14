@@ -270,6 +270,43 @@
         .bg-mesh { background: linear-gradient(-45deg, #131417, #1c1e22, #2a2552, #131417); background-size: 400% 400%; animation: meshGradient 10s ease infinite; }
         @keyframes meshGradient { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
         #disclaimer-modal { border-radius: 20px; }
+        
+        /* =============================================
+           KPI SPINNER (Loading nos KPIs)
+        ============================================= */
+        .kpi-spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid var(--glass-border);
+            border-top-color: #685BC7;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* =============================================
+           KPI FADE TRANSITIONS
+        ============================================= */
+        .kpi-fade-out {
+            animation: kpiFadeOut 0.15s ease-out forwards;
+        }
+        
+        .kpi-fade-in {
+            animation: kpiFadeIn 0.2s ease-in forwards;
+        }
+        
+        @keyframes kpiFadeOut {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-8px); }
+        }
+        
+        @keyframes kpiFadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body class="antialiased dark">

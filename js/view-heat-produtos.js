@@ -8,6 +8,33 @@ let currentProduct = null;
 let unsubscribeData = null;
 let currentRenderToken = 0;
 
+// Helper para aplicar fade suave nos KPIs
+function updateKPIWithFade(elementId, newContent, isHTML = false) {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+    
+    // Fade out
+    el.classList.add('kpi-fade-out');
+    
+    setTimeout(() => {
+        // Atualiza o conteúdo
+        if (isHTML) {
+            el.innerHTML = newContent;
+        } else {
+            el.innerText = newContent;
+        }
+        
+        // Remove fade-out e adiciona fade-in
+        el.classList.remove('kpi-fade-out');
+        el.classList.add('kpi-fade-in');
+        
+        // Remove a classe de fade-in após a animação
+        setTimeout(() => {
+            el.classList.remove('kpi-fade-in');
+        }, 200);
+    }, 150);
+}
+
 export const getHeatProdutosHTML = () => {
     return `
         <style>
@@ -108,17 +135,28 @@ export const getHeatProdutosHTML = () => {
                     <div id="html-heatmap-container" class="min-w-[800px]"></div>
                 </div>
 
-                <div id="hp-drilldown-overlay" class="absolute inset-0 z-20 flex flex-col p-8 md:p-12 opacity-0 pointer-events-none translate-y-8" style="background: rgba(18, 19, 23, 0.85); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);">
+                <div id="hp-drilldown-overlay" class="absolute inset-0 z-20 flex flex-col p-8 md:p-12 opacity-0 pointer-events-none translate-y-8" style="background: rgba(18, 19, 23, 0.92); backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);">
                     <div class="flex justify-between items-start mb-6 border-b border-white/10 pb-6">
                         <div>
-                            <h3 class="text-2xl font-black text-white leading-tight">Distribuição por Aparelho</h3>
+                            <h3 class="text-2xl font-black text-white leading-tight">Análise Detalhada</h3>
                             <p id="hp-drill-subtitle" class="text-xs font-bold text-[#685BC7] uppercase tracking-widest mt-1">-</p>
                         </div>
                         <button id="btn-close-drilldown" class="px-6 py-2 rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 text-white font-bold text-[10px] uppercase tracking-widest transition-all shadow-lg hover:shadow-xl">
                             ← Voltar
                         </button>
                     </div>
-                    <div id="hp-drill-list" class="flex-1 overflow-y-auto custom-scrollbar pr-4 space-y-2"></div>
+                    <div class="flex-1 overflow-y-auto custom-scrollbar pr-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="text-sm font-black text-white/60 uppercase tracking-widest mb-4 pb-2 border-b border-white/10">Por Aparelho</h4>
+                                <div id="hp-drill-list-produtos" class="space-y-2"></div>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-black text-white/60 uppercase tracking-widest mb-4 pb-2 border-b border-white/10">Por Rede</h4>
+                                <div id="hp-drill-list-redes" class="space-y-2"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -192,10 +230,11 @@ async function executeRenderLogic() {
     const container = document.getElementById('html-heatmap-container');
     if (!container) return;
 
-    // Mostra loading nos KPIs
-    document.getElementById('hp-k-vol').innerHTML = '<div class="skeleton-pulse">...</div>';
-    document.getElementById('hp-k-peak').innerHTML = '<div class="skeleton-pulse">...</div>';
-    document.getElementById('hp-k-top').innerHTML = '<div class="skeleton-pulse">...</div>';
+    // Mostra loading nos KPIs com fade
+    const kpiSpinner = '<div class="flex items-center justify-center"><div class="kpi-spinner"></div></div>';
+    updateKPIWithFade('hp-k-vol', kpiSpinner, true);
+    updateKPIWithFade('hp-k-peak', kpiSpinner, true);
+    updateKPIWithFade('hp-k-top', kpiSpinner, true);
 
     // Mostra spinner no heatmap
     container.innerHTML = '<div class="chart-loading"><div class="spinner"></div></div>';
@@ -236,6 +275,7 @@ async function executeRenderLogic() {
         const heatmap = dbData.heatmap || [];
         const heatmapDrill = dbData.heatmap_drill || [];
         const heatmapCat = dbData.heatmap_cat || [];
+        const heatmapRede = dbData.heatmap_rede || [];
         const radarProd = dbData.radar_prod || [];
         const radarCat = dbData.radar_cat || [];
         const canal = dbData.canal || [];
@@ -252,26 +292,30 @@ async function executeRenderLogic() {
         }
 
         // KPIs
-        document.getElementById('hp-k-vol').innerText = Math.round(kpis.total_sessions || 0).toLocaleString('pt-BR');
-        document.getElementById('hp-k-peak').innerText = kpis.peak_label || '-';
-        document.getElementById('hp-k-top').innerText = kpis.top_store || '-';
+        updateKPIWithFade('hp-k-vol', Math.round(kpis.total_sessions || 0).toLocaleString('pt-BR'));
+        updateKPIWithFade('hp-k-peak', kpis.peak_label || '-');
+        updateKPIWithFade('hp-k-top', kpis.top_store || '-');
 
         // Monta estruturas para o heatmap
-        const diasPT = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+        const diasPT = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado', 'Domingo'];
+        const diasAbrev = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
         const horasComerciais = Array.from({length: 13}, (_, i) => i + 10);
 
         const heatMapData = {};
         const catDataMap = {};
         const drillDataMap = {};
+        const redeDataMap = {};
 
         diasPT.forEach(d => {
             heatMapData[d] = {};
             catDataMap[d] = {};
             drillDataMap[d] = {};
+            redeDataMap[d] = {};
             horasComerciais.forEach(h => {
                 heatMapData[d][h] = 0;
                 catDataMap[d][h] = {};
                 drillDataMap[d][h] = {};
+                redeDataMap[d][h] = {};
             });
         });
 
@@ -301,6 +345,15 @@ async function executeRenderLogic() {
             }
         });
 
+        heatmapRede.forEach(row => {
+            const dayPT = row.day_name;
+            const hour = row.hour;
+            const rede = row.rede || 'N/A';
+            if (redeDataMap[dayPT] && redeDataMap[dayPT][hour]) {
+                redeDataMap[dayPT][hour][rede] = row.total || 0;
+            }
+        });
+
         let maxSess = 0;
         for(let d in heatMapData) {
             for(let h in heatMapData[d]) {
@@ -311,7 +364,7 @@ async function executeRenderLogic() {
         if (heatmap.length === 0) {
             container.innerHTML = '<div class="p-10 text-center opacity-50 text-adaptive w-full">Nenhum dado encontrado para os filtros atuais.</div>';
         } else {
-            renderStaticHeatmap(container, heatMapData, catDataMap, drillDataMap, diasPT, horasComerciais, maxSess);
+            renderStaticHeatmap(container, heatMapData, catDataMap, drillDataMap, redeDataMap, diasPT, diasAbrev, horasComerciais, maxSess);
         }
 
         // Radar
@@ -380,165 +433,205 @@ async function executeRenderLogic() {
 }
 
 
-function renderStaticHeatmap(container, dataMap, catDataMap, drillDataMap, days, hours, maxVal) {
+function renderStaticHeatmap(container, dataMap, catDataMap, drillDataMap, redeDataMap, days, daysAbrev, hours, maxVal) {
     const isDark = document.body.classList.contains('dark');
     const textColor = isDark ? 'text-white/30' : 'text-gray-400';
     const emptyBg = isDark ? 'bg-white/[0.02] border-white/[0.02]' : 'bg-black/[0.03] border-black/[0.03]';
 
-    let tooltip = document.getElementById('hp-global-tooltip');
-    if (!tooltip) {
-        tooltip = document.createElement('div');
-        tooltip.id = 'hp-global-tooltip';
-        tooltip.style.cssText = `
-            position: fixed; pointer-events: none; z-index: 99999; display: none; opacity: 0;
-            min-width: 200px; padding: 16px; border-radius: 16px;
-            background: var(--glass-bg, rgba(18, 19, 23, 0.9));
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.1));
-            box-shadow: var(--glass-shadow, 0 10px 40px rgba(0, 0, 0, 0.5));
-            color: var(--text-main, #fff); font-family: 'Archivo', sans-serif;
-            transition: opacity 0.15s ease-out;
-        `;
-        document.body.appendChild(tooltip);
-    }
-
-    let html = `<div class="grid grid-cols-[60px_repeat(13,minmax(40px,1fr))] gap-1"><div></div>`;
-    hours.forEach(h => html += `<div class="text-center text-[9px] font-black uppercase tracking-widest ${textColor} pb-2">${h}h</div>`);
+    // Adiciona blur durante a transição
+    container.style.filter = 'blur(8px)';
+    container.style.opacity = '0.4';
     
-    days.forEach(day => {
-        html += `<div class="flex items-center justify-end pr-4 text-[9px] font-black uppercase tracking-widest ${textColor}">${day}</div>`;
-        hours.forEach(hour => {
-            const val = dataMap[day][hour] || 0;
-            const breakdowns = catDataMap[day][hour] || {};
-            const drilldowns = drillDataMap[day][hour] || {};
-            
-            const bdJson = JSON.stringify(breakdowns).replace(/"/g, '&quot;');
-            const drillJson = JSON.stringify(drilldowns).replace(/"/g, '&quot;');
-            
-            let bgStyle = '';
-            let baseClasses = `heatmap-cell h-10 w-full flex items-center justify-center text-[12px] transition-all duration-300 z-10`;
-            let colorClasses = '';
-            
-            if (val > 0) {
-                let ratio = maxVal > 0 ? (val / maxVal) : 0;
-                let alpha = 0.15 + (ratio * 0.85);
-                let hue = 260 + (ratio * 90);
-                bgStyle = `background-color: hsla(${hue}, 85%, 55%, ${alpha}); box-shadow: 0 0 12px hsla(${hue}, 85%, 55%, ${alpha * 0.4}); border: 1px solid hsla(${hue}, 85%, 70%, ${alpha * 0.5});`;
-                
-                let textClass = ratio > 0.35 ? `text-white font-bold` : (isDark ? `text-white/50 font-medium` : `text-black/50 font-medium`);
-                colorClasses = ` ${textClass} rounded-lg cursor-pointer hover:scale-110 hover:z-20`;
-            } else {
-                colorClasses = ` border ${emptyBg} text-transparent rounded-lg cursor-default`;
-            }
-
-            html += `<div class="${baseClasses}${colorClasses}" 
-                          style="${bgStyle} font-stretch: 140%;"
-                          data-day="${day}"
-                          data-hour="${hour}"
-                          data-total="${Math.round(val)}"
-                          data-bd="${bdJson}"
-                          data-drill="${drillJson}"
-                     >${Math.round(val)}</div>`;
-        });
-    });
-    html += `</div>`;
-    container.innerHTML = html;
-
-    const cells = container.querySelectorAll('.heatmap-cell');
-    cells.forEach(cell => {
-        const total = parseInt(cell.getAttribute('data-total') || 0);
-
-        cell.addEventListener('mouseenter', () => {
-            if (total === 0 || container.classList.contains('heatmap-blurred')) return;
-
-            const day = cell.getAttribute('data-day');
-            const hour = cell.getAttribute('data-hour');
-            const bd = JSON.parse(cell.getAttribute('data-bd') || '{}');
-
-            const bdKeys = Object.keys(bd).sort((a,b) => bd[b] - bd[a]);
-            let bdHTML = bdKeys.map(k => `
-                <div style="display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:4px;">
-                    <span style="font-size:10px; text-transform:uppercase; font-weight:700; color:var(--text-muted, #9ca3af);">${k}</span>
-                    <span style="font-size:12px; font-weight:900;">${Math.round(bd[k])}</span>
-                </div>
-            `).join('');
-
-            if (bdHTML === '') bdHTML = `<div style="font-size:10px; color:var(--text-muted, #9ca3af); font-style:italic;">Sem detalhes</div>`;
-
-            tooltip.innerHTML = `
-                <div style="border-bottom: 1px solid var(--glass-border, rgba(255,255,255,0.1)); padding-bottom: 8px; margin-bottom: 8px;">
-                    <p style="font-size:9px; font-weight:900; color:#685BC7; text-transform:uppercase; letter-spacing:0.1em; margin:0 0 2px 0;">${day} • ${hour}h</p>
-                    <p style="font-size:16px; font-weight:900; line-height:1; margin:0;">${total} <span style="font-size:9px; font-weight:400; color:var(--text-muted, #9ca3af); text-transform:uppercase; letter-spacing:0;">interações</span></p>
-                    <p style="font-size:8px; margin-top:4px; opacity:0.5; font-weight:bold;">CLIQUE PARA DRILL-DOWN</p>
-                </div>
-                ${bdHTML}
+    setTimeout(() => {
+        let tooltip = document.getElementById('hp-global-tooltip');
+        if (!tooltip) {
+            tooltip = document.createElement('div');
+            tooltip.id = 'hp-global-tooltip';
+            tooltip.style.cssText = `
+                position: fixed; pointer-events: none; z-index: 99999; display: none; opacity: 0;
+                min-width: 200px; padding: 16px; border-radius: 16px;
+                background: var(--glass-bg, rgba(18, 19, 23, 0.9));
+                backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+                border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.1));
+                box-shadow: var(--glass-shadow, 0 10px 40px rgba(0, 0, 0, 0.5));
+                color: var(--text-main, #fff); font-family: 'Archivo', sans-serif;
+                transition: opacity 0.15s ease-out;
             `;
+            document.body.appendChild(tooltip);
+        }
 
-            tooltip.style.display = 'block';
-            tooltip.style.opacity = '0';
+        let html = `<div class="grid grid-cols-[60px_repeat(13,minmax(40px,1fr))] gap-1"><div></div>`;
+        hours.forEach(h => html += `<div class="text-center text-[9px] font-black uppercase tracking-widest ${textColor} pb-2">${h}h</div>`);
+        
+        days.forEach((day, dayIndex) => {
+            html += `<div class="flex items-center justify-end pr-4 text-[9px] font-black uppercase tracking-widest ${textColor}">${daysAbrev[dayIndex]}</div>`;
+            hours.forEach(hour => {
+                const val = dataMap[day][hour] || 0;
+                const breakdowns = catDataMap[day][hour] || {};
+                const drilldowns = drillDataMap[day][hour] || {};
+                const redes = redeDataMap[day][hour] || {};
+                
+                const bdJson = JSON.stringify(breakdowns).replace(/"/g, '&quot;');
+                const drillJson = JSON.stringify(drilldowns).replace(/"/g, '&quot;');
+                const redeJson = JSON.stringify(redes).replace(/"/g, '&quot;');
+                
+                let bgStyle = '';
+                let baseClasses = `heatmap-cell h-10 w-full flex items-center justify-center text-[12px] transition-all duration-300 z-10`;
+                let colorClasses = '';
+                
+                if (val > 0) {
+                    let ratio = maxVal > 0 ? (val / maxVal) : 0;
+                    let alpha = 0.15 + (ratio * 0.85);
+                    let hue = 260 + (ratio * 90);
+                    bgStyle = `background-color: hsla(${hue}, 85%, 55%, ${alpha}); box-shadow: 0 0 12px hsla(${hue}, 85%, 55%, ${alpha * 0.4}); border: 1px solid hsla(${hue}, 85%, 70%, ${alpha * 0.5});`;
+                    
+                    let textClass = ratio > 0.35 ? `text-white font-bold` : (isDark ? `text-white/50 font-medium` : `text-black/50 font-medium`);
+                    colorClasses = ` ${textClass} rounded-lg cursor-pointer hover:scale-110 hover:z-20`;
+                } else {
+                    colorClasses = ` border ${emptyBg} text-transparent rounded-lg cursor-default`;
+                }
+
+                html += `<div class="${baseClasses}${colorClasses}" 
+                              style="${bgStyle} font-stretch: 140%;"
+                              data-day="${day}"
+                              data-hour="${hour}"
+                              data-total="${Math.round(val)}"
+                              data-bd="${bdJson}"
+                              data-drill="${drillJson}"
+                              data-rede="${redeJson}"
+                         >${Math.round(val)}</div>`;
+            });
         });
+        html += `</div>`;
+        container.innerHTML = html;
 
-        cell.addEventListener('mousemove', (e) => {
-            if (tooltip.style.display === 'none' || container.classList.contains('heatmap-blurred')) return;
+        // Remove blur após renderizar
+        setTimeout(() => {
+            container.style.filter = 'blur(0px)';
+            container.style.opacity = '1';
+        }, 50);
 
-            const tW = tooltip.offsetWidth;
-            const tH = tooltip.offsetHeight;
-            const winW = window.innerWidth;
-            const winH = window.innerHeight;
+        const cells = container.querySelectorAll('.heatmap-cell');
+        cells.forEach(cell => {
+            const total = parseInt(cell.getAttribute('data-total') || 0);
 
-            const gap = 15;
-            let x = e.clientX + gap;
-            let y = e.clientY + gap;
+            cell.addEventListener('mouseenter', () => {
+                if (total === 0 || container.classList.contains('heatmap-blurred')) return;
 
-            if (x + tW > winW - gap) x = e.clientX - tW - gap;
-            if (y + tH > winH - gap) y = e.clientY - tH - gap;
+                const day = cell.getAttribute('data-day');
+                const hour = cell.getAttribute('data-hour');
+                const bd = JSON.parse(cell.getAttribute('data-bd') || '{}');
 
-            tooltip.style.left = x + 'px';
-            tooltip.style.top = y + 'px';
-            tooltip.style.opacity = '1';
+                const bdKeys = Object.keys(bd).sort((a,b) => bd[b] - bd[a]);
+                let bdHTML = bdKeys.map(k => `
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:4px;">
+                        <span style="font-size:10px; text-transform:uppercase; font-weight:700; color:var(--text-muted, #9ca3af);">${k}</span>
+                        <span style="font-size:12px; font-weight:900;">${Math.round(bd[k])}</span>
+                    </div>
+                `).join('');
+
+                if (bdHTML === '') bdHTML = `<div style="font-size:10px; color:var(--text-muted, #9ca3af); font-style:italic;">Sem detalhes</div>`;
+
+                tooltip.innerHTML = `
+                    <div style="border-bottom: 1px solid var(--glass-border, rgba(255,255,255,0.1)); padding-bottom: 8px; margin-bottom: 8px;">
+                        <p style="font-size:9px; font-weight:900; color:#685BC7; text-transform:uppercase; letter-spacing:0.1em; margin:0 0 2px 0;">${day} • ${hour}h</p>
+                        <p style="font-size:16px; font-weight:900; line-height:1; margin:0;">${total} <span style="font-size:9px; font-weight:400; color:var(--text-muted, #9ca3af); text-transform:uppercase; letter-spacing:0;">interações</span></p>
+                        <p style="font-size:8px; margin-top:4px; opacity:0.5; font-weight:bold;">CLIQUE PARA DRILL-DOWN</p>
+                    </div>
+                    ${bdHTML}
+                `;
+
+                tooltip.style.display = 'block';
+                tooltip.style.opacity = '0';
+            });
+
+            cell.addEventListener('mousemove', (e) => {
+                if (tooltip.style.display === 'none' || container.classList.contains('heatmap-blurred')) return;
+
+                const tW = tooltip.offsetWidth;
+                const tH = tooltip.offsetHeight;
+                const winW = window.innerWidth;
+                const winH = window.innerHeight;
+
+                const gap = 15;
+                let x = e.clientX + gap;
+                let y = e.clientY + gap;
+
+                if (x + tW > winW - gap) x = e.clientX - tW - gap;
+                if (y + tH > winH - gap) y = e.clientY - tH - gap;
+
+                tooltip.style.left = x + 'px';
+                tooltip.style.top = y + 'px';
+                tooltip.style.opacity = '1';
+            });
+
+            cell.addEventListener('mouseleave', () => {
+                tooltip.style.opacity = '0';
+                tooltip.style.display = 'none';
+            });
+
+            cell.addEventListener('click', () => {
+                if (total === 0) return;
+                
+                tooltip.style.opacity = '0';
+                tooltip.style.display = 'none';
+
+                const day = cell.getAttribute('data-day');
+                const hour = cell.getAttribute('data-hour');
+                const drillData = JSON.parse(cell.getAttribute('data-drill') || '{}');
+                const redeData = JSON.parse(cell.getAttribute('data-rede') || '{}');
+                
+                openDrilldown(day, hour, total, drillData, redeData);
+            });
         });
-
-        cell.addEventListener('mouseleave', () => {
-            tooltip.style.opacity = '0';
-            tooltip.style.display = 'none';
-        });
-
-        cell.addEventListener('click', () => {
-            if (total === 0) return;
-            
-            tooltip.style.opacity = '0';
-            tooltip.style.display = 'none';
-
-            const day = cell.getAttribute('data-day');
-            const hour = cell.getAttribute('data-hour');
-            const drillData = JSON.parse(cell.getAttribute('data-drill') || '{}');
-            
-            openDrilldown(day, hour, total, drillData);
-        });
-    });
+    }, 100);
 }
 
-function openDrilldown(day, hour, total, drillData) {
+function openDrilldown(day, hour, total, drillData, redeData) {
     const container = document.getElementById('html-heatmap-container');
     const overlay = document.getElementById('hp-drilldown-overlay');
     const subtitle = document.getElementById('hp-drill-subtitle');
-    const listContainer = document.getElementById('hp-drill-list');
+    const listProdutos = document.getElementById('hp-drill-list-produtos');
+    const listRedes = document.getElementById('hp-drill-list-redes');
 
     subtitle.innerText = `${day} às ${hour}h • Total: ${total}`;
     
-    const items = Object.entries(drillData).sort((a,b) => b[1] - a[1]);
-    let html = '';
+    // Lista de produtos
+    const itemsProdutos = Object.entries(drillData).sort((a,b) => b[1] - a[1]);
+    let htmlProdutos = '';
     
-    items.forEach(([prod, vol], index) => {
-        html += `
-            <div class="flex justify-between items-center p-4 bg-white/5 border border-white/5 rounded-xl hover:bg-white/10 transition-colors" style="animation: smoothEntrance 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: ${index * 0.05}s; opacity: 0;">
-                <span class="text-sm font-bold text-white/90 truncate mr-4">${prod}</span>
-                <span class="text-lg font-black text-[#685BC7] font-numbers">${Math.round(vol)}</span>
-            </div>
-        `;
-    });
+    if (itemsProdutos.length === 0) {
+        htmlProdutos = '<div class="text-white/40 text-sm italic p-4">Nenhum aparelho registrado</div>';
+    } else {
+        itemsProdutos.forEach(([prod, vol], index) => {
+            htmlProdutos += `
+                <div class="flex justify-between items-center p-4 bg-white/5 border border-white/5 rounded-xl hover:bg-white/10 transition-colors" style="animation: smoothEntrance 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: ${index * 0.05}s; opacity: 0;">
+                    <span class="text-sm font-bold text-white/90 truncate mr-4">${prod}</span>
+                    <span class="text-lg font-black text-[#685BC7] font-numbers">${Math.round(vol)}</span>
+                </div>
+            `;
+        });
+    }
+    
+    // Lista de redes
+    const itemsRedes = Object.entries(redeData).sort((a,b) => b[1] - a[1]);
+    let htmlRedes = '';
+    
+    if (itemsRedes.length === 0) {
+        htmlRedes = '<div class="text-white/40 text-sm italic p-4">Nenhuma rede registrada</div>';
+    } else {
+        itemsRedes.forEach(([rede, vol], index) => {
+            htmlRedes += `
+                <div class="flex justify-between items-center p-4 bg-white/5 border border-white/5 rounded-xl hover:bg-white/10 transition-colors" style="animation: smoothEntrance 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: ${index * 0.05}s; opacity: 0;">
+                    <span class="text-sm font-bold text-white/90 truncate mr-4">${rede}</span>
+                    <span class="text-lg font-black text-[#f43f5e] font-numbers">${Math.round(vol)}</span>
+                </div>
+            `;
+        });
+    }
 
-    listContainer.innerHTML = html;
+    listProdutos.innerHTML = htmlProdutos;
+    listRedes.innerHTML = htmlRedes;
 
     container.classList.add('heatmap-blurred');
     overlay.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-8');

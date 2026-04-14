@@ -238,15 +238,43 @@ export const renderOverviewCharts = () => {
 
 let currentRenderToken = 0; // Trava de segurança global da tela
 
+// Helper para aplicar fade suave nos KPIs
+function updateKPIWithFade(elementId, newContent, isHTML = false) {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+    
+    // Fade out
+    el.classList.add('kpi-fade-out');
+    
+    setTimeout(() => {
+        // Atualiza o conteúdo
+        if (isHTML) {
+            el.innerHTML = newContent;
+        } else {
+            el.innerText = newContent;
+        }
+        
+        // Remove fade-out e adiciona fade-in
+        el.classList.remove('kpi-fade-out');
+        el.classList.add('kpi-fade-in');
+        
+        // Remove a classe de fade-in após a animação
+        setTimeout(() => {
+            el.classList.remove('kpi-fade-in');
+        }, 200);
+    }, 150);
+}
+
 async function executeRenderLogic() {
     // 1. Gera um "ticket" exclusivo para este clico de renderização
     const renderToken = ++currentRenderToken;
 
-    // Mostra loading nos KPIs
-    document.getElementById('k-sess').innerHTML = '<div class="skeleton-pulse">Carregando...</div>';
-    document.getElementById('k-sto').innerHTML = '<div class="skeleton-pulse">Carregando...</div>';
-    document.getElementById('k-dev').innerHTML = '<div class="skeleton-pulse">Carregando...</div>';
-    document.getElementById('k-avg').innerHTML = '<div class="skeleton-pulse">Carregando...</div>';
+    // Mostra loading nos KPIs com fade
+    const kpiSpinner = '<div class="flex items-center justify-center"><div class="kpi-spinner"></div></div>';
+    updateKPIWithFade('k-sess', kpiSpinner, true);
+    updateKPIWithFade('k-sto', kpiSpinner, true);
+    updateKPIWithFade('k-dev', kpiSpinner, true);
+    updateKPIWithFade('k-avg', kpiSpinner, true);
     
     // Mostra spinner nos gráficos
     const chartContainers = ['c-timeline', 'c-time', 'c-rede', 'c-shop', 'c-linha'];
@@ -286,10 +314,10 @@ async function executeRenderLogic() {
 
         // 2. Se a rede funcionou, mas os filtros não trouxeram nenhum resultado matematicamente
         if (!dbData.kpis || dbData.kpis.total_sessions === 0) {
-            document.getElementById('k-sess').innerText = '0';
-            document.getElementById('k-sto').innerText = '0';
-            document.getElementById('k-dev').innerText = '0';
-            document.getElementById('k-avg').innerText = '0';
+            updateKPIWithFade('k-sess', '0');
+            updateKPIWithFade('k-sto', '0');
+            updateKPIWithFade('k-dev', '0');
+            updateKPIWithFade('k-avg', '0');
             document.getElementById('insight-text').innerText = 'Aguardando dados estruturados para processamento analítico.';
             return;
         }
@@ -299,10 +327,10 @@ async function executeRenderLogic() {
         const stores = dbData.kpis.unique_stores;
         const devices = dbData.kpis.unique_devices;
         
-        document.getElementById('k-sess').innerText = Math.round(totalSess).toLocaleString('pt-BR');
-        document.getElementById('k-sto').innerText = stores;
-        document.getElementById('k-dev').innerText = devices;
-        document.getElementById('k-avg').innerText = stores ? Math.round(totalSess/stores).toLocaleString('pt-BR') : 0;
+        updateKPIWithFade('k-sess', Math.round(totalSess).toLocaleString('pt-BR'));
+        updateKPIWithFade('k-sto', stores.toString());
+        updateKPIWithFade('k-dev', devices.toString());
+        updateKPIWithFade('k-avg', stores ? Math.round(totalSess/stores).toLocaleString('pt-BR') : '0');
         
         // Tooltip de Aparelhos (Safeguard de Array Vazio)
         const sortedDevList = (dbData.aparelhos || [])
