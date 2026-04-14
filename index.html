@@ -171,19 +171,20 @@
         /* =============================================
            FILTER BAR ANIMATION UNIFICADA
         ============================================= */
-        #filterbar-row {
-            display: flex; align-items: flex-end; justify-content: center; flex-wrap: wrap;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            overflow: hidden;
-        }
+       #filterbar-row {
+    display: flex; align-items: flex-end; justify-content: center; flex-wrap: wrap;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative; 
+    z-index: 100; /* Garante que os dropdowns fiquem acima de qualquer view */
+}
 
-        #filterbar-row.filters-hidden {
-            max-height: 0; opacity: 0; transform: translateY(-10px); pointer-events: none; gap: 0; margin: 0;
-        }
+#filterbar-row.filters-hidden {
+    max-height: 0; opacity: 0; transform: translateY(-10px); pointer-events: none; gap: 0; margin: 0;
+}
 
-        #filterbar-row.filters-open {
-            max-height: 400px; opacity: 1; transform: translateY(0); pointer-events: auto; gap: 12px; margin-top: 10px;
-        }
+#filterbar-row.filters-open {
+    max-height: 400px; opacity: 1; transform: translateY(0); pointer-events: auto; gap: 12px; margin-top: 10px;
+}
 
         @media (max-width: 768px) {
             #filterbar-row.filters-open {
