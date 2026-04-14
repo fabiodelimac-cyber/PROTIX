@@ -9,7 +9,7 @@ export const getPositivacaoHTML = () => {
             .glass-panel { background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); }
             .text-adaptive { color: var(--text-main); }
             .text-adaptive-muted { color: var(--text-muted); }
-            .text-adaptive-strong { color: var(--text-muted-strong); } /* Classe adicionada para correção do dark mode */
+            .text-adaptive-strong { color: var(--text-muted-strong); }
             .text-glow { text-shadow: var(--glow-shadow); }
             .text-glow-accent { text-shadow: var(--glow-accent); }
             .text-glow-green { text-shadow: var(--glow-green); }
@@ -21,13 +21,15 @@ export const getPositivacaoHTML = () => {
             .bg-sticky { background-color: var(--bg-sticky); backdrop-filter: blur(10px); }
             .hover-row:hover td { background-color: var(--hover-table); }
 
+            /* Transição da Tabela de Matriz */
+            #matrix-table { transition: opacity 0.3s ease; }
+
             /* EYE CANDY: Animações de Entrada em Cascata */
-          @keyframes smoothEntrance {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-.anim-cascade { opacity: 0; animation: smoothEntrance 0.3s ease-in-out forwards; }
-            .anim-cascade { opacity: 0; animation: smoothEntrance 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+            @keyframes smoothEntrance {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            .anim-cascade { opacity: 0; animation: smoothEntrance 0.3s ease-in-out forwards; }
             .delay-1 { animation-delay: 0.1s; }
             .delay-2 { animation-delay: 0.2s; }
             .delay-3 { animation-delay: 0.3s; }
@@ -104,19 +106,32 @@ export const renderPositivacao = () => {
         btn.classList.add('text-adaptive-strong', 'hover:text-adaptive', 'bg-transparent');
     };
 
+    const updateMatrixWithTransition = () => {
+        const matrixTable = document.getElementById('matrix-table');
+        if (matrixTable) {
+            matrixTable.style.opacity = 0;
+            setTimeout(() => {
+                executeRenderLogic(appData.getFilteredData());
+                matrixTable.style.opacity = 1;
+            }, 300);
+        } else {
+            executeRenderLogic(appData.getFilteredData());
+        }
+    };
+
     if (btnStore && btnDevice) {
         btnStore.onclick = () => {
             if(currentMode === 'store') return;
             currentMode = 'store';
             setActive(btnStore); setInactive(btnDevice);
-            executeRenderLogic(appData.getFilteredData()); // Força redesenho
+            updateMatrixWithTransition();
         };
 
         btnDevice.onclick = () => {
             if(currentMode === 'device') return;
             currentMode = 'device';
             setActive(btnDevice); setInactive(btnStore);
-            executeRenderLogic(appData.getFilteredData()); // Força redesenho
+            updateMatrixWithTransition();
         };
 
         // Estado inicial dos botões
@@ -237,18 +252,18 @@ function renderProductTable(data) {
 }
 
 // ==========================================
-// MATRIZ DE POSITIVAÇÃO
+// MATRIZ DE POSITIVAÇÃO (COMPORTAMENTO MOBILE ATUALIZADO)
 // ==========================================
 function renderStoreMatrix(table, rows, cols, map) {
-    let html = `<thead><tr><th class="p-4 text-[9px] font-black text-adaptive-muted uppercase tracking-[0.2em] border-b table-border sticky top-0 left-0 z-30 bg-sticky shadow-[2px_2px_10px_rgba(0,0,0,0.05)]">Ponto de Venda</th>`;
-    cols.forEach(c => html += `<th class="p-4 text-[9px] font-black text-adaptive-muted uppercase tracking-[0.1em] border-b table-border text-center min-w-[120px] sticky top-0 z-20 bg-sticky shadow-[0_2px_10px_rgba(0,0,0,0.02)]">${c}</th>`);
+    let html = `<thead><tr><th class="p-3 md:p-4 text-[9px] font-black text-adaptive-muted uppercase tracking-[0.2em] border-b table-border sticky top-0 left-0 z-30 bg-sticky shadow-[2px_2px_10px_rgba(0,0,0,0.05)] min-w-[110px] max-w-[130px] md:min-w-auto md:max-w-none whitespace-normal md:whitespace-nowrap leading-tight">Ponto de Venda</th>`;
+    cols.forEach(c => html += `<th class="p-3 md:p-4 text-[9px] font-black text-adaptive-muted uppercase tracking-[0.1em] border-b table-border text-center min-w-[70px] md:min-w-[120px] sticky top-0 z-20 bg-sticky shadow-[0_2px_10px_rgba(0,0,0,0.02)]">${c}</th>`);
     html += `</tr></thead><tbody>`;
 
     rows.forEach(r => {
-        html += `<tr class="hover-row transition-colors duration-200"><td class="p-4 text-[11px] font-bold text-adaptive border-b table-border sticky left-0 z-10 bg-sticky whitespace-nowrap shadow-[2px_0_10px_rgba(0,0,0,0.02)]">${r}</td>`;
+        html += `<tr class="hover-row transition-colors duration-200"><td class="p-3 md:p-4 text-[9.5px] md:text-[11px] font-bold text-adaptive border-b table-border sticky left-0 z-10 bg-sticky shadow-[2px_0_10px_rgba(0,0,0,0.02)] min-w-[110px] max-w-[130px] md:max-w-none whitespace-normal md:whitespace-nowrap leading-tight break-words">${r}</td>`;
         cols.forEach(c => {
             const isPos = map[`${r}|${c}`];
-            html += `<td class="p-4 border-b table-border text-center cursor-default">
+            html += `<td class="p-3 md:p-4 border-b table-border text-center cursor-default">
                 ${isPos ? '<span class="text-[#22c55e] text-xl text-glow-green drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]">●</span>' : '<span class="text-adaptive-muted opacity-10 text-[10px]">―</span>'}
             </td>`;
         });
@@ -258,15 +273,15 @@ function renderStoreMatrix(table, rows, cols, map) {
 }
 
 function renderDeviceMatrix(table, rows, cols, map) {
-    let html = `<thead><tr><th class="p-4 text-[9px] font-black text-adaptive-muted uppercase tracking-[0.2em] border-b table-border sticky top-0 left-0 z-30 bg-sticky shadow-[2px_2px_10px_rgba(0,0,0,0.05)]">Modelo do Aparelho</th>`;
-    cols.forEach(c => html += `<th class="p-4 text-[9px] font-black text-adaptive-muted uppercase tracking-[0.1em] border-b table-border text-center min-w-[120px] sticky top-0 z-20 bg-sticky shadow-[0_2px_10px_rgba(0,0,0,0.02)]">${c}</th>`);
+    let html = `<thead><tr><th class="p-3 md:p-4 text-[9px] font-black text-adaptive-muted uppercase tracking-[0.2em] border-b table-border sticky top-0 left-0 z-30 bg-sticky shadow-[2px_2px_10px_rgba(0,0,0,0.05)] min-w-[110px] max-w-[130px] md:min-w-auto md:max-w-none whitespace-normal md:whitespace-nowrap leading-tight">Modelo do Aparelho</th>`;
+    cols.forEach(c => html += `<th class="p-3 md:p-4 text-[9px] font-black text-adaptive-muted uppercase tracking-[0.1em] border-b table-border text-center min-w-[70px] md:min-w-[120px] sticky top-0 z-20 bg-sticky shadow-[0_2px_10px_rgba(0,0,0,0.02)]">${c}</th>`);
     html += `</tr></thead><tbody>`;
 
     rows.forEach(r => {
-        html += `<tr class="hover-row transition-colors duration-200"><td class="p-4 text-[11px] font-bold text-adaptive border-b table-border sticky left-0 z-10 bg-sticky whitespace-nowrap shadow-[2px_0_10px_rgba(0,0,0,0.02)]">${r}</td>`;
+        html += `<tr class="hover-row transition-colors duration-200"><td class="p-3 md:p-4 text-[9.5px] md:text-[11px] font-bold text-adaptive border-b table-border sticky left-0 z-10 bg-sticky shadow-[2px_0_10px_rgba(0,0,0,0.02)] min-w-[110px] max-w-[130px] md:max-w-none whitespace-normal md:whitespace-nowrap leading-tight break-words">${r}</td>`;
         cols.forEach(c => {
             const isPos = map[`${c}|${r}`];
-            html += `<td class="p-4 border-b table-border text-center cursor-default">
+            html += `<td class="p-3 md:p-4 border-b table-border text-center cursor-default">
                 ${isPos ? '<span class="text-[#22c55e] text-xl text-glow-green drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]">●</span>' : '<span class="text-adaptive-muted opacity-10 text-[10px]">―</span>'}
             </td>`;
         });

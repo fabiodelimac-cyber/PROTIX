@@ -5,7 +5,8 @@ Chart.register(ChartDataLabels);
 
 let chartInstances = {};
 let insightTimeout = null;
-let unsubscribeData = null; // Variável para controlar a inscrição no DataManager
+let unsubscribeData = null;
+let timelineMode = 'dia'; // Estado global do seletor da timeline
 
 export const getOverviewHTML = () => {
     const showWelcome = !sessionStorage.getItem('ps_welcome_shown');
@@ -17,12 +18,13 @@ export const getOverviewHTML = () => {
             .glass-panel { background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); }
             .text-adaptive { color: var(--text-main); }
             .text-adaptive-muted { color: var(--text-muted); }
+            .text-adaptive-strong { color: var(--text-muted-strong); }
             .text-glow { text-shadow: var(--glow-shadow); }
             .text-glow-accent { text-shadow: var(--glow-accent); }
             .neon-accent { background: var(--neon-bg); }
             .divide-adaptive > div { border-color: var(--glass-border); }
 
-            /* EYE CANDY: Animações de Entrada Supremas */
+            /* EYE CANDY: Animações de Entrada */
             @keyframes slideUpFade {
                 from { opacity: 0; transform: translateY(10px); }
                 to { opacity: 1; transform: translateY(0); }
@@ -32,20 +34,22 @@ export const getOverviewHTML = () => {
             }
             
             @keyframes smoothEntrance {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-.anim-cascade { opacity: 0; animation: smoothEntrance 0.3s ease-in-out forwards; }
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            .anim-cascade { opacity: 0; animation: smoothEntrance 0.3s ease-in-out forwards; }
             
             .welcome-msg { animation: slideUpFade 0.8s ease forwards; }
             .welcome-msg.hide { animation: fadeOutWelcome 0.5s ease forwards; }
             
-            /* Classes de cascata para os cards */
-            .anim-cascade { opacity: 0; animation: smoothEntrance 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+            /* Cascata de entrada */
             .delay-1 { animation-delay: 0.1s; }
             .delay-2 { animation-delay: 0.2s; }
             .delay-3 { animation-delay: 0.3s; }
             .delay-4 { animation-delay: 0.4s; }
+
+            /* Transição de título */
+            #title-timeline { transition: opacity 0.3s ease; }
         </style>
 
         <div id="view-overview-wrapper" class="pb-10 overflow-hidden">
@@ -59,7 +63,7 @@ export const getOverviewHTML = () => {
             </div>
             ` : ''}
 
-            <div id="insight-box" class="anim-cascade delay-1 glass-panel p-5 md:p-6 rounded-2xl flex items-center gap-5 mb-6 md:mb-8 transition-all hover:scale-[1.01]">
+            <div id="insight-box" class="anim-cascade delay-1 glass-panel p-5 md:p-6 rounded-2xl flex items-center gap-5 mb-6 md:mb-8 transition-all">
                 <div class="bg-gradient-to-br from-[#685BC7] to-[#8b5cf6] px-4 py-2 rounded-xl text-white font-black text-[9px] uppercase tracking-[0.2em] shadow-lg shadow-[#685BC7]/30 shrink-0">INSIGHT</div>
                 <p id="insight-text" class="text-sm md:text-base font-medium tracking-tight text-adaptive italic"></p>
             </div>
@@ -89,37 +93,45 @@ export const getOverviewHTML = () => {
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mb-6 md:mb-8">
-                <div class="anim-cascade delay-3 glass-panel p-8 md:p-10 rounded-[2.5rem] relative z-10 hover:-translate-y-1 transition-transform duration-300">
-                    <h4 class="ds-chart-title mb-8">Volume de Interações por Dia</h4>
-                    <div class="chart-container" style="height: 250px;"><canvas id="c-timeline"></canvas></div>
+            <div class="anim-cascade delay-3 glass-panel p-8 md:p-10 rounded-[2.5rem] relative z-10 mb-6 md:mb-8">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                    <h4 id="title-timeline" class="ds-chart-title">Volume de Interações por Dia</h4>
+                    
+                    <div class="flex bg-[var(--input-bg)] p-1 rounded-2xl border border-[var(--glass-border)]">
+                        <button id="mode-dia" class="px-5 py-2 text-[9px] font-bold uppercase tracking-[0.1em] rounded-xl bg-[#685BC7] text-white shadow-lg transition-all duration-300">
+                            Por Dia
+                        </button>
+                        <button id="mode-semana" class="px-5 py-2 text-[9px] font-bold uppercase tracking-[0.1em] rounded-xl text-adaptive-strong hover:text-adaptive transition-all duration-300">
+                            Por Semana
+                        </button>
+                    </div>
                 </div>
-                <div class="anim-cascade delay-3 glass-panel p-8 md:p-10 rounded-[2.5rem] relative z-10 hover:-translate-y-1 transition-transform duration-300">
-                    <h4 class="ds-chart-title mb-8">Frequência de Uso por Hora</h4>
-                    <div class="chart-container" style="height: 250px;"><canvas id="c-time"></canvas></div>
+                <div class="chart-container" style="height: 280px;"><canvas id="c-timeline"></canvas></div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mb-6 md:mb-8">
+                <div class="anim-cascade delay-3 glass-panel p-8 md:p-10 rounded-[2.5rem] relative z-10">
+                    <h4 class="ds-chart-title mb-8">Frequência de Interação por Hora</h4>
+                    <div class="chart-container" style="height: 280px;"><canvas id="c-time"></canvas></div>
+                </div>
+                <div class="anim-cascade delay-4 glass-panel p-8 md:p-10 rounded-[2.5rem] relative z-10">
+                    <h4 class="ds-chart-title mb-8">Engajamento por Rede</h4>
+                    <div class="chart-container" style="height: 280px;"><canvas id="c-rede"></canvas></div>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mb-6 md:mb-8">
-                <div class="anim-cascade delay-4 glass-panel p-8 md:p-10 rounded-[2.5rem] relative z-10 hover:-translate-y-1 transition-transform duration-300">
-                    <h4 class="ds-chart-title mb-8">Engajamento por Rede</h4>
-                    <div class="chart-container" style="height: 280px;"><canvas id="c-rede"></canvas></div>
+                <div class="anim-cascade delay-4 glass-panel p-8 md:p-10 rounded-[2.5rem] relative z-10 flex flex-col">
+                    <h4 class="ds-chart-title mb-8 text-center xl:text-left">Interações por Local</h4>
+                    <div class="chart-container relative flex-1 min-h-[250px]">
+                        <canvas id="c-shop"></canvas>
+                    </div>
                 </div>
                 
-                <div class="anim-cascade delay-4 glass-panel p-6 md:p-8 rounded-[2.5rem] relative z-10 hover:-translate-y-1 transition-transform duration-300">
-                    <div class="flex flex-col xl:flex-row gap-6 h-full">
-                        <div class="flex-1 flex flex-col">
-                            <h4 class="ds-chart-title mb-2 text-center xl:text-left">Interações por Local</h4>
-                            <div class="chart-container relative flex-1 min-h-[220px]">
-                                <canvas id="c-shop"></canvas>
-                            </div>
-                        </div>
-                        <div class="flex-1 flex flex-col border-t xl:border-t-0 xl:border-l border-[var(--glass-border)] pt-6 xl:pt-0 xl:pl-6">
-                            <h4 class="ds-chart-title mb-2 text-center xl:text-left">Interações por Linha</h4>
-                            <div class="chart-container relative flex-1 min-h-[220px]">
-                                <canvas id="c-linha"></canvas>
-                            </div>
-                        </div>
+                <div class="anim-cascade delay-4 glass-panel p-8 md:p-10 rounded-[2.5rem] relative z-10 flex flex-col">
+                    <h4 class="ds-chart-title mb-8 text-center xl:text-left">Interações por Linha</h4>
+                    <div class="chart-container relative flex-1 min-h-[250px]">
+                        <canvas id="c-linha"></canvas>
                     </div>
                 </div>
             </div>
@@ -133,11 +145,7 @@ export const destroyOverviewCharts = () => {
     });
     chartInstances = {};
     if (insightTimeout) clearInterval(insightTimeout);
-
-    if (unsubscribeData) {
-        unsubscribeData();
-        unsubscribeData = null;
-    }
+    if (unsubscribeData) { unsubscribeData(); unsubscribeData = null; }
 };
 
 export const renderOverviewCharts = () => {
@@ -148,6 +156,49 @@ export const renderOverviewCharts = () => {
             welcome.classList.add('hide');
             setTimeout(() => welcome.remove(), 500);
         }, 5000);
+    }
+
+    // Configuração do Seletor da Timeline
+    const btnDia = document.getElementById('mode-dia');
+    const btnSemana = document.getElementById('mode-semana');
+
+    const setActive = (btn) => {
+        btn.classList.add('bg-[#685BC7]', 'text-white', 'shadow-lg');
+        btn.classList.remove('text-adaptive-strong', 'hover:text-adaptive', 'bg-transparent');
+    };
+
+    const setInactive = (btn) => {
+        btn.classList.remove('bg-[#685BC7]', 'text-white', 'shadow-lg');
+        btn.classList.add('text-adaptive-strong', 'hover:text-adaptive', 'bg-transparent');
+    };
+
+    if (btnDia && btnSemana) {
+        btnDia.onclick = () => {
+            if(timelineMode === 'dia') return;
+            timelineMode = 'dia';
+            setActive(btnDia); setInactive(btnSemana);
+            updateTimelineTitle();
+        };
+
+        btnSemana.onclick = () => {
+            if(timelineMode === 'semana') return;
+            timelineMode = 'semana';
+            setActive(btnSemana); setInactive(btnDia);
+            updateTimelineTitle();
+        };
+
+        if (timelineMode === 'dia') { setActive(btnDia); setInactive(btnSemana); } 
+        else { setActive(btnSemana); setInactive(btnDia); }
+    }
+
+    function updateTimelineTitle() {
+        const titleEl = document.getElementById('title-timeline');
+        titleEl.style.opacity = 0; 
+        setTimeout(() => {
+            titleEl.innerText = timelineMode === 'semana' ? 'Volume de Interações por Semana' : 'Volume de Interações por Dia';
+            titleEl.style.opacity = 1; 
+            executeRenderLogic(appData.getFilteredData());
+        }, 300);
     }
 
     unsubscribeData = appData.subscribe((filteredData) => {
@@ -173,7 +224,6 @@ function executeRenderLogic(filteredData) {
         return;
     }
     
-    // Simplificado pois o DataManager já garante que é número
     const parseN = v => Number(v) || 0;
     
     // KPIs
@@ -186,7 +236,6 @@ function executeRenderLogic(filteredData) {
     document.getElementById('k-dev').innerText = devices;
     document.getElementById('k-avg').innerText = stores ? Math.round(totalSess/stores).toLocaleString('pt-BR') : 0;
     
-    // Tooltip do Aparelho
     const devSetMap = {};
     filteredData.forEach(d => {
         if(d.aparelho && d.tipo && d.device_code) {
@@ -202,33 +251,23 @@ function executeRenderLogic(filteredData) {
             ? sortedDevList.map(v => `<div class="mt-2.5 flex items-center justify-between gap-6"><span class="opacity-90">${v[0]}</span> <span class="font-black font-numbers text-[#8b5cf6] bg-[#8b5cf6]/10 px-2 py-0.5 rounded-md border border-[#8b5cf6]/20">${v[1]}</span></div>`).join('') 
             : '<div class="opacity-50 mt-2">Nenhum modelo detectado</div>');
             
-    // Heurística do Insight
+    // Insight Heurístico
     const devG = filteredData.reduce((a, o) => { a[o.aparelho] = (a[o.aparelho] || 0) + parseN(o.sessions); return a; }, {});
     const topDev = Object.entries(devG).sort((a,b) => b[1]-a[1])[0];
     const textInsight = topDev ? `PROSOLUTION ANALYTICS: O modelo ${topDev[0]} registrou a maior tração com ${Math.round(topDev[1]).toLocaleString('pt-BR')} interações validadas.` : 'Aguardando massa de dados.';
     
     const el = document.getElementById('insight-text'); 
-    el.innerHTML = ""; 
-    let i = 0;
-    
+    el.innerHTML = ""; let i = 0;
     insightTimeout = setInterval(() => { 
-        if (i < textInsight.length) {
-            el.innerHTML += textInsight.charAt(i); 
-            i++; 
-        } else {
-            clearInterval(insightTimeout);
-        }
+        if (i < textInsight.length) { el.innerHTML += textInsight.charAt(i); i++; } 
+        else clearInterval(insightTimeout);
     }, 20); 
 
-    // BINÁRIO: Loja de Rua vs Shopping
+    // Agrupamentos Locais
     let ruaTotal = 0, shopTotal = 0;
-    
-    // LINHA: Agrupamento
     const linhaAgg = {};
-
     filteredData.forEach(d => {
         const sess = parseN(d.sessions);
-        
         const tipoOriginal = (d.shopping || '').toUpperCase().trim();
         if (tipoOriginal === 'LOJA DE RUA') ruaTotal += sess;
         else shopTotal += sess;
@@ -236,34 +275,101 @@ function executeRenderLogic(filteredData) {
         const linha = (d.linha_de_produto || 'N/A').toUpperCase().trim();
         linhaAgg[linha] = (linhaAgg[linha] || 0) + sess;
     });
-
     const sortedLinhas = Object.keys(linhaAgg).sort((a,b) => linhaAgg[b] - linhaAgg[a]);
 
-    // Renderizando os gráficos na nova ordem
-    drawChart('c-timeline', 'line', aggregateWithStores(filteredData, 'pure_date', true), true);
-    drawChart('c-time', 'line', aggregateWithStores(filteredData, 'faixa', true), true);
-    drawChart('c-rede', 'bar', aggregateWithStores(filteredData, 'rede', false, true));
-    
+    // Disparo dos Gráficos
+    drawChart('c-timeline', 'line', aggregateTimeline(filteredData, timelineMode), true);
+    drawChart('c-time', 'line', aggregateData(filteredData, 'faixa', true), true);
+    drawChart('c-rede', 'bar', aggregateData(filteredData, 'rede', false, true));
     drawChart('c-shop', 'doughnut', { labels: ['Loja de Rua', 'Shopping'], values: [ruaTotal, shopTotal] });
     drawChart('c-linha', 'doughnut', { labels: sortedLinhas, values: sortedLinhas.map(l => linhaAgg[l]) });
 }
 
-function aggregateWithStores(data, key, isT = false, isR = false) {
+// ==========================================
+// TRATAMENTO DA TIMELINE (DIA VS SEMANA ISO)
+// ==========================================
+function getISOWeek(dateStr) {
+    if(!dateStr || dateStr === 'N/A') return { sort: 'N/A', label: 'N/A' };
+    const parts = dateStr.split('-');
+    if(parts.length !== 3) return { sort: dateStr, label: dateStr };
+    
+    const d = new Date(Date.UTC(parts[0], parts[1]-1, parts[2]));
+    const day = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - day);
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+    
+    return {
+        sort: `${d.getUTCFullYear()}${weekNo.toString().padStart(2,'0')}`,
+        label: `Semana ${weekNo}`
+    };
+}
+
+function aggregateTimeline(data, mode) {
+    const grouped = {};
+    data.forEach(o => {
+        const rawDate = o.pure_date || 'N/A';
+        let sortKey = rawDate;
+        let label = rawDate;
+        
+        if (mode === 'semana' && rawDate !== 'N/A') {
+            const weekInfo = getISOWeek(rawDate);
+            sortKey = weekInfo.sort;
+            label = weekInfo.label;
+        } else if (mode === 'dia' && rawDate !== 'N/A') {
+            const parts = rawDate.split('-');
+            if(parts.length === 3) {
+                const d = new Date(parts[0], parts[1]-1, parts[2]);
+                const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+                label = `${rawDate}\n${days[d.getDay()]}`;
+            }
+        }
+        
+        const sess = Number(o.sessions) || 0;
+        const linha = o.linha_de_produto || 'N/A';
+        
+        if (!grouped[sortKey]) grouped[sortKey] = { label, total: 0, linhas: {} };
+        grouped[sortKey].total += sess;
+        grouped[sortKey].linhas[linha] = (grouped[sortKey].linhas[linha] || 0) + sess;
+    });
+    
+    const entries = Object.entries(grouped).sort((a,b) => a[0].localeCompare(b[0]));
+    return {
+        labels: entries.map(e => e[1].label),
+        values: entries.map(e => e[1].total),
+        tooltipData: entries.reduce((acc, e) => { acc[e[1].label] = e[1].linhas; return acc; }, {})
+    };
+}
+
+// ==========================================
+// AGRUPAMENTO PADRÃO COM TOOLTIP POR LINHA
+// ==========================================
+function aggregateData(data, key, isT = false, isR = false) {
     const g = data.reduce((acc, o) => { 
         const k = o[key] || 'N/A'; 
-        // Como o DataManager já tratou, usamos o Number() direto:
         const sess = Number(o.sessions) || 0; 
-        const store = o.store_name || 'N/A';
-        if (!acc[k]) acc[k] = { total: 0, stores: {} };
-        acc[k].total += sess; acc[k].stores[store] = (acc[k].stores[store] || 0) + sess; return acc; 
+        const linha = o.linha_de_produto || 'N/A';
+        
+        if (!acc[k]) acc[k] = { total: 0, linhas: {} };
+        acc[k].total += sess; 
+        acc[k].linhas[linha] = (acc[k].linhas[linha] || 0) + sess; 
+        return acc; 
     }, {});
+    
     let entries = Object.entries(g);
     if(isT) entries.sort((a,b) => a[0].localeCompare(b[0]));
     if(isR) entries.sort((a,b) => b[1].total - a[1].total);
-    return { labels: entries.map(e => e[0]), values: entries.map(e => e[1].total), tooltipData: entries.reduce((acc, e) => { acc[e[0]] = e[1].stores; return acc; }, {}) };
+    
+    return { 
+        labels: entries.map(e => e[0]), 
+        values: entries.map(e => e[1].total), 
+        tooltipData: entries.reduce((acc, e) => { acc[e[0]] = e[1].linhas; return acc; }, {}) 
+    };
 }
 
-// Plugin Crosshair
+// ==========================================
+// PLUGINS VISUAIS
+// ==========================================
 const crosshairPlugin = {
     id: 'crosshair',
     afterDraw: chart => {
@@ -275,17 +381,86 @@ const crosshairPlugin = {
             const x = activePoint.element.x;
             const topY = chart.scales.y.top;
             const bottomY = chart.scales.y.bottom;
-
-            ctx.save();
-            ctx.beginPath();
-            ctx.moveTo(x, topY);
-            ctx.lineTo(x, bottomY);
-            ctx.lineWidth = 1;
-            ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.15)';
-            ctx.setLineDash([4, 4]);
-            ctx.stroke();
-            ctx.restore();
+            ctx.save(); ctx.beginPath(); ctx.moveTo(x, topY); ctx.lineTo(x, bottomY);
+            ctx.lineWidth = 1; ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.15)';
+            ctx.setLineDash([4, 4]); ctx.stroke(); ctx.restore();
         }
+    }
+};
+
+const doughnutCustomLabelPlugin = {
+    id: 'doughnutCustomLabel',
+    afterDraw: chart => {
+        if (chart.config.type !== 'doughnut') return;
+        const ctx = chart.ctx;
+        const isDark = document.body.classList.contains('dark');
+        const lineColor = isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)';
+        const textColor = isDark ? '#FFFFFF' : '#131417';
+        
+        const meta = chart.getDatasetMeta(0);
+        const dataset = chart.data.datasets[0];
+        const total = dataset.data.reduce((a, b) => a + b, 0);
+        if (total === 0) return;
+
+        // 1. Extrai as posições brutas
+        let labelsInfo = meta.data.map((arc, i) => {
+            const data = dataset.data[i];
+            if(!data) return null;
+            
+            const angle = (arc.startAngle + arc.endAngle) / 2;
+            const cos = Math.cos(angle);
+            const sin = Math.sin(angle);
+            const radius = arc.outerRadius;
+            
+            return {
+                i, arc, cos, sin,
+                side: cos >= 0 ? 'right' : 'left',
+                y: arc.y + sin * (radius + 15),
+                xStart: arc.x + cos * radius,
+                yStart: arc.y + sin * radius,
+                labelText: chart.data.labels[i].toUpperCase(),
+                perc: (data * 100 / total).toFixed(1).replace('.', ',') + '%'
+            };
+        }).filter(Boolean);
+
+        // 2. Agrupa por lado e resolve as colisões no eixo Y
+        const sides = { 
+            right: labelsInfo.filter(l => l.side === 'right').sort((a,b) => a.y - b.y), 
+            left: labelsInfo.filter(l => l.side === 'left').sort((a,b) => a.y - b.y) 
+        };
+
+        const resolveCollisions = (arr) => {
+            const minYDist = 18; // Distância mínima garantida entre labels
+            for(let i=1; i<arr.length; i++) {
+                if(arr[i].y - arr[i-1].y < minYDist) {
+                    arr[i].y = arr[i-1].y + minYDist;
+                }
+            }
+        };
+        resolveCollisions(sides.right);
+        resolveCollisions(sides.left);
+
+        // 3. Renderiza as linhas e os textos nas coordenadas ajustadas
+        ctx.save();
+        [...sides.right, ...sides.left].forEach(l => {
+            const elbowX = l.arc.x + l.cos * (l.arc.outerRadius + 15);
+            const textX = elbowX + (l.side === 'right' ? 15 : -15);
+            
+            ctx.beginPath();
+            ctx.moveTo(l.xStart, l.yStart);
+            ctx.lineTo(elbowX, l.y); // Diagonal para acomodar a colisão
+            ctx.lineTo(textX, l.y);  // Tracinho horizontal
+            ctx.strokeStyle = lineColor;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            ctx.fillStyle = textColor;
+            ctx.font = '800 10px Archivo';
+            ctx.textAlign = l.side === 'right' ? 'left' : 'right';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(`${l.labelText} (${l.perc})`, textX + (l.side === 'right' ? 5 : -5), l.y);
+        });
+        ctx.restore();
     }
 };
 
@@ -301,7 +476,9 @@ function drawChart(id, type, data, isArea = false, isH = false) {
     const tooltipBody = isDark ? 'rgba(255, 255, 255, 0.8)' : 'rgba(19, 20, 23, 0.8)';
     const tooltipBorder = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)';
 
-    const pluginsArray = type === 'line' ? [crosshairPlugin] : [];
+    const pluginsArray = [];
+    if (type === 'line') pluginsArray.push(crosshairPlugin);
+    if (type === 'doughnut') pluginsArray.push(doughnutCustomLabelPlugin); // Usa o novo plugin inteligente
     
     let bg;
     let borderColor = '#685BC7';
@@ -310,8 +487,8 @@ function drawChart(id, type, data, isArea = false, isH = false) {
     if (type === 'doughnut') {
         bg = data.labels.map((_, i) => {
             if (id === 'c-shop') return i === 0 ? '#685BC7' : (isDark ? '#3B455E' : '#B2BECE');
-            const colorsDark = ['#685BC7', '#526082', '#3B455E', '#242A38'];
-            const colorsLight = ['#685BC7', '#8B9BB4', '#B2BECE', '#E2E8F0'];
+            const colorsDark = ['#685BC7', '#526082', '#3B455E', '#242A38', '#1a1f2c'];
+            const colorsLight = ['#685BC7', '#8B9BB4', '#B2BECE', '#CBD5E1', '#F1F5F9'];
             return isDark ? colorsDark[i % colorsDark.length] : colorsLight[i % colorsLight.length];
         });
         borderColor = isDark ? '#1c1e22' : '#ffffff'; 
@@ -326,17 +503,6 @@ function drawChart(id, type, data, isArea = false, isH = false) {
         }
     }
 
-    let xLabels = data.labels;
-    if (id === 'c-timeline') {
-        xLabels = data.labels.map(dateStr => {
-            const parts = dateStr.split('-');
-            if(parts.length === 3) {
-                const d = new Date(parts[0], parts[1]-1, parts[2]);
-                const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']; return [dateStr, days[d.getDay()]]; 
-            } return dateStr;
-        });
-    }
-
     let tooltipConfig = { 
         backgroundColor: tooltipBg, 
         titleColor: tooltipTitle,
@@ -349,24 +515,16 @@ function drawChart(id, type, data, isArea = false, isH = false) {
         cornerRadius: 12
     };
 
-    if ((id === 'c-store' || id === 'c-rede') && data.tooltipData) {
+    if (data.tooltipData) {
         tooltipConfig.callbacks = {
-            title: ctx => { const code = ctx[0].label; return data.tooltipData[code] ? data.tooltipData[code].name || code : code; },
-            label: ctx => {
-                const code = ctx.label;
-                if(data.tooltipData[code]) {
-                    const devices = data.tooltipData[code].devices || data.tooltipData[code].stores;
-                    if(devices) return Object.entries(devices).sort((a,b) => b[1]-a[1]).map(d => `${d[0]}: ${Math.round(d[1]).toLocaleString('pt-BR')}`);
-                } return ctx.formattedValue;
-            }
-        };
-    } else if (data.tooltipData) {
-        tooltipConfig.callbacks = {
-            title: ctx => { let lbl = ctx[0].label; if (id === 'c-timeline' && Array.isArray(lbl)) return lbl.join('\n'); if (id === 'c-timeline' && typeof lbl === 'string' && lbl.includes(',')) return lbl.replace(',', '\n'); return lbl; },
+            title: ctx => { let lbl = ctx[0].label; if (typeof lbl === 'string' && lbl.includes(',')) return lbl.replace(',', '\n'); return lbl; },
             label: ctx => {
                 const key = typeof ctx.label === 'string' ? ctx.label.split(',')[0] : (Array.isArray(ctx.label) ? ctx.label[0] : ctx.label);
-                const stores = data.tooltipData[key];
-                if(stores) { return Object.entries(stores).sort((a,b) => b[1]-a[1]).map(s => `${s[0]}: ${Math.round(s[1]).toLocaleString('pt-BR')}`); }
+                const linhas = data.tooltipData[key];
+                if(linhas) { 
+                    // Renderiza múltiplas linhas dentro da tooltip perfeitamente
+                    return Object.entries(linhas).sort((a,b) => b[1]-a[1]).map(s => `${s[0]}: ${Math.round(s[1]).toLocaleString('pt-BR')}`); 
+                }
                 return ctx.formattedValue;
             }
         };
@@ -375,7 +533,7 @@ function drawChart(id, type, data, isArea = false, isH = false) {
     const chartConfig = {
         type: type,
         data: { 
-            labels: xLabels, 
+            labels: data.labels, 
             datasets: [{ 
                 data: data.values, 
                 backgroundColor: bg, 
@@ -395,65 +553,32 @@ function drawChart(id, type, data, isArea = false, isH = false) {
             responsive: true, 
             maintainAspectRatio: false,
             cutout: type === 'doughnut' ? '65%' : undefined, 
-            
-            interaction: { 
-                mode: isH ? 'nearest' : (type === 'doughnut' ? 'nearest' : 'index'), 
-                intersect: isH || type === 'doughnut' ? true : false,   
-                axis: isH ? 'y' : (type === 'doughnut' ? 'xy' : 'x')
-            },
-
+            interaction: { mode: isH || type === 'doughnut' ? 'nearest' : 'index', intersect: isH || type === 'doughnut' ? true : false, axis: isH ? 'y' : (type === 'doughnut' ? 'xy' : 'x') },
             layout: {
                 padding: {
-                    top: type === 'doughnut' ? 35 : (!isH ? 30 : 0), 
-                    right: type === 'doughnut' ? 30 : (isH ? 50 : 0),
-                    bottom: type === 'doughnut' ? 25 : 0,
-                    left: type === 'doughnut' ? 30 : 0
+                    top: type === 'doughnut' ? 40 : (!isH ? 30 : 0), 
+                    right: type === 'doughnut' ? 100 : (isH ? 50 : 0),
+                    bottom: type === 'doughnut' ? 40 : 0,
+                    left: type === 'doughnut' ? 100 : 0
                 }
             },
             plugins: { 
-                legend: { 
-                    display: type === 'doughnut', 
-                    position: 'bottom',
-                    labels: { color: tickColor, font: { family: 'Archivo', size: 10, weight: 700 }, usePointStyle: true, boxWidth: 6, padding: 15 }
-                }, 
+                legend: { display: false }, 
                 tooltip: tooltipConfig,
                 datalabels: {
-                    display: true, 
-                    font: { family: 'Archivo', size: type === 'doughnut' ? 13 : 10, weight: type === 'doughnut' ? 900 : 800 },
-                    formatter: (value, ctx) => {
-                        if (type === 'doughnut') {
-                            let sum = ctx.dataset.data.reduce((a, b) => a + b, 0);
-                            if (sum === 0) return '0%';
-                            return (value * 100 / sum).toFixed(1).replace('.', ',') + '%';
-                        }
-                        return Math.round(value).toLocaleString('pt-BR');
-                    },
+                    display: type !== 'doughnut', // DESLIGADO na Pizza, o Plugin Customizado assume o desenho
+                    font: { family: 'Archivo', size: 10, weight: 800 },
+                    formatter: (value) => Math.round(value).toLocaleString('pt-BR'),
                     anchor: 'end',
-                    align: type === 'doughnut' ? 'end' : (isH ? 'right' : 'top'),
+                    align: isH ? 'right' : 'top',
                     color: labelColor,
-                    offset: type === 'doughnut' ? 5 : 6
+                    textAlign: 'center',
+                    offset: 6
                 }
             },
             scales: { 
-                y: { 
-                    display: type !== 'doughnut',
-                    grace: isH ? '0%' : '15%', 
-                    beginAtZero: true, 
-                    grid: { color: isH ? 'transparent' : gridColor, drawBorder: false }, 
-                    ticks: { 
-                        color: tickColor, 
-                        font: { family: 'Archivo', size: 10, weight: 600 },
-                        autoSkip: isH ? false : true 
-                    }, 
-                    border: { display: false } 
-                },
-                x: { 
-                    display: type !== 'doughnut',
-                    grace: isH ? '15%' : '0%', 
-                    grid: { display: isH ? true : false, color: gridColor, drawBorder: false }, 
-                    ticks: { color: tickColor, font: { family: 'Archivo', size: 9, weight: 700 } }, 
-                    border: { display: false } 
-                }
+                y: { display: type !== 'doughnut', grace: isH ? '0%' : '15%', beginAtZero: true, grid: { color: isH ? 'transparent' : gridColor, drawBorder: false }, ticks: { color: tickColor, font: { family: 'Archivo', size: 10, weight: 600 }, autoSkip: !isH }, border: { display: false } },
+                x: { display: type !== 'doughnut', grace: isH ? '15%' : '0%', grid: { display: !!isH, color: gridColor, drawBorder: false }, ticks: { color: tickColor, font: { family: 'Archivo', size: 9, weight: 700 } }, border: { display: false } }
             }
         }
     };
