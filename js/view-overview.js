@@ -51,6 +51,37 @@ export const getOverviewHTML = () => {
                 to { transform: rotate(360deg); }
             }
 
+            /* Insight Rotation Animation */
+            .insight-slide-out {
+                animation: insightSlideOut 0.5s ease-out forwards;
+            }
+            
+            .insight-slide-in {
+                animation: insightSlideIn 0.5s ease-out forwards;
+            }
+            
+            @keyframes insightSlideOut {
+                from { 
+                    opacity: 1; 
+                    transform: translateY(0);
+                }
+                to { 
+                    opacity: 0; 
+                    transform: translateY(-20px);
+                }
+            }
+            
+            @keyframes insightSlideIn {
+                from { 
+                    opacity: 0; 
+                    transform: translateY(20px);
+                }
+                to { 
+                    opacity: 1; 
+                    transform: translateY(0);
+                }
+            }
+
             /* EYE CANDY: Animações de Entrada */
             @keyframes slideUpFade {
                 from { opacity: 0; transform: translateY(10px); }
@@ -171,8 +202,22 @@ export const destroyOverviewCharts = () => {
         if(chartInstances[id]) chartInstances[id].destroy();
     });
     chartInstances = {};
-    if (insightTimeout) clearInterval(insightTimeout);
-    if (unsubscribeData) { unsubscribeData(); unsubscribeData = null; }
+    if (insightTimeout) {
+        clearInterval(insightTimeout);
+        insightTimeout = null;
+    }
+    if (insightRotationInterval) {
+        clearInterval(insightRotationInterval);
+        insightRotationInterval = null;
+    }
+    if (insightTypewriterInterval) {
+        clearInterval(insightTypewriterInterval);
+        insightTypewriterInterval = null;
+    }
+    if (unsubscribeData) { 
+        unsubscribeData(); 
+        unsubscribeData = null; 
+    }
 };
 
 export const renderOverviewCharts = () => {
@@ -237,6 +282,9 @@ export const renderOverviewCharts = () => {
 };
 
 let currentRenderToken = 0; // Trava de segurança global da tela
+let insightRotationInterval = null;
+let insightTypewriterInterval = null;
+let currentInsightIndex = 0;
 
 // Helper para aplicar fade suave nos KPIs
 function updateKPIWithFade(elementId, newContent, isHTML = false) {
@@ -263,6 +311,139 @@ function updateKPIWithFade(elementId, newContent, isHTML = false) {
             el.classList.remove('kpi-fade-in');
         }, 200);
     }, 150);
+}
+
+// Gera as variantes de insights baseadas nos dados
+function generateInsights(dbData) {
+    const insights = [];
+    
+    console.log('🔍 Dados recebidos para insights:', {
+        kpis: dbData.kpis,
+        aparelhos: dbData.aparelhos?.length,
+        rede: dbData.rede?.length,
+        linha: dbData.linha?.length
+    });
+    
+    // Insight 1: Aparelho com mais tração
+    const aparelhosArray = dbData.aparelhos || [];
+    const topDev = [...aparelhosArray].sort((a,b) => b.total - a.total)[0];
+    if (topDev && topDev.total > 0) {
+        insights.push(`PROSOLUTION ANALYTICS: O modelo ${topDev.aparelho} registrou a maior tração com ${Math.round(topDev.total).toLocaleString('pt-BR')} interações validadas.`);
+    }
+    
+    // Insight 2: Rede com mais interações
+    const redeArray = dbData.rede || [];
+    if (redeArray.length > 0) {
+        const topRede = [...redeArray].sort((a,b) => b.total - a.total)[0];
+        if (topRede && topRede.rede && topRede.total > 0) {
+            insights.push(`PROSOLUTION ANALYTICS: A rede ${topRede.rede} concentra ${Math.round(topRede.total).toLocaleString('pt-BR')} interações, liderando o engajamento no período.`);
+        }
+    }
+    
+    // Insight 3: Loja com mais interações
+    // NOTA: Requer atualização da RPC get_overview_metrics para incluir top_store nos kpis
+    // Ver: BACKUPS/== SUPABASE BACKUP/README_OVERVIEW_UPDATE.md
+    if (dbData.kpis && dbData.kpis.top_store) {
+        insights.push(`PROSOLUTION ANALYTICS: O PDV ${dbData.kpis.top_store} lidera o ranking de engajamento no período analisado.`);
+    } else {
+        console.warn('⚠️ Campo top_store não encontrado nos KPIs. Atualize a RPC get_overview_metrics.');
+    }
+    
+    // Insight 4: Linha de produto com mais tração
+    const linhaArray = dbData.linha || [];
+    if (linhaArray.length > 0) {
+        const topLinha = [...linhaArray].sort((a,b) => b.total - a.total)[0];
+        if (topLinha && topLinha.linha_de_produto && topLinha.total > 0) {
+            insights.push(`PROSOLUTION ANALYTICS: A linha ${topLinha.linha_de_produto} demonstra maior adesão com ${Math.round(topLinha.total).toLocaleString('pt-BR')} interações validadas.`);
+        }
+    }
+    
+    // Fallback se não houver dados suficientes
+    if (insights.length === 0) {
+        insights.push('Aguardando massa de dados para análise preditiva.');
+    }
+    
+    console.log(`📊 Total de insights gerados: ${insights.length}`, insights);
+    return insights;
+}
+
+// Efeito de digitação (typewriter)
+function typewriterEffect(element, text, callback) {
+    // Limpa qualquer typewriter anterior
+    if (insightTypewriterInterval) {
+        clearInterval(insightTypewriterInterval);
+    }
+    
+    element.innerHTML = "";
+    let i = 0;
+    insightTypewriterInterval = setInterval(() => {
+        if (i < text.length) {
+            element.innerHTML += text.charAt(i);
+            i++;
+        } else {
+            clearInterval(insightTypewriterInterval);
+            insightTypewriterInterval = null;
+            if (callback) callback();
+        }
+    }, 20);
+}
+
+// Inicia a rotação de insights
+function startInsightRotation(dbData) {
+    const el = document.getElementById('insight-text');
+    if (!el) return;
+    
+    // Limpa rotação anterior
+    if (insightRotationInterval) {
+        clearInterval(insightRotationInterval);
+        insightRotationInterval = null;
+    }
+    if (insightTimeout) {
+        clearInterval(insightTimeout);
+        insightTimeout = null;
+    }
+    if (insightTypewriterInterval) {
+        clearInterval(insightTypewriterInterval);
+        insightTypewriterInterval = null;
+    }
+    
+    const insights = generateInsights(dbData);
+    
+    // Se só tem 1 insight, não rotaciona
+    if (insights.length <= 1) {
+        typewriterEffect(el, insights[0]);
+        return;
+    }
+    
+    currentInsightIndex = 0;
+    
+    // Mostra o primeiro insight
+    typewriterEffect(el, insights[currentInsightIndex]);
+    
+    // Rotaciona a cada 5 segundos
+    insightRotationInterval = setInterval(() => {
+        // Slide out
+        el.classList.add('insight-slide-out');
+        
+        setTimeout(() => {
+            // Atualiza o índice para o PRÓXIMO insight
+            currentInsightIndex = (currentInsightIndex + 1) % insights.length;
+            
+            // Remove animação de saída
+            el.classList.remove('insight-slide-out');
+            
+            // Adiciona animação de entrada
+            el.classList.add('insight-slide-in');
+            
+            // Mostra novo insight com efeito de digitação
+            typewriterEffect(el, insights[currentInsightIndex], () => {
+                // Remove animação de entrada após completar
+                setTimeout(() => {
+                    el.classList.remove('insight-slide-in');
+                }, 500);
+            });
+        }, 500);
+    }, 5000);
 }
 
 async function executeRenderLogic() {
@@ -342,16 +523,8 @@ async function executeRenderLogic() {
                 ? sortedDevList.map(v => `<div class="mt-2.5 flex items-center justify-between gap-6"><span class="opacity-90">${v[0]}</span> <span class="font-black font-numbers text-[#8b5cf6] bg-[#8b5cf6]/10 px-2 py-0.5 rounded-md border border-[#8b5cf6]/20">${v[1]}</span></div>`).join('') 
                 : '<div class="opacity-50 mt-2">Nenhum modelo detectado</div>');
                 
-        // Insight Heurístico
-        const topDev = [...(dbData.aparelhos || [])].sort((a,b) => b.total - a.total)[0];
-        const textInsight = topDev ? `PROSOLUTION ANALYTICS: O modelo ${topDev.aparelho} registrou a maior tração com ${Math.round(topDev.total).toLocaleString('pt-BR')} interações validadas.` : 'Aguardando massa de dados.';
-        
-        const el = document.getElementById('insight-text'); 
-        el.innerHTML = ""; let i = 0;
-        insightTimeout = setInterval(() => { 
-            if (i < textInsight.length) { el.innerHTML += textInsight.charAt(i); i++; } 
-            else clearInterval(insightTimeout);
-        }, 20); 
+        // Sistema de Insights Rotativos
+        startInsightRotation(dbData);
 
         // Agrupamentos Locais com Proteção (fallback para [])
         let ruaTotal = 0, shopTotal = 0;
