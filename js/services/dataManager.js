@@ -24,6 +24,135 @@ class DataManager {
     }
 
     /**
+     * Busca os dados consolidados no Supabase para o Heatmap Operacional.
+     * Aceita p_aparelho como filtro interno da view (select de modelo).
+     */
+    async fetchHeatmapRPC(p_aparelho = null) {
+        const params = {
+            p_shopping:     this.currentFilters['shopping']          || null,
+            p_rede:         this.currentFilters['rede']              || null,
+            p_store_name:   this.currentFilters['store_name']        || null,
+            p_linha:        this.currentFilters['linha_de_produto']  || null,
+            p_regional:     this.currentFilters['regional']          || null,
+            p_p8020:        this.currentFilters['p8020']             || null,
+            p_visibilidade: this.currentFilters['visibilidade']      || null,
+            p_dates: (this.currentFilters['pure_date'] && this.currentFilters['pure_date'].length > 0)
+                     ? this.currentFilters['pure_date']
+                     : null,
+            p_aparelho: p_aparelho || null
+        };
+
+        const tentativas = [0, 3000];
+
+        for (let i = 0; i < tentativas.length; i++) {
+            const espera = tentativas[i];
+            const numTentativa = i + 1;
+
+            if (espera > 0) {
+                console.log(`⏳ Aguardando ${espera / 1000}s antes da tentativa ${numTentativa} (Heatmap)...`);
+                await new Promise(resolve => setTimeout(resolve, espera));
+            }
+
+            console.log(`⏳ Heatmap: buscando dados... (Tentativa ${numTentativa}/${tentativas.length})`);
+
+            try {
+                const freshClient = createFreshClient();
+
+                const timeoutPromise = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error("TIMEOUT_REDE")), 15000)
+                );
+
+                const dbPromise = freshClient.rpc('get_heatmap_metrics', params);
+
+                const { data, error } = await Promise.race([dbPromise, timeoutPromise]);
+
+                if (error) throw error;
+
+                console.log(`✅ Heatmap: dados recebidos (tentativa ${numTentativa}).`);
+                return data;
+
+            } catch (err) {
+                if (err.message === "TIMEOUT_REDE") {
+                    console.warn(`⏱️ Timeout na tentativa ${numTentativa} (Heatmap).`);
+                    if (numTentativa === tentativas.length) {
+                        console.error("🚨 Heatmap: falha crítica após todas as tentativas.");
+                        return null;
+                    }
+                } else {
+                    console.error("🚨 Heatmap: erro inesperado:", err);
+                    return null;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Busca os dados consolidados no Supabase para a Positivação.
+     * Mesma estratégia do fetchOverviewRPC: cliente fresco + 2 tentativas.
+     */
+    async fetchPositivacaoRPC() {
+        const params = {
+            p_shopping:     this.currentFilters['shopping']          || null,
+            p_rede:         this.currentFilters['rede']              || null,
+            p_store_name:   this.currentFilters['store_name']        || null,
+            p_linha:        this.currentFilters['linha_de_produto']  || null,
+            p_regional:     this.currentFilters['regional']          || null,
+            p_p8020:        this.currentFilters['p8020']             || null,
+            p_visibilidade: this.currentFilters['visibilidade']      || null,
+            p_dates: (this.currentFilters['pure_date'] && this.currentFilters['pure_date'].length > 0)
+                     ? this.currentFilters['pure_date']
+                     : null
+        };
+
+        const tentativas = [0, 3000];
+
+        for (let i = 0; i < tentativas.length; i++) {
+            const espera = tentativas[i];
+            const numTentativa = i + 1;
+
+            if (espera > 0) {
+                console.log(`⏳ Aguardando ${espera / 1000}s antes da tentativa ${numTentativa} (Positivação)...`);
+                await new Promise(resolve => setTimeout(resolve, espera));
+            }
+
+            console.log(`⏳ Positivação: buscando dados... (Tentativa ${numTentativa}/${tentativas.length})`);
+
+            try {
+                const freshClient = createFreshClient();
+
+                const timeoutPromise = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error("TIMEOUT_REDE")), 15000)
+                );
+
+                const dbPromise = freshClient.rpc('get_positivacao_metrics', params);
+
+                const { data, error } = await Promise.race([dbPromise, timeoutPromise]);
+
+                if (error) throw error;
+
+                console.log(`✅ Positivação: dados recebidos (tentativa ${numTentativa}).`);
+                return data;
+
+            } catch (err) {
+                if (err.message === "TIMEOUT_REDE") {
+                    console.warn(`⏱️ Timeout na tentativa ${numTentativa} (Positivação).`);
+                    if (numTentativa === tentativas.length) {
+                        console.error("🚨 Positivação: falha crítica após todas as tentativas.");
+                        return null;
+                    }
+                } else {
+                    console.error("🚨 Positivação: erro inesperado:", err);
+                    return null;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Busca os dados consolidados no Supabase para a Visão Geral.
      * Cria um cliente Supabase NOVO a cada chamada para evitar estado corrompido
      * após hibernação do Chrome. Possui 2 tentativas com espera entre elas.

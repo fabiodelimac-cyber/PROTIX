@@ -4,9 +4,9 @@ import { appData } from './services/dataManager.js';
 Chart.register(ChartDataLabels);
 
 let chartInstances = {};
-let currentProduct = 'ALL'; 
-let latestFilteredData = []; 
-let unsubscribeData = null; // Controle da inscrição no Cérebro
+let currentProduct = null;
+let unsubscribeData = null;
+let currentRenderToken = 0;
 
 export const getHeatProdutosHTML = () => {
     return `
@@ -15,7 +15,6 @@ export const getHeatProdutosHTML = () => {
             #html-heatmap-container { transition: filter 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease; will-change: filter, opacity; }
             .data-loading { filter: blur(12px); opacity: 0.3; pointer-events: none; }
             
-            /* Classes de Drilldown */
             .heatmap-blurred { filter: blur(12px) saturate(60%); opacity: 0.3; pointer-events: none; }
             #hp-drilldown-overlay { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
 
@@ -28,16 +27,42 @@ export const getHeatProdutosHTML = () => {
             .input-adaptive { background: var(--input-bg); border: 1px solid var(--glass-border); color: var(--text-main); }
             .divide-adaptive > div { border-color: var(--glass-border); }
 
-          @keyframes smoothEntrance {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-.anim-cascade { opacity: 0; animation: smoothEntrance 0.3s ease-in-out forwards; }
-            .anim-cascade { opacity: 0; animation: smoothEntrance 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+            @keyframes smoothEntrance {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            .anim-cascade { opacity: 0; animation: smoothEntrance 0.3s ease-in-out forwards; }
             .delay-1 { animation-delay: 0.1s; }
             .delay-2 { animation-delay: 0.2s; }
             .delay-3 { animation-delay: 0.3s; }
             .delay-4 { animation-delay: 0.4s; }
+
+            /* Loading States */
+            .skeleton-pulse { animation: skeleton-pulse 1.5s ease-in-out infinite; }
+            @keyframes skeleton-pulse {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.4; }
+            }
+            
+            .chart-loading {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 200px;
+            }
+            
+            .spinner {
+                width: 40px;
+                height: 40px;
+                border: 3px solid var(--glass-border);
+                border-top-color: #685BC7;
+                border-radius: 50%;
+                animation: spin 0.8s linear infinite;
+            }
+            
+            @keyframes spin {
+                to { transform: rotate(360deg); }
+            }
         </style>
 
         <div id="view-heatmap-wrapper" class="pb-10">
@@ -48,7 +73,7 @@ export const getHeatProdutosHTML = () => {
                 <div class="w-full md:w-1/3 relative z-10">
                     <label class="ds-filter-label mb-2 block">Selecione o Modelo Alvo</label>
                     <select id="hp-master-select" class="w-full p-3 rounded-xl ds-filter-input input-adaptive focus:border-[#685BC7] outline-none transition-colors cursor-pointer backdrop-blur-md appearance-none">
-                        <option value="ALL">Carregando produtos...</option>
+                        <option value="">Carregando produtos...</option>
                     </select>
                 </div>
             </div>
@@ -93,8 +118,7 @@ export const getHeatProdutosHTML = () => {
                             ← Voltar
                         </button>
                     </div>
-                    <div id="hp-drill-list" class="flex-1 overflow-y-auto custom-scrollbar pr-4 space-y-2">
-                        </div>
+                    <div id="hp-drill-list" class="flex-1 overflow-y-auto custom-scrollbar pr-4 space-y-2"></div>
                 </div>
             </div>
 
@@ -123,7 +147,6 @@ export const getHeatProdutosHTML = () => {
     `;
 };
 
-// Esta função agora é usada APENAS quando mudamos de aba no menu lateral
 export const destroyHeatProdutosCharts = () => {
     Object.keys(chartInstances).forEach(id => { if(chartInstances[id]) chartInstances[id].destroy(); });
     chartInstances = {};
@@ -141,11 +164,10 @@ export const renderHeatProdutos = () => {
     const select = document.getElementById('hp-master-select');
     const btnVoltar = document.getElementById('btn-close-drilldown');
 
-    // 1. Configura os Listeners da UI apenas uma vez
     if (select && !select.dataset.listenerAttached) {
         select.addEventListener('change', (e) => {
-            currentProduct = e.target.value;
-            processHeatmapData(latestFilteredData);
+            currentProduct = e.target.value || null;
+            executeRenderLogic();
         });
         select.dataset.listenerAttached = "true";
     }
@@ -155,162 +177,212 @@ export const renderHeatProdutos = () => {
         btnVoltar.dataset.listenerAttached = "true";
     }
 
-    // 2. Conecta ao Cérebro (DataManager) - Fica ouvindo ativamente
     if (unsubscribeData) unsubscribeData();
-    unsubscribeData = appData.subscribe((filteredData) => {
-        updateSelectOptions(filteredData);
-        processHeatmapData(filteredData);
+    unsubscribeData = appData.subscribe(async () => {
+        await executeRenderLogic();
     });
 
-    // 3. Primeira Carga
-    const initialData = appData.getFilteredData();
-    updateSelectOptions(initialData);
-    processHeatmapData(initialData);
+    executeRenderLogic();
 };
 
-function updateSelectOptions(filteredData) {
-    if (!filteredData) return;
-    const select = document.getElementById('hp-master-select');
-    if (!select) return;
 
-    const products = [...new Set(filteredData.map(d => d.aparelho))].filter(x => x).sort();
-    
-    if(!currentProduct || (currentProduct !== 'ALL' && !products.includes(currentProduct))) currentProduct = 'ALL';
-
-    select.innerHTML = '';
-    select.add(new Option('VISÃO MACRO (TODOS)', 'ALL')); 
-    products.forEach(p => select.add(new Option(p, p)));
-    select.value = currentProduct;
-}
-
-function processHeatmapData(globalData) {
-    if(!currentProduct || !globalData) return;
-    latestFilteredData = globalData;
+async function executeRenderLogic() {
+    const renderToken = ++currentRenderToken;
     
     const container = document.getElementById('html-heatmap-container');
-    if(!container) return;
+    if (!container) return;
 
-    container.classList.add('data-loading');
-    closeDrilldown(); 
+    // Mostra loading nos KPIs
+    document.getElementById('hp-k-vol').innerHTML = '<div class="skeleton-pulse">...</div>';
+    document.getElementById('hp-k-peak').innerHTML = '<div class="skeleton-pulse">...</div>';
+    document.getElementById('hp-k-top').innerHTML = '<div class="skeleton-pulse">...</div>';
 
-    setTimeout(() => {
-        // CORREÇÃO AQUI: Limpamos o Chart.js na marra, SEM chamar a função que mata o subscribe
+    // Mostra spinner no heatmap
+    container.innerHTML = '<div class="chart-loading"><div class="spinner"></div></div>';
+    
+    // Mostra spinner nos gráficos
+    const chartContainers = ['hp-c-radar', 'hp-c-canal', 'hp-c-semana', 'hp-c-trend'];
+    chartContainers.forEach(id => {
+        const canvas = document.getElementById(id);
+        if (canvas) {
+            const chartContainer = canvas.parentElement;
+            if (!chartContainer.querySelector('.spinner')) {
+                const spinner = document.createElement('div');
+                spinner.className = 'spinner';
+                chartContainer.appendChild(spinner);
+                canvas.style.display = 'none';
+            }
+        }
+    });
+
+    closeDrilldown();
+
+    try {
+        const dbData = await appData.fetchHeatmapRPC(currentProduct);
+
+        if (renderToken !== currentRenderToken) return;
+        if (!document.getElementById('view-heatmap-wrapper')) return;
+
         Object.keys(chartInstances).forEach(id => { if(chartInstances[id]) chartInstances[id].destroy(); });
         chartInstances = {};
-        
-        const parseN = v => Number(v) || 0;
-        
-        const prodData = currentProduct === 'ALL' 
-            ? globalData.filter(d => d.aparelho && d.aparelho.trim() !== '') 
-            : globalData.filter(d => d.aparelho === currentProduct);
-        
-        const categoryData = globalData.filter(d => d.aparelho && d.aparelho !== currentProduct);
 
-        const totalProd = prodData.reduce((a, b) => a + parseN(b.sessions), 0);
-        document.getElementById('hp-k-vol').innerText = Math.round(totalProd).toLocaleString('pt-BR');
+        if (!dbData) {
+            container.innerHTML = '<div class="p-10 text-center opacity-50 text-adaptive w-full">⚠️ Conexão interrompida. Clique em um filtro para reconectar.</div>';
+            return;
+        }
 
-        const heatMapData = {}; 
-        const catDataMap = {}; 
-        const drillDataMap = {}; 
-        const storeAgg = {}; 
-        const canalAgg = {}; const semanaAgg = {};
-        const diaSemanaAgg = { 'Seg': 0, 'Ter': 0, 'Qua': 0, 'Qui': 0, 'Sex': 0, 'Sáb': 0, 'Dom': 0 };
-        
-        const hourlyProd = Array(13).fill(0);
-        const hourlyCat = Array(13).fill(0);
+        const kpis = dbData.kpis || {};
+        const aparelhos = dbData.aparelhos || [];
+        const heatmap = dbData.heatmap || [];
+        const heatmapDrill = dbData.heatmap_drill || [];
+        const heatmapCat = dbData.heatmap_cat || [];
+        const radarProd = dbData.radar_prod || [];
+        const radarCat = dbData.radar_cat || [];
+        const canal = dbData.canal || [];
+        const semana = dbData.semana || [];
+        const diaSemana = dbData.dia_semana || [];
 
-        const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-        const horasComerciais = Array.from({length: 13}, (_, i) => i + 10); 
-        
-        diasSemana.forEach(d => { 
-            heatMapData[d] = {}; 
-            catDataMap[d] = {}; 
+        // Popula o select de aparelhos
+        const select = document.getElementById('hp-master-select');
+        if (select && !select.dataset.populated) {
+            select.innerHTML = '<option value="">VISÃO MACRO (TODOS)</option>';
+            aparelhos.forEach(a => select.add(new Option(a, a)));
+            select.value = currentProduct || '';
+            select.dataset.populated = 'true';
+        }
+
+        // KPIs
+        document.getElementById('hp-k-vol').innerText = Math.round(kpis.total_sessions || 0).toLocaleString('pt-BR');
+        document.getElementById('hp-k-peak').innerText = kpis.peak_label || '-';
+        document.getElementById('hp-k-top').innerText = kpis.top_store || '-';
+
+        // Monta estruturas para o heatmap
+        const diasPT = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+        const horasComerciais = Array.from({length: 13}, (_, i) => i + 10);
+
+        const heatMapData = {};
+        const catDataMap = {};
+        const drillDataMap = {};
+
+        diasPT.forEach(d => {
+            heatMapData[d] = {};
+            catDataMap[d] = {};
             drillDataMap[d] = {};
-            horasComerciais.forEach(h => { 
-                heatMapData[d][h] = 0; 
-                catDataMap[d][h] = {}; 
+            horasComerciais.forEach(h => {
+                heatMapData[d][h] = 0;
+                catDataMap[d][h] = {};
                 drillDataMap[d][h] = {};
-            }); 
+            });
         });
 
-        horasComerciais.forEach(h => {
-            canalAgg[h] = { 'Rua': 0, 'Shopping': 0 };
-            semanaAgg[h] = { 'Dias Úteis': 0, 'Fim de Semana': 0 };
-        });
-
-        prodData.forEach(d => {
-            const sess = parseN(d.sessions);
-            const store = d.store_name || 'N/A'; 
-            const cat = d.linha_de_produto || 'N/A'; 
-            const aparelho = d.aparelho || 'N/A';
-            const shopVal = (d.shopping || '').toString().trim().toUpperCase(); 
-            const isShopping = (shopVal === 'LOJA DE RUA') ? 'Rua' : 'Shopping';
-            storeAgg[store] = (storeAgg[store] || 0) + sess;
-
-            if (d.datetime && d.pure_date) {
-                const dateParts = d.pure_date.split('-');
-                const dtObj = new Date(dateParts[0], dateParts[1]-1, dateParts[2]);
-                const dayName = diasSemana[dtObj.getDay()];
-                const hour = parseInt(d.datetime.split(' ')[1]?.split(':')[0], 10);
-                
-                if (diaSemanaAgg[dayName] !== undefined) diaSemanaAgg[dayName] += sess;
-
-                if (hour >= 10 && hour <= 22) {
-                    heatMapData[dayName][hour] += sess;
-                    
-                    if (!catDataMap[dayName][hour][cat]) catDataMap[dayName][hour][cat] = 0;
-                    catDataMap[dayName][hour][cat] += sess;
-
-                    if (!drillDataMap[dayName][hour][aparelho]) drillDataMap[dayName][hour][aparelho] = 0;
-                    drillDataMap[dayName][hour][aparelho] += sess;
-
-                    canalAgg[hour][isShopping] += sess;
-                    semanaAgg[hour][(dtObj.getDay() === 0 || dtObj.getDay() === 6) ? 'Fim de Semana' : 'Dias Úteis'] += sess;
-                    hourlyProd[hour - 10] += sess;
-                }
+        heatmap.forEach(row => {
+            const dayPT = row.day_name;
+            const hour = row.hour;
+            if (heatMapData[dayPT] && heatMapData[dayPT][hour] !== undefined) {
+                heatMapData[dayPT][hour] = row.total || 0;
             }
         });
 
-        categoryData.forEach(d => {
-            const hour = parseInt(d.datetime?.split(' ')[1]?.split(':')[0], 10);
-            if (hour >= 10 && hour <= 22) hourlyCat[hour - 10] += parseN(d.sessions);
+        heatmapCat.forEach(row => {
+            const dayPT = row.day_name;
+            const hour = row.hour;
+            const linha = row.linha_de_produto || 'N/A';
+            if (catDataMap[dayPT] && catDataMap[dayPT][hour]) {
+                catDataMap[dayPT][hour][linha] = row.total || 0;
+            }
         });
 
-        let maxSess = 0, peakText = '-';
-        for(let d in heatMapData) for(let h in heatMapData[d]) if(heatMapData[d][h] > maxSess) { maxSess = heatMapData[d][h]; peakText = `${d}, ${h}h`; }
-        
-        document.getElementById('hp-k-peak').innerText = maxSess > 0 ? peakText : '-';
-        document.getElementById('hp-k-top').innerText = Object.entries(storeAgg).sort((a,b) => b[1]-a[1])[0]?.[0] || '-';
+        heatmapDrill.forEach(row => {
+            const dayPT = row.day_name;
+            const hour = row.hour;
+            const aparelho = row.aparelho || 'N/A';
+            if (drillDataMap[dayPT] && drillDataMap[dayPT][hour]) {
+                drillDataMap[dayPT][hour][aparelho] = row.total || 0;
+            }
+        });
 
-        if (globalData.length === 0) {
-            container.innerHTML = '<div class="p-10 text-center opacity-50 text-adaptive w-full">Nenhum dado encontrado para os filtros atuais.</div>';
-        } else {
-            renderStaticHeatmap(container, heatMapData, catDataMap, drillDataMap, diasSemana, horasComerciais, maxSess);
+        let maxSess = 0;
+        for(let d in heatMapData) {
+            for(let h in heatMapData[d]) {
+                if(heatMapData[d][h] > maxSess) maxSess = heatMapData[d][h];
+            }
         }
 
+        if (heatmap.length === 0) {
+            container.innerHTML = '<div class="p-10 text-center opacity-50 text-adaptive w-full">Nenhum dado encontrado para os filtros atuais.</div>';
+        } else {
+            renderStaticHeatmap(container, heatMapData, catDataMap, drillDataMap, diasPT, horasComerciais, maxSess);
+        }
+
+        // Radar
+        const hourlyProd = Array(13).fill(0);
+        const hourlyCat = Array(13).fill(0);
+        radarProd.forEach(r => { const idx = r.hour - 10; if(idx >= 0 && idx < 13) hourlyProd[idx] = r.total || 0; });
+        radarCat.forEach(r => { const idx = r.hour - 10; if(idx >= 0 && idx < 13) hourlyCat[idx] = r.total || 0; });
+
         const labelsHoras = horasComerciais.map(h => `${h}h`);
-        
         drawRadarChart('hp-c-radar', labelsHoras, hourlyProd, hourlyCat);
-        
+
+        // Canal
+        const canalAgg = {};
+        horasComerciais.forEach(h => { canalAgg[h] = { 'Rua': 0, 'Shopping': 0 }; });
+        canal.forEach(r => {
+            if (canalAgg[r.hour]) canalAgg[r.hour][r.tipo] = r.total || 0;
+        });
         drawComparisonChart('hp-c-canal', labelsHoras, [
             { label: 'Rua', data: horasComerciais.map(h => canalAgg[h]['Rua']), color: '#8b5cf6' },
             { label: 'Shopping', data: horasComerciais.map(h => canalAgg[h]['Shopping']), color: '#f43f5e' }
         ]);
+
+        // Semana
+        const semanaAgg = {};
+        horasComerciais.forEach(h => { semanaAgg[h] = { 'Dias Úteis': 0, 'Fim de Semana': 0 }; });
+        semana.forEach(r => {
+            if (semanaAgg[r.hour]) semanaAgg[r.hour][r.tipo] = r.total || 0;
+        });
         drawComparisonChart('hp-c-semana', labelsHoras, [
             { label: 'Úteis', data: horasComerciais.map(h => semanaAgg[h]['Dias Úteis']), color: '#f43f5e' },
             { label: 'FDS', data: horasComerciais.map(h => semanaAgg[h]['Fim de Semana']), color: '#8b5cf6' }
         ]);
 
-        const labelsSemana = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+        // Dia da semana
+        const diaSemanaAgg = { 
+            'Segunda-feira': 0, 
+            'Terça-feira': 0, 
+            'Quarta-feira': 0, 
+            'Quinta-feira': 0, 
+            'Sexta-feira': 0, 
+            'Sábado': 0, 
+            'Domingo': 0 
+        };
+        diaSemana.forEach(r => {
+            const dayPT = r.day_name;
+            if (diaSemanaAgg[dayPT] !== undefined) diaSemanaAgg[dayPT] = r.total || 0;
+        });
+        const labelsSemana = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado', 'Domingo'];
         drawChart('hp-c-trend', 'bar', { labels: labelsSemana, values: labelsSemana.map(d => diaSemanaAgg[d]) }, false, true);
 
-        container.classList.remove('data-loading');
-    }, 400); 
+    } catch (e) {
+        console.error("Crash interceptado na renderização do Heatmap:", e);
+    } finally {
+        // Remove loading de todos os gráficos
+        const chartContainers = ['hp-c-radar', 'hp-c-canal', 'hp-c-semana', 'hp-c-trend'];
+        chartContainers.forEach(id => {
+            const canvas = document.getElementById(id);
+            if (canvas) {
+                const chartContainer = canvas.parentElement;
+                const spinner = chartContainer.querySelector('.spinner');
+                if (spinner) spinner.remove();
+                canvas.style.display = 'block';
+            }
+        });
+    }
 }
+
 
 function renderStaticHeatmap(container, dataMap, catDataMap, drillDataMap, days, hours, maxVal) {
     const isDark = document.body.classList.contains('dark');
-    const textColor = isDark ? 'text-white/30' : 'text-gray-400'; 
+    const textColor = isDark ? 'text-white/30' : 'text-gray-400';
     const emptyBg = isDark ? 'bg-white/[0.02] border-white/[0.02]' : 'bg-black/[0.03] border-black/[0.03]';
 
     let tooltip = document.getElementById('hp-global-tooltip');
@@ -340,8 +412,8 @@ function renderStaticHeatmap(container, dataMap, catDataMap, drillDataMap, days,
             const breakdowns = catDataMap[day][hour] || {};
             const drilldowns = drillDataMap[day][hour] || {};
             
-            const bdJson = JSON.stringify(breakdowns).replace(/"/g, '&quot;'); 
-            const drillJson = JSON.stringify(drilldowns).replace(/"/g, '&quot;'); 
+            const bdJson = JSON.stringify(breakdowns).replace(/"/g, '&quot;');
+            const drillJson = JSON.stringify(drilldowns).replace(/"/g, '&quot;');
             
             let bgStyle = '';
             let baseClasses = `heatmap-cell h-10 w-full flex items-center justify-center text-[12px] transition-all duration-300 z-10`;
@@ -354,9 +426,9 @@ function renderStaticHeatmap(container, dataMap, catDataMap, drillDataMap, days,
                 bgStyle = `background-color: hsla(${hue}, 85%, 55%, ${alpha}); box-shadow: 0 0 12px hsla(${hue}, 85%, 55%, ${alpha * 0.4}); border: 1px solid hsla(${hue}, 85%, 70%, ${alpha * 0.5});`;
                 
                 let textClass = ratio > 0.35 ? `text-white font-bold` : (isDark ? `text-white/50 font-medium` : `text-black/50 font-medium`);
-                colorClasses = ` ${textClass} rounded-lg cursor-pointer hover:scale-110 hover:z-20`; 
-            } else { 
-                colorClasses = ` border ${emptyBg} text-transparent rounded-lg cursor-default`; 
+                colorClasses = ` ${textClass} rounded-lg cursor-pointer hover:scale-110 hover:z-20`;
+            } else {
+                colorClasses = ` border ${emptyBg} text-transparent rounded-lg cursor-default`;
             }
 
             html += `<div class="${baseClasses}${colorClasses}" 
@@ -403,7 +475,7 @@ function renderStaticHeatmap(container, dataMap, catDataMap, drillDataMap, days,
             `;
 
             tooltip.style.display = 'block';
-            tooltip.style.opacity = '0'; 
+            tooltip.style.opacity = '0';
         });
 
         cell.addEventListener('mousemove', (e) => {
@@ -423,7 +495,7 @@ function renderStaticHeatmap(container, dataMap, catDataMap, drillDataMap, days,
 
             tooltip.style.left = x + 'px';
             tooltip.style.top = y + 'px';
-            tooltip.style.opacity = '1'; 
+            tooltip.style.opacity = '1';
         });
 
         cell.addEventListener('mouseleave', () => {
@@ -484,6 +556,7 @@ function closeDrilldown() {
     }
 }
 
+
 function drawRadarChart(id, labels, prodData, catData) {
     const ctx = document.getElementById(id).getContext('2d');
     const isDark = document.body.classList.contains('dark');
@@ -525,13 +598,13 @@ function drawRadarChart(id, labels, prodData, catData) {
                     angleLines: { color: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' },
                     grid: { color: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' },
                     pointLabels: { color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)', font: { family: 'Archivo', size: 11, weight: 700 } },
-                    ticks: { display: false }, 
+                    ticks: { display: false },
                     suggestedMin: 0,
                     suggestedMax: 100
                 }
             },
             plugins: {
-                datalabels: { display: false }, 
+                datalabels: { display: false },
                 legend: { position: 'bottom', labels: { color: isDark ? '#fff' : '#000', font: { family: 'Archivo', size: 10, weight: 700 }, usePointStyle: true } },
                 tooltip: { enabled: false }
             }
@@ -553,12 +626,12 @@ function drawComparisonChart(id, labels, datasets) {
         options: {
             responsive: true, maintainAspectRatio: false,
             interaction: { mode: 'index', intersect: false },
-            plugins: { 
+            plugins: {
                 datalabels: { display: false },
                 legend: { display: true, position: 'top', align: 'end', labels: { color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.6)', font: { family: 'Archivo', size: 10, weight: 700 }, boxWidth: 6, usePointStyle: true } },
                 tooltip: { backgroundColor: isDark ? 'rgba(18, 19, 23, 0.9)' : 'rgba(255, 255, 255, 0.9)', titleFont: { family: 'Archivo', size: 10, weight: 800 }, bodyFont: { family: 'Archivo', size: 11, weight: 500 }, padding: 12, cornerRadius: 8 }
             },
-            scales: { 
+            scales: {
                 y: { beginAtZero: true, grid: { color: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)' }, ticks: { color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.4)', font: { family: 'Archivo', size: 10, weight: 600 } }, border: { display: false } },
                 x: { grid: { display: false }, ticks: { color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.4)', font: { family: 'Archivo', size: 9, weight: 700 } }, border: { display: false } }
             }
@@ -573,17 +646,17 @@ function drawChart(id, type, data, isArea = false, showPercentage = false) {
     chartInstances[id] = new Chart(ctx, {
         type: type,
         data: { labels: data.labels, datasets: [{ data: data.values, backgroundColor: isArea ? 'rgba(104, 91, 199, 0.15)' : '#685BC7', borderColor: '#685BC7', fill: isArea, tension: 0.5, borderRadius: type === 'bar' ? 6 : 0, borderWidth: type === 'bar' ? 0 : 2, pointRadius: 0, pointHoverRadius: 6 }] },
-        options: { 
+        options: {
             responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
-            plugins: { 
-                legend: { display: false }, 
-                datalabels: { 
+            plugins: {
+                legend: { display: false },
+                datalabels: {
                     display: showPercentage, align: 'end', anchor: 'end', color: isDark ? '#ffffff' : '#131417', font: { family: 'Archivo', size: 12, weight: 800 },
                     formatter: (value) => totalData === 0 ? '0%' : ((value / totalData) * 100).toFixed(1).replace('.', ',') + '%'
                 },
                 tooltip: { backgroundColor: isDark ? 'rgba(18, 19, 23, 0.9)' : 'rgba(255, 255, 255, 0.9)', titleFont: { family: 'Archivo', size: 10, weight: 800 }, bodyFont: { family: 'Archivo', size: 11, weight: 500 }, padding: 12, cornerRadius: 8 }
             },
-            scales: { 
+            scales: {
                 y: { beginAtZero: true, grace: showPercentage ? '15%' : '0%', grid: { color: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)' }, ticks: { color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.4)', font: { family: 'Archivo', size: 10, weight: 600 } }, border: { display: false } },
                 x: { grid: { display: false }, ticks: { color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.4)', font: { family: 'Archivo', size: 9, weight: 700 } }, border: { display: false } }
             }

@@ -24,6 +24,33 @@ export const getOverviewHTML = () => {
             .neon-accent { background: var(--neon-bg); }
             .divide-adaptive > div { border-color: var(--glass-border); }
 
+            /* Loading States */
+            .skeleton-pulse { animation: skeleton-pulse 1.5s ease-in-out infinite; }
+            @keyframes skeleton-pulse {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.4; }
+            }
+            
+            .chart-loading {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 200px;
+            }
+            
+            .spinner {
+                width: 40px;
+                height: 40px;
+                border: 3px solid var(--glass-border);
+                border-top-color: #685BC7;
+                border-radius: 50%;
+                animation: spin 0.8s linear infinite;
+            }
+            
+            @keyframes spin {
+                to { transform: rotate(360deg); }
+            }
+
             /* EYE CANDY: Animações de Entrada */
             @keyframes slideUpFade {
                 from { opacity: 0; transform: translateY(10px); }
@@ -215,6 +242,27 @@ async function executeRenderLogic() {
     // 1. Gera um "ticket" exclusivo para este clico de renderização
     const renderToken = ++currentRenderToken;
 
+    // Mostra loading nos KPIs
+    document.getElementById('k-sess').innerHTML = '<div class="skeleton-pulse">Carregando...</div>';
+    document.getElementById('k-sto').innerHTML = '<div class="skeleton-pulse">Carregando...</div>';
+    document.getElementById('k-dev').innerHTML = '<div class="skeleton-pulse">Carregando...</div>';
+    document.getElementById('k-avg').innerHTML = '<div class="skeleton-pulse">Carregando...</div>';
+    
+    // Mostra spinner nos gráficos
+    const chartContainers = ['c-timeline', 'c-time', 'c-rede', 'c-shop', 'c-linha'];
+    chartContainers.forEach(id => {
+        const canvas = document.getElementById(id);
+        if (canvas) {
+            const container = canvas.parentElement;
+            if (!container.querySelector('.spinner')) {
+                const spinner = document.createElement('div');
+                spinner.className = 'spinner';
+                container.appendChild(spinner);
+                canvas.style.display = 'none';
+            }
+        }
+    });
+
     try {
         const dbData = await appData.fetchOverviewRPC();
 
@@ -301,6 +349,17 @@ async function executeRenderLogic() {
 
     } catch (e) {
         console.error("Crash interceptado na renderização visual:", e);
+    } finally {
+        // Remove loading de todos os gráficos
+        chartContainers.forEach(id => {
+            const canvas = document.getElementById(id);
+            if (canvas) {
+                const container = canvas.parentElement;
+                const spinner = container.querySelector('.spinner');
+                if (spinner) spinner.remove();
+                canvas.style.display = 'block';
+            }
+        });
     }
 }
 

@@ -16,15 +16,39 @@ export const getPositivacaoHTML = () => {
             .neon-accent { background: var(--neon-bg); }
             .divide-adaptive > div { border-color: var(--glass-border); }
             
-            /* Tabela Ajustada para Escala 1080p */
             .table-border { border-color: var(--glass-border); }
             .bg-sticky { background-color: var(--bg-sticky); backdrop-filter: blur(10px); }
             .hover-row:hover td { background-color: var(--hover-table); }
 
-            /* Transição da Tabela de Matriz */
             #matrix-table { transition: opacity 0.3s ease; }
 
-            /* EYE CANDY: Animações de Entrada em Cascata */
+            /* Loading States */
+            .skeleton-pulse { animation: skeleton-pulse 1.5s ease-in-out infinite; }
+            @keyframes skeleton-pulse {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.4; }
+            }
+            
+            .table-loading {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 200px;
+            }
+            
+            .spinner {
+                width: 40px;
+                height: 40px;
+                border: 3px solid var(--glass-border);
+                border-top-color: #685BC7;
+                border-radius: 50%;
+                animation: spin 0.8s linear infinite;
+            }
+            
+            @keyframes spin {
+                to { transform: rotate(360deg); }
+            }
+
             @keyframes smoothEntrance {
                 from { opacity: 0; }
                 to { opacity: 1; }
@@ -87,12 +111,12 @@ export const getPositivacaoHTML = () => {
     `;
 };
 
-// Variáveis de controle de estado
+// Estado da view
 let currentMode = 'store';
 let unsubscribeData = null;
+let currentRenderToken = 0;
 
 export const renderPositivacao = () => {
-    // 1. Configura os botões de alternância de visão UMA vez ao entrar na tela
     const btnStore = document.getElementById('mode-store');
     const btnDevice = document.getElementById('mode-device');
 
@@ -106,123 +130,127 @@ export const renderPositivacao = () => {
         btn.classList.add('text-adaptive-strong', 'hover:text-adaptive', 'bg-transparent');
     };
 
-    const updateMatrixWithTransition = () => {
+    const switchMatrixWithTransition = () => {
         const matrixTable = document.getElementById('matrix-table');
         if (matrixTable) {
             matrixTable.style.opacity = 0;
-            setTimeout(() => {
-                executeRenderLogic(appData.getFilteredData());
-                matrixTable.style.opacity = 1;
-            }, 300);
-        } else {
-            executeRenderLogic(appData.getFilteredData());
+            setTimeout(() => { matrixTable.style.opacity = 1; }, 300);
         }
     };
 
     if (btnStore && btnDevice) {
         btnStore.onclick = () => {
-            if(currentMode === 'store') return;
+            if (currentMode === 'store') return;
             currentMode = 'store';
             setActive(btnStore); setInactive(btnDevice);
-            updateMatrixWithTransition();
+            switchMatrixWithTransition();
+            executeRenderLogic();
         };
 
         btnDevice.onclick = () => {
-            if(currentMode === 'device') return;
+            if (currentMode === 'device') return;
             currentMode = 'device';
             setActive(btnDevice); setInactive(btnStore);
-            updateMatrixWithTransition();
+            switchMatrixWithTransition();
+            executeRenderLogic();
         };
 
-        // Estado inicial dos botões
-        if (currentMode === 'store') { setActive(btnStore); setInactive(btnDevice); } 
+        if (currentMode === 'store') { setActive(btnStore); setInactive(btnDevice); }
         else { setActive(btnDevice); setInactive(btnStore); }
     }
 
-    // 2. Conecta a tela ao Cérebro (DataManager)
-    if (unsubscribeData) {
-        unsubscribeData();
-    }
-    unsubscribeData = appData.subscribe((filteredData) => {
-        executeRenderLogic(filteredData);
+    // Conecta ao DataManager — reage a mudanças de filtro
+    if (unsubscribeData) unsubscribeData();
+    unsubscribeData = appData.subscribe(async () => {
+        await executeRenderLogic();
     });
 
-    // 3. Primeira renderização com os dados já filtrados
-    executeRenderLogic(appData.getFilteredData());
+    executeRenderLogic();
 };
 
-function executeRenderLogic(data) {
+async function executeRenderLogic() {
+    // Anticolisão: mesmo padrão da overview
+    const renderToken = ++currentRenderToken;
+
     const matrixTable = document.getElementById('matrix-table');
+    const productTable = document.getElementById('product-table');
     if (!matrixTable) return;
 
-    if (!data || data.length === 0) {
-        matrixTable.innerHTML = '<tr><td class="p-8 text-center opacity-50 text-adaptive">Nenhum dado encontrado para os filtros atuais.</td></tr>';
-        document.getElementById('product-table').innerHTML = '';
-        document.getElementById('kp-lojas').innerText = '0';
-        document.getElementById('kp-mod').innerText = '0';
-        document.getElementById('kp-cap').innerText = '-';
-        return;
+    // Mostra loading nos KPIs
+    document.getElementById('kp-lojas').innerHTML = '<div class="skeleton-pulse">...</div>';
+    document.getElementById('kp-cap').innerHTML = '<div class="skeleton-pulse">...</div>';
+    document.getElementById('kp-mod').innerHTML = '<div class="skeleton-pulse">...</div>';
+
+    // Mostra spinner nas tabelas
+    matrixTable.innerHTML = `<tr><td class="p-8 text-center"><div class="table-loading"><div class="spinner"></div></div></td></tr>`;
+    if (productTable) {
+        productTable.innerHTML = `<tr><td class="p-8 text-center"><div class="table-loading"><div class="spinner"></div></div></td></tr>`;
     }
 
-    // Renderiza a nova tabela de produtos
-    renderProductTable(data);
+    try {
+        const dbData = await appData.fetchPositivacaoRPC();
 
-    // Preparação para a matriz usando as chaves do Supabase
-    const aparelhos = [...new Set(data.map(d => d.aparelho))].filter(x => x).sort();
-    const lojas = [...new Set(data.map(d => d.store_name))].filter(x => x).sort();
+        // Anticolisão: descarta se um filtro mais recente já disparou
+        if (renderToken !== currentRenderToken) return;
 
-    const presenceMap = {};
-    data.forEach(d => {
-        if(d.store_name && d.aparelho) {
-            const key = `${d.store_name}|${d.aparelho}`;
-            presenceMap[key] = true;
+        // Segurança de DOM: usuário pode ter trocado de aba
+        if (!document.getElementById('view-positivacao-wrapper')) return;
+
+        // Falha de rede
+        if (!dbData) {
+            matrixTable.innerHTML = `<tr><td class="p-8 text-center text-adaptive-muted text-xs font-bold uppercase tracking-widest opacity-50">⚠️ Conexão interrompida. Clique em um filtro para reconectar.</td></tr>`;
+            return;
         }
-    });
 
-    if (currentMode === 'store') {
-        renderStoreMatrix(matrixTable, lojas, aparelhos, presenceMap);
-    } else {
-        renderDeviceMatrix(matrixTable, aparelhos, lojas, presenceMap);
+        const kpis    = dbData.kpis    || {};
+        const produtos = dbData.produtos || [];
+        const matriz  = dbData.matriz  || [];
+
+        // Sem dados para os filtros aplicados
+        if (!kpis.total_lojas || kpis.total_lojas === 0) {
+            matrixTable.innerHTML = `<tr><td class="p-8 text-center opacity-50 text-adaptive">Nenhum dado encontrado para os filtros atuais.</td></tr>`;
+            if (productTable) productTable.innerHTML = '';
+            document.getElementById('kp-lojas').innerText = '0';
+            document.getElementById('kp-mod').innerText = '0';
+            document.getElementById('kp-cap').innerText = '-';
+            return;
+        }
+
+        // KPIs
+        document.getElementById('kp-lojas').innerText = kpis.total_lojas;
+        document.getElementById('kp-mod').innerText = kpis.total_aparelhos;
+        document.getElementById('kp-cap').innerHTML = kpis.top_capilaridade
+            ? `${kpis.top_capilaridade} <span class="ds-helper-text text-adaptive-muted ml-2 block md:inline">(${kpis.top_capilaridade_lojas} Lojas)</span>`
+            : '-';
+
+        // Tabela de produtos
+        renderProductTable(productTable, produtos);
+
+        // Monta o mapa de presença para a matriz
+        const presenceMap = {};
+        matriz.forEach(row => {
+            presenceMap[`${row.store_name}|${row.aparelho}`] = true;
+        });
+
+        const lojas     = [...new Set(matriz.map(r => r.store_name))].filter(Boolean).sort();
+        const aparelhos = [...new Set(matriz.map(r => r.aparelho))].filter(Boolean).sort();
+
+        if (currentMode === 'store') {
+            renderStoreMatrix(matrixTable, lojas, aparelhos, presenceMap);
+        } else {
+            renderDeviceMatrix(matrixTable, aparelhos, lojas, presenceMap);
+        }
+
+    } catch (e) {
+        console.error("Crash interceptado na renderização da Positivação:", e);
     }
-
-    calculateKPIs(lojas, aparelhos, presenceMap);
 }
 
 // ==========================================
 // TABELA DE PRODUTOS
 // ==========================================
-function renderProductTable(data) {
-    const table = document.getElementById('product-table');
+function renderProductTable(table, produtos) {
     if (!table) return;
-
-    const prodMap = {};
-    
-    // Agrupa dados usando as chaves do Supabase
-    data.forEach(d => {
-        const prod = d.aparelho;
-        if (!prod) return;
-        
-        if (!prodMap[prod]) {
-            prodMap[prod] = {
-                linha: d.linha_de_produto || '-',
-                devices: new Set(),
-                stores: new Set()
-            };
-        }
-        
-        // Conta devices únicos (Aparelhos operantes reais)
-        if (d.device_code) prodMap[prod].devices.add(d.device_code);
-        // Conta lojas únicas (Capilaridade)
-        if (d.store_name) prodMap[prod].stores.add(d.store_name);
-    });
-
-    // Converte para array e ordena por maior qtd de ativos
-    const prodList = Object.entries(prodMap).map(([prod, info]) => ({
-        produto: prod,
-        linha: info.linha,
-        qtdAtivos: info.devices.size,
-        qtdLojas: info.stores.size
-    })).sort((a, b) => b.qtdAtivos - a.qtdAtivos);
 
     let html = `
         <thead>
@@ -236,13 +264,13 @@ function renderProductTable(data) {
         <tbody>
     `;
 
-    prodList.forEach(p => {
+    (produtos || []).forEach(p => {
         html += `
             <tr class="hover-row transition-colors duration-200">
-                <td class="p-4 text-[11px] font-semibold text-adaptive-strong border-b table-border sticky left-0 z-10 bg-sticky whitespace-nowrap shadow-[2px_0_10px_rgba(0,0,0,0.02)]">${p.linha}</td>
-                <td class="p-4 text-[12px] font-bold text-adaptive border-b table-border whitespace-nowrap">${p.produto}</td>
-                <td class="p-4 text-[13px] font-black text-[#685BC7] border-b table-border text-center font-numbers bg-[#685BC7]/5">${p.qtdAtivos}</td>
-                <td class="p-4 text-[13px] font-black text-[#8b5cf6] border-b table-border text-center font-numbers">${p.qtdLojas}</td>
+                <td class="p-4 text-[11px] font-semibold text-adaptive-strong border-b table-border sticky left-0 z-10 bg-sticky whitespace-nowrap shadow-[2px_0_10px_rgba(0,0,0,0.02)]">${p.linha_de_produto || '-'}</td>
+                <td class="p-4 text-[12px] font-bold text-adaptive border-b table-border whitespace-nowrap">${p.aparelho || '-'}</td>
+                <td class="p-4 text-[13px] font-black text-[#685BC7] border-b table-border text-center font-numbers bg-[#685BC7]/5">${p.qtd_unidades ?? 0}</td>
+                <td class="p-4 text-[13px] font-black text-[#8b5cf6] border-b table-border text-center font-numbers">${p.qtd_lojas ?? 0}</td>
             </tr>
         `;
     });
@@ -252,58 +280,50 @@ function renderProductTable(data) {
 }
 
 // ==========================================
-// MATRIZ DE POSITIVAÇÃO (COMPORTAMENTO MOBILE ATUALIZADO)
+// MATRIZES DE EXECUÇÃO
 // ==========================================
 function renderStoreMatrix(table, rows, cols, map) {
-    let html = `<thead><tr><th class="p-3 md:p-4 text-[9px] font-black text-adaptive-muted uppercase tracking-[0.2em] border-b table-border sticky top-0 left-0 z-30 bg-sticky shadow-[2px_2px_10px_rgba(0,0,0,0.05)] min-w-[110px] max-w-[130px] md:min-w-auto md:max-w-none whitespace-normal md:whitespace-nowrap leading-tight">Ponto de Venda</th>`;
+    let html = `<thead><tr>
+        <th class="p-3 md:p-4 text-[9px] font-black text-adaptive-muted uppercase tracking-[0.2em] border-b table-border sticky top-0 left-0 z-30 bg-sticky shadow-[2px_2px_10px_rgba(0,0,0,0.05)] min-w-[110px] max-w-[130px] md:min-w-auto md:max-w-none whitespace-normal md:whitespace-nowrap leading-tight">Ponto de Venda</th>`;
     cols.forEach(c => html += `<th class="p-3 md:p-4 text-[9px] font-black text-adaptive-muted uppercase tracking-[0.1em] border-b table-border text-center min-w-[70px] md:min-w-[120px] sticky top-0 z-20 bg-sticky shadow-[0_2px_10px_rgba(0,0,0,0.02)]">${c}</th>`);
     html += `</tr></thead><tbody>`;
 
     rows.forEach(r => {
-        html += `<tr class="hover-row transition-colors duration-200"><td class="p-3 md:p-4 text-[9.5px] md:text-[11px] font-bold text-adaptive border-b table-border sticky left-0 z-10 bg-sticky shadow-[2px_0_10px_rgba(0,0,0,0.02)] min-w-[110px] max-w-[130px] md:max-w-none whitespace-normal md:whitespace-nowrap leading-tight break-words">${r}</td>`;
+        html += `<tr class="hover-row transition-colors duration-200">
+            <td class="p-3 md:p-4 text-[9.5px] md:text-[11px] font-bold text-adaptive border-b table-border sticky left-0 z-10 bg-sticky shadow-[2px_0_10px_rgba(0,0,0,0.02)] min-w-[110px] max-w-[130px] md:max-w-none whitespace-normal md:whitespace-nowrap leading-tight break-words">${r}</td>`;
         cols.forEach(c => {
             const isPos = map[`${r}|${c}`];
             html += `<td class="p-3 md:p-4 border-b table-border text-center cursor-default">
-                ${isPos ? '<span class="text-[#22c55e] text-xl text-glow-green drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]">●</span>' : '<span class="text-adaptive-muted opacity-10 text-[10px]">―</span>'}
+                ${isPos
+                    ? '<span class="text-[#22c55e] text-xl text-glow-green drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]">●</span>'
+                    : '<span class="text-adaptive-muted opacity-10 text-[10px]">―</span>'}
             </td>`;
         });
         html += `</tr>`;
     });
+
     table.innerHTML = html + `</tbody>`;
 }
 
 function renderDeviceMatrix(table, rows, cols, map) {
-    let html = `<thead><tr><th class="p-3 md:p-4 text-[9px] font-black text-adaptive-muted uppercase tracking-[0.2em] border-b table-border sticky top-0 left-0 z-30 bg-sticky shadow-[2px_2px_10px_rgba(0,0,0,0.05)] min-w-[110px] max-w-[130px] md:min-w-auto md:max-w-none whitespace-normal md:whitespace-nowrap leading-tight">Modelo do Aparelho</th>`;
+    let html = `<thead><tr>
+        <th class="p-3 md:p-4 text-[9px] font-black text-adaptive-muted uppercase tracking-[0.2em] border-b table-border sticky top-0 left-0 z-30 bg-sticky shadow-[2px_2px_10px_rgba(0,0,0,0.05)] min-w-[110px] max-w-[130px] md:min-w-auto md:max-w-none whitespace-normal md:whitespace-nowrap leading-tight">Modelo do Aparelho</th>`;
     cols.forEach(c => html += `<th class="p-3 md:p-4 text-[9px] font-black text-adaptive-muted uppercase tracking-[0.1em] border-b table-border text-center min-w-[70px] md:min-w-[120px] sticky top-0 z-20 bg-sticky shadow-[0_2px_10px_rgba(0,0,0,0.02)]">${c}</th>`);
     html += `</tr></thead><tbody>`;
 
     rows.forEach(r => {
-        html += `<tr class="hover-row transition-colors duration-200"><td class="p-3 md:p-4 text-[9.5px] md:text-[11px] font-bold text-adaptive border-b table-border sticky left-0 z-10 bg-sticky shadow-[2px_0_10px_rgba(0,0,0,0.02)] min-w-[110px] max-w-[130px] md:max-w-none whitespace-normal md:whitespace-nowrap leading-tight break-words">${r}</td>`;
+        html += `<tr class="hover-row transition-colors duration-200">
+            <td class="p-3 md:p-4 text-[9.5px] md:text-[11px] font-bold text-adaptive border-b table-border sticky left-0 z-10 bg-sticky shadow-[2px_0_10px_rgba(0,0,0,0.02)] min-w-[110px] max-w-[130px] md:max-w-none whitespace-normal md:whitespace-nowrap leading-tight break-words">${r}</td>`;
         cols.forEach(c => {
             const isPos = map[`${c}|${r}`];
             html += `<td class="p-3 md:p-4 border-b table-border text-center cursor-default">
-                ${isPos ? '<span class="text-[#22c55e] text-xl text-glow-green drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]">●</span>' : '<span class="text-adaptive-muted opacity-10 text-[10px]">―</span>'}
+                ${isPos
+                    ? '<span class="text-[#22c55e] text-xl text-glow-green drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]">●</span>'
+                    : '<span class="text-adaptive-muted opacity-10 text-[10px]">―</span>'}
             </td>`;
         });
         html += `</tr>`;
     });
+
     table.innerHTML = html + `</tbody>`;
-}
-
-function calculateKPIs(lojas, aparelhos, map) {
-    document.getElementById('kp-lojas').innerText = lojas.length;
-    document.getElementById('kp-mod').innerText = aparelhos.length;
-
-    const capMap = {};
-    Object.keys(map).forEach(key => {
-        const dev = key.split('|')[1];
-        capMap[dev] = (capMap[dev] || 0) + 1;
-    });
-    
-    const sortedDevs = Object.entries(capMap).sort((a,b) => b[1]-a[1]);
-    const topDev = sortedDevs[0];
-
-    document.getElementById('kp-cap').innerHTML = topDev 
-        ? `${topDev[0]} <span class="ds-helper-text text-adaptive-muted ml-2 block md:inline">(${topDev[1]} Lojas)</span>` 
-        : '-';
 }
