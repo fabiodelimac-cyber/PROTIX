@@ -68,9 +68,7 @@ themeToggles.forEach(btn => {
 
 // --- CONFIGURAÇÃO SUPABASE ---
 // Lembre-se de colocar as suas chaves aqui (Project URL e Publishable Key)
-const supabaseUrl = 'https://zkxzjrlhuyjqikzszrjx.supabase.co';
-const supabaseKey = 'sb_publishable_paYvySajRU_JQWPd9PrgvA_bxb6zFwy';
-const supabase = createClient(supabaseUrl, supabaseKey);
+import { supabase } from './services/supabaseClient.js';
 
 // --- VARIÁVEIS GLOBAIS DE ESTADO (Apenas UI e Rotas) ---
 let isDataLoaded = false;

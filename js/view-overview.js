@@ -197,92 +197,111 @@ export const renderOverviewCharts = () => {
         setTimeout(() => {
             titleEl.innerText = timelineMode === 'semana' ? 'Volume de Interações por Semana' : 'Volume de Interações por Dia';
             titleEl.style.opacity = 1; 
-            executeRenderLogic(appData.getFilteredData());
+            executeRenderLogic();
         }, 300);
     }
 
-    unsubscribeData = appData.subscribe((filteredData) => {
-        executeRenderLogic(filteredData);
+    // Passa a reagir aos filtros solicitando os dados do banco
+    unsubscribeData = appData.subscribe(async () => {
+        await executeRenderLogic();
     });
 
-    executeRenderLogic(appData.getFilteredData());
+    executeRenderLogic();
 };
 
-function executeRenderLogic(filteredData) {
-    Object.keys(chartInstances).forEach(id => {
-        if(chartInstances[id]) chartInstances[id].destroy();
-    });
-    chartInstances = {};
-    if (insightTimeout) clearInterval(insightTimeout);
+let currentRenderToken = 0; // Trava de segurança global da tela
 
-    if(!filteredData || filteredData.length === 0) {
-        document.getElementById('k-sess').innerText = '0';
-        document.getElementById('k-sto').innerText = '0';
-        document.getElementById('k-dev').innerText = '0';
-        document.getElementById('k-avg').innerText = '0';
-        document.getElementById('insight-text').innerText = 'Aguardando dados estruturados para processamento analítico.';
-        return;
-    }
-    
-    const parseN = v => Number(v) || 0;
-    
-    // KPIs
-    const totalSess = filteredData.reduce((a, b) => a + parseN(b.sessions), 0);
-    const stores = [...new Set(filteredData.map(d => d.store_name))].filter(x => x).length;
-    const devices = [...new Set(filteredData.map(d => d.device_code))].filter(x => x).length;
-    
-    document.getElementById('k-sess').innerText = Math.round(totalSess).toLocaleString('pt-BR');
-    document.getElementById('k-sto').innerText = stores;
-    document.getElementById('k-dev').innerText = devices;
-    document.getElementById('k-avg').innerText = stores ? Math.round(totalSess/stores).toLocaleString('pt-BR') : 0;
-    
-    const devSetMap = {};
-    filteredData.forEach(d => {
-        if(d.aparelho && d.tipo && d.device_code) {
-            const k = `${d.aparelho} - <span class="text-white/40 font-normal">${d.tipo}</span>`;
-            if(!devSetMap[k]) devSetMap[k] = new Set();
-            devSetMap[k].add(d.device_code);
+async function executeRenderLogic() {
+    // 1. Gera um "ticket" exclusivo para este clico de renderização
+    const renderToken = ++currentRenderToken;
+
+    try {
+        const dbData = await appData.fetchOverviewRPC();
+
+        // 2. ANTICOLISÃO: Se um filtro mais recente foi clicado enquanto esperávamos a rede, aborte e deixe o novo assumir.
+        if (renderToken !== currentRenderToken) return;
+
+        // 3. SEGURANÇA DE DOM: Garante que o usuário não mudou de tela enquanto a requisição carregava
+        if (!document.getElementById('view-overview-wrapper')) return;
+
+        Object.keys(chartInstances).forEach(id => {
+            if(chartInstances[id]) chartInstances[id].destroy();
+        });
+        chartInstances = {};
+        if (insightTimeout) clearInterval(insightTimeout);
+
+       // 1. Se a rede falhou completamente (dbData é null)
+        if (!dbData) {
+            document.getElementById('insight-text').innerText = '⚠️ Conexão interrompida pelo navegador. Recarregue a página ou clique em um filtro para reconectar.';
+            return; // Interrompe aqui, não zera os números à força, apenas avisa.
         }
-    });
-    
-    const sortedDevList = Object.entries(devSetMap).map(([k, set]) => [k, set.size]).sort((a, b) => b[1] - a[1]);
-    document.getElementById('k-dev-tooltip').innerHTML = '<p class="ds-sidebar-title text-[#685BC7] mb-3 border-b border-white/10 pb-3">Modelos Operantes na Rede</p>' + 
-        (sortedDevList.length > 0 
-            ? sortedDevList.map(v => `<div class="mt-2.5 flex items-center justify-between gap-6"><span class="opacity-90">${v[0]}</span> <span class="font-black font-numbers text-[#8b5cf6] bg-[#8b5cf6]/10 px-2 py-0.5 rounded-md border border-[#8b5cf6]/20">${v[1]}</span></div>`).join('') 
-            : '<div class="opacity-50 mt-2">Nenhum modelo detectado</div>');
-            
-    // Insight Heurístico
-    const devG = filteredData.reduce((a, o) => { a[o.aparelho] = (a[o.aparelho] || 0) + parseN(o.sessions); return a; }, {});
-    const topDev = Object.entries(devG).sort((a,b) => b[1]-a[1])[0];
-    const textInsight = topDev ? `PROSOLUTION ANALYTICS: O modelo ${topDev[0]} registrou a maior tração com ${Math.round(topDev[1]).toLocaleString('pt-BR')} interações validadas.` : 'Aguardando massa de dados.';
-    
-    const el = document.getElementById('insight-text'); 
-    el.innerHTML = ""; let i = 0;
-    insightTimeout = setInterval(() => { 
-        if (i < textInsight.length) { el.innerHTML += textInsight.charAt(i); i++; } 
-        else clearInterval(insightTimeout);
-    }, 20); 
 
-    // Agrupamentos Locais
-    let ruaTotal = 0, shopTotal = 0;
-    const linhaAgg = {};
-    filteredData.forEach(d => {
-        const sess = parseN(d.sessions);
-        const tipoOriginal = (d.shopping || '').toUpperCase().trim();
-        if (tipoOriginal === 'LOJA DE RUA') ruaTotal += sess;
-        else shopTotal += sess;
+        // 2. Se a rede funcionou, mas os filtros não trouxeram nenhum resultado matematicamente
+        if (!dbData.kpis || dbData.kpis.total_sessions === 0) {
+            document.getElementById('k-sess').innerText = '0';
+            document.getElementById('k-sto').innerText = '0';
+            document.getElementById('k-dev').innerText = '0';
+            document.getElementById('k-avg').innerText = '0';
+            document.getElementById('insight-text').innerText = 'Aguardando dados estruturados para processamento analítico.';
+            return;
+        }
         
-        const linha = (d.linha_de_produto || 'N/A').toUpperCase().trim();
-        linhaAgg[linha] = (linhaAgg[linha] || 0) + sess;
-    });
-    const sortedLinhas = Object.keys(linhaAgg).sort((a,b) => linhaAgg[b] - linhaAgg[a]);
+        // KPIs (Direto do Banco)
+        const totalSess = dbData.kpis.total_sessions;
+        const stores = dbData.kpis.unique_stores;
+        const devices = dbData.kpis.unique_devices;
+        
+        document.getElementById('k-sess').innerText = Math.round(totalSess).toLocaleString('pt-BR');
+        document.getElementById('k-sto').innerText = stores;
+        document.getElementById('k-dev').innerText = devices;
+        document.getElementById('k-avg').innerText = stores ? Math.round(totalSess/stores).toLocaleString('pt-BR') : 0;
+        
+        // Tooltip de Aparelhos (Safeguard de Array Vazio)
+        const sortedDevList = (dbData.aparelhos || [])
+            .map(d => [`${d.aparelho} - <span class="text-white/40 font-normal">${d.tipo}</span>`, d.devices])
+            .sort((a, b) => b[1] - a[1]);
 
-    // Disparo dos Gráficos
-    drawChart('c-timeline', 'line', aggregateTimeline(filteredData, timelineMode), true);
-    drawChart('c-time', 'line', aggregateData(filteredData, 'faixa', true), true);
-    drawChart('c-rede', 'bar', aggregateData(filteredData, 'rede', false, true));
-    drawChart('c-shop', 'doughnut', { labels: ['Loja de Rua', 'Shopping'], values: [ruaTotal, shopTotal] });
-    drawChart('c-linha', 'doughnut', { labels: sortedLinhas, values: sortedLinhas.map(l => linhaAgg[l]) });
+        document.getElementById('k-dev-tooltip').innerHTML = '<p class="ds-sidebar-title text-[#685BC7] mb-3 border-b border-white/10 pb-3">Modelos Operantes na Rede</p>' + 
+            (sortedDevList.length > 0 
+                ? sortedDevList.map(v => `<div class="mt-2.5 flex items-center justify-between gap-6"><span class="opacity-90">${v[0]}</span> <span class="font-black font-numbers text-[#8b5cf6] bg-[#8b5cf6]/10 px-2 py-0.5 rounded-md border border-[#8b5cf6]/20">${v[1]}</span></div>`).join('') 
+                : '<div class="opacity-50 mt-2">Nenhum modelo detectado</div>');
+                
+        // Insight Heurístico
+        const topDev = [...(dbData.aparelhos || [])].sort((a,b) => b.total - a.total)[0];
+        const textInsight = topDev ? `PROSOLUTION ANALYTICS: O modelo ${topDev.aparelho} registrou a maior tração com ${Math.round(topDev.total).toLocaleString('pt-BR')} interações validadas.` : 'Aguardando massa de dados.';
+        
+        const el = document.getElementById('insight-text'); 
+        el.innerHTML = ""; let i = 0;
+        insightTimeout = setInterval(() => { 
+            if (i < textInsight.length) { el.innerHTML += textInsight.charAt(i); i++; } 
+            else clearInterval(insightTimeout);
+        }, 20); 
+
+        // Agrupamentos Locais com Proteção (fallback para [])
+        let ruaTotal = 0, shopTotal = 0;
+        (dbData.shop || []).forEach(d => {
+            const tipoOriginal = (d.shopping || '').toUpperCase().trim();
+            if (tipoOriginal === 'LOJA DE RUA') ruaTotal += d.total;
+            else shopTotal += d.total;
+        });
+
+        const linhaAgg = {};
+        (dbData.linha || []).forEach(d => {
+            const linha = (d.linha_de_produto || 'N/A').toUpperCase().trim();
+            linhaAgg[linha] = (linhaAgg[linha] || 0) + d.total;
+        });
+        const sortedLinhas = Object.keys(linhaAgg).sort((a,b) => linhaAgg[b] - linhaAgg[a]);
+
+        // Disparo dos Gráficos
+        drawChart('c-timeline', 'line', aggregateTimeline((dbData.timeline || []), timelineMode), true);
+        drawChart('c-time', 'line', aggregateData((dbData.faixa || []), 'faixa', true), true);
+        drawChart('c-rede', 'bar', aggregateData((dbData.rede || []), 'rede', false, true));
+        drawChart('c-shop', 'doughnut', { labels: ['Loja de Rua', 'Shopping'], values: [ruaTotal, shopTotal] });
+        drawChart('c-linha', 'doughnut', { labels: sortedLinhas, values: sortedLinhas.map(l => linhaAgg[l]) });
+
+    } catch (e) {
+        console.error("Crash interceptado na renderização visual:", e);
+    }
 }
 
 // ==========================================
@@ -305,9 +324,9 @@ function getISOWeek(dateStr) {
     };
 }
 
-function aggregateTimeline(data, mode) {
+function aggregateTimeline(dataArray, mode) {
     const grouped = {};
-    data.forEach(o => {
+    dataArray.forEach(o => {
         const rawDate = o.pure_date || 'N/A';
         let sortKey = rawDate;
         let label = rawDate;
@@ -325,7 +344,7 @@ function aggregateTimeline(data, mode) {
             }
         }
         
-        const sess = Number(o.sessions) || 0;
+        const sess = Number(o.total) || 0; // Alterado para ler do objeto agrupado do Banco
         const linha = o.linha_de_produto || 'N/A';
         
         if (!grouped[sortKey]) grouped[sortKey] = { label, total: 0, linhas: {} };
@@ -344,10 +363,10 @@ function aggregateTimeline(data, mode) {
 // ==========================================
 // AGRUPAMENTO PADRÃO COM TOOLTIP POR LINHA
 // ==========================================
-function aggregateData(data, key, isT = false, isR = false) {
-    const g = data.reduce((acc, o) => { 
+function aggregateData(dataArray, key, isT = false, isR = false) {
+    const g = dataArray.reduce((acc, o) => { 
         const k = o[key] || 'N/A'; 
-        const sess = Number(o.sessions) || 0; 
+        const sess = Number(o.total) || 0;  // Alterado para ler do objeto agrupado do Banco
         const linha = o.linha_de_produto || 'N/A';
         
         if (!acc[k]) acc[k] = { total: 0, linhas: {} };
@@ -478,7 +497,7 @@ function drawChart(id, type, data, isArea = false, isH = false) {
 
     const pluginsArray = [];
     if (type === 'line') pluginsArray.push(crosshairPlugin);
-    if (type === 'doughnut') pluginsArray.push(doughnutCustomLabelPlugin); // Usa o novo plugin inteligente
+    if (type === 'doughnut') pluginsArray.push(doughnutCustomLabelPlugin);
     
     let bg;
     let borderColor = '#685BC7';
@@ -522,7 +541,6 @@ function drawChart(id, type, data, isArea = false, isH = false) {
                 const key = typeof ctx.label === 'string' ? ctx.label.split(',')[0] : (Array.isArray(ctx.label) ? ctx.label[0] : ctx.label);
                 const linhas = data.tooltipData[key];
                 if(linhas) { 
-                    // Renderiza múltiplas linhas dentro da tooltip perfeitamente
                     return Object.entries(linhas).sort((a,b) => b[1]-a[1]).map(s => `${s[0]}: ${Math.round(s[1]).toLocaleString('pt-BR')}`); 
                 }
                 return ctx.formattedValue;
@@ -566,7 +584,7 @@ function drawChart(id, type, data, isArea = false, isH = false) {
                 legend: { display: false }, 
                 tooltip: tooltipConfig,
                 datalabels: {
-                    display: type !== 'doughnut', // DESLIGADO na Pizza, o Plugin Customizado assume o desenho
+                    display: type !== 'doughnut', 
                     font: { family: 'Archivo', size: 10, weight: 800 },
                     formatter: (value) => Math.round(value).toLocaleString('pt-BR'),
                     anchor: 'end',
