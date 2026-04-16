@@ -137,7 +137,7 @@ export const getOverviewHTML = () => {
                 </div>
                 <div class="flex-1 p-8 md:p-10 flex flex-col justify-start relative z-10 group cursor-help">
                     <p class="ds-kpi-label mb-4 flex items-center gap-1.5">
-                        Aparelhos Demonstrados
+                        Aparelhos Ativos
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3 h-3 opacity-50 group-hover:opacity-100 transition-opacity"><path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" /></svg>
                     </p>
                     <h3 id="k-dev" class="ds-kpi-value text-4xl md:text-5xl">0</h3>
@@ -513,15 +513,33 @@ async function executeRenderLogic() {
         updateKPIWithFade('k-dev', devices.toString());
         updateKPIWithFade('k-avg', stores ? Math.round(totalSess/stores).toLocaleString('pt-BR') : '0');
         
-        // Tooltip de Aparelhos (Safeguard de Array Vazio)
-        const sortedDevList = (dbData.aparelhos || [])
-            .map(d => [`${d.aparelho} - <span class="text-white/40 font-normal">${d.tipo}</span>`, d.devices])
+        // Tooltip: Aparelhos Ativos por Linha de Produto
+        // Como a RPC não retorna linha_de_produto em 'aparelhos', vamos usar os dados brutos
+        const aparelhosPorLinha = {};
+        
+        // Usa os dados brutos filtrados para contar device_code únicos por linha
+        const filteredData = appData.getFilteredData();
+        filteredData.forEach(row => {
+            const linha = row.linha_de_produto || 'N/A';
+            const deviceCode = row.device_code;
+            
+            if (!aparelhosPorLinha[linha]) {
+                aparelhosPorLinha[linha] = new Set();
+            }
+            if (deviceCode) {
+                aparelhosPorLinha[linha].add(deviceCode);
+            }
+        });
+        
+        // Converte para array e ordena por quantidade de aparelhos
+        const sortedLinhasList = Object.entries(aparelhosPorLinha)
+            .map(([linha, deviceSet]) => [linha, deviceSet.size])
             .sort((a, b) => b[1] - a[1]);
 
-        document.getElementById('k-dev-tooltip').innerHTML = '<p class="ds-sidebar-title text-[#685BC7] mb-3 border-b border-white/10 pb-3">Modelos Operantes na Rede</p>' + 
-            (sortedDevList.length > 0 
-                ? sortedDevList.map(v => `<div class="mt-2.5 flex items-center justify-between gap-6"><span class="opacity-90">${v[0]}</span> <span class="font-black font-numbers text-[#8b5cf6] bg-[#8b5cf6]/10 px-2 py-0.5 rounded-md border border-[#8b5cf6]/20">${v[1]}</span></div>`).join('') 
-                : '<div class="opacity-50 mt-2">Nenhum modelo detectado</div>');
+        document.getElementById('k-dev-tooltip').innerHTML = '<p class="ds-sidebar-title text-[#685BC7] mb-3 border-b border-white/10 pb-3">Aparelhos Ativos por Linha de Produto</p>' + 
+            (sortedLinhasList.length > 0 
+                ? sortedLinhasList.map(v => `<div class="mt-2.5 flex items-center justify-between gap-6"><span class="opacity-90">${v[0]}</span> <span class="font-black font-numbers text-[#8b5cf6] bg-[#8b5cf6]/10 px-2 py-0.5 rounded-md border border-[#8b5cf6]/20">${v[1]}</span></div>`).join('') 
+                : '<div class="opacity-50 mt-2">Nenhuma linha detectada</div>');
                 
         // Sistema de Insights Rotativos
         startInsightRotation(dbData);

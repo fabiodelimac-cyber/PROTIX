@@ -102,9 +102,10 @@ supabase.auth.onAuthStateChange(async (event, session) => {
                 const emailDisplay = document.getElementById('topbar-user-email');
                 if (emailDisplay) emailDisplay.innerText = session.user.email;
 
-                if (!sessionStorage.getItem('disclaimerAccepted')) {
-                    document.getElementById('disclaimer-modal').classList.remove('hidden');
-                }
+                // Sempre mostra o disclaimer ao logar
+                document.getElementById('disclaimer-modal').classList.remove('hidden');
+                startDisclaimerCountdown();
+                
                 if (!isDataLoaded) initData();
                 
             } else {
@@ -177,14 +178,49 @@ if (btnMicrosoftLogin) {
 }
 
 document.getElementById('btn-logout').addEventListener('click', async () => {
-    await supabase.auth.signOut();
-    document.getElementById('pass').value = ''; 
-    sessionStorage.removeItem('disclaimerAccepted'); 
+    try {
+        await supabase.auth.signOut();
+    } catch (error) {
+        console.error('Erro ao fazer logout:', error);
+    }
+    
+    // Limpa o campo de senha se existir (apenas na tela de login)
+    const passField = document.getElementById('pass');
+    if (passField) {
+        passField.value = '';
+    }
 });
 
 document.getElementById('btn-accept-beta').addEventListener('click', () => {
-    document.getElementById('disclaimer-modal').classList.add('hidden'); sessionStorage.setItem('disclaimerAccepted', 'true');
+    document.getElementById('disclaimer-modal').classList.add('hidden');
 });
+
+// Função para iniciar a contagem regressiva no disclaimer
+function startDisclaimerCountdown() {
+    const btnAccept = document.getElementById('btn-accept-beta');
+    let countdown = 3;
+    
+    // Desabilita o botão e mostra a contagem
+    btnAccept.disabled = true;
+    btnAccept.style.opacity = '0.5';
+    btnAccept.style.cursor = 'not-allowed';
+    btnAccept.innerText = `ESTOU CIENTE (${countdown}s)`;
+    
+    const interval = setInterval(() => {
+        countdown--;
+        
+        if (countdown > 0) {
+            btnAccept.innerText = `ESTOU CIENTE (${countdown}s)`;
+        } else {
+            // Contagem terminou, habilita o botão
+            btnAccept.disabled = false;
+            btnAccept.style.opacity = '1';
+            btnAccept.style.cursor = 'pointer';
+            btnAccept.innerText = 'ESTOU CIENTE';
+            clearInterval(interval);
+        }
+    }, 1000);
+}
 
 // --- ROTEAMENTO (NAVEGAÇÃO) - INTACTO ---
 const appContent = document.getElementById('app-content');
@@ -231,6 +267,12 @@ navItems.forEach(btn => {
 
             appContent.classList.remove('view-hidden');
             appContent.classList.add('view-visible');
+            
+            // Scroll suave para o topo ao trocar de view
+            const contentWrapper = document.getElementById('app-content-wrapper');
+            if (contentWrapper) {
+                contentWrapper.scrollTo({ top: 0, behavior: 'smooth' });
+            }
             
             closeSidebarMobile();
         }, 200); 

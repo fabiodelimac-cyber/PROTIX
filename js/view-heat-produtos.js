@@ -90,7 +90,108 @@ export const getHeatProdutosHTML = () => {
             @keyframes spin {
                 to { transform: rotate(360deg); }
             }
+            
+            /* Filtro Flutuante */
+            #hp-floating-filter {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                z-index: 90;
+                padding: 16px 24px;
+                transform: translateY(-100%);
+                transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease;
+                opacity: 0;
+                pointer-events: none;
+            }
+            
+            #hp-floating-filter.visible {
+                transform: translateY(0);
+                opacity: 1;
+                pointer-events: auto;
+            }
+            
+            /* Ajusta a posição baseado no estado dos filtros */
+            #hp-floating-filter.filters-closed {
+                top: 120px; /* Abaixo da navegação */
+            }
+            
+            #hp-floating-filter.filters-open {
+                top: 220px; /* Abaixo da navegação + filtros */
+            }
+            
+            @media (max-width: 768px) {
+                #hp-floating-filter.filters-closed {
+                    top: 180px;
+                }
+                
+                #hp-floating-filter.filters-open {
+                    top: 320px;
+                }
+            }
+            
+            #hp-floating-filter-inner {
+                max-width: 500px;
+                margin: 0 auto;
+                padding: 16px 24px;
+                border-radius: 20px;
+                backdrop-filter: blur(24px);
+                -webkit-backdrop-filter: blur(24px);
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            }
+            
+            body.dark #hp-floating-filter-inner {
+                background: rgba(15, 16, 19, 0.85);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+            }
+            
+            body:not(.dark) #hp-floating-filter-inner {
+                background: rgba(255, 255, 255, 0.85);
+                border: 1px solid rgba(255, 255, 255, 0.95);
+            }
+            
+            #hp-floating-select {
+                width: 100%;
+                padding: 12px 16px;
+                border-radius: 12px;
+                outline: none;
+                transition: all 0.3s ease;
+                cursor: pointer;
+                backdrop-filter: blur(12px);
+                appearance: none;
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23ffffff'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+                background-repeat: no-repeat;
+                background-position: right 12px center;
+                background-size: 1.1em;
+                padding-right: 40px;
+            }
+            
+            body.dark #hp-floating-select {
+                background-color: rgba(0, 0, 0, 0.45);
+                border: 1px solid rgba(255, 255, 255, 0.15);
+                color: #ffffff;
+            }
+            
+            body:not(.dark) #hp-floating-select {
+                background-color: rgba(255, 255, 255, 0.9);
+                border: 1px solid rgba(0, 0, 0, 0.1);
+                color: #131417;
+            }
+            
+            #hp-floating-select:focus {
+                border-color: #685BC7;
+            }
         </style>
+
+        <!-- Filtro Flutuante -->
+        <div id="hp-floating-filter" class="filters-closed">
+            <div id="hp-floating-filter-inner">
+                <label class="ds-filter-label mb-2 block text-center">Modelo Alvo</label>
+                <select id="hp-floating-select" class="ds-filter-input font-semibold">
+                    <option value="">VISÃO MACRO (TODOS)</option>
+                </select>
+            </div>
+        </div>
 
         <div id="view-heatmap-wrapper" class="pb-10">
             <div class="anim-cascade delay-1 glass-panel p-6 md:p-8 rounded-[2rem] mb-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden group">
@@ -191,23 +292,97 @@ export const destroyHeatProdutosCharts = () => {
     
     const tooltip = document.getElementById('hp-global-tooltip');
     if (tooltip) tooltip.remove();
+    
+    // Remove o filtro flutuante ao sair da view
+    const floatingFilter = document.getElementById('hp-floating-filter');
+    if (floatingFilter) {
+        floatingFilter.classList.remove('visible');
+    }
+    
+    // Remove listener de scroll
+    const contentWrapper = document.getElementById('app-content-wrapper');
+    if (contentWrapper) {
+        contentWrapper.dataset.scrollListenerAttached = '';
+    }
 
     if (unsubscribeData) {
         unsubscribeData();
         unsubscribeData = null;
     }
+
 };
 
 export const renderHeatProdutos = () => {
     const select = document.getElementById('hp-master-select');
+    const floatingSelect = document.getElementById('hp-floating-select');
+    const floatingFilter = document.getElementById('hp-floating-filter');
     const btnVoltar = document.getElementById('btn-close-drilldown');
+    const contentWrapper = document.getElementById('app-content-wrapper');
+    const filterBar = document.getElementById('filterbar-row');
 
-    if (select && !select.dataset.listenerAttached) {
+    // Sincroniza os dois selects
+    if (select && floatingSelect && !select.dataset.listenerAttached) {
         select.addEventListener('change', (e) => {
             currentProduct = e.target.value || null;
+            floatingSelect.value = e.target.value;
             executeRenderLogic();
         });
         select.dataset.listenerAttached = "true";
+    }
+
+    if (floatingSelect && !floatingSelect.dataset.listenerAttached) {
+        floatingSelect.addEventListener('change', (e) => {
+            currentProduct = e.target.value || null;
+            if (select) select.value = e.target.value;
+            executeRenderLogic();
+        });
+        floatingSelect.dataset.listenerAttached = "true";
+    }
+
+    // Função para atualizar a posição do filtro flutuante baseado no estado dos filtros globais
+    const updateFloatingFilterPosition = () => {
+        if (!floatingFilter || !filterBar) return;
+        
+        const filtersOpen = filterBar.classList.contains('filters-open');
+        
+        if (filtersOpen) {
+            floatingFilter.classList.remove('filters-closed');
+            floatingFilter.classList.add('filters-open');
+        } else {
+            floatingFilter.classList.remove('filters-open');
+            floatingFilter.classList.add('filters-closed');
+        }
+    };
+
+    // Observa mudanças no estado dos filtros globais
+    if (filterBar && !filterBar.dataset.observerAttached) {
+        const observer = new MutationObserver(updateFloatingFilterPosition);
+        observer.observe(filterBar, { attributes: true, attributeFilter: ['class'] });
+        filterBar.dataset.observerAttached = "true";
+        
+        // Atualiza a posição inicial
+        updateFloatingFilterPosition();
+    }
+
+    // Controla a visibilidade do filtro flutuante baseado no scroll
+    if (contentWrapper && floatingFilter && !contentWrapper.dataset.scrollListenerAttached) {
+        let lastScrollTop = 0;
+        const threshold = 200; // Pixels para ativar o filtro flutuante
+        
+        contentWrapper.addEventListener('scroll', () => {
+            const scrollTop = contentWrapper.scrollTop;
+            
+            // Mostra o filtro flutuante quando rolar para baixo além do threshold
+            if (scrollTop > threshold) {
+                floatingFilter.classList.add('visible');
+            } else {
+                floatingFilter.classList.remove('visible');
+            }
+            
+            lastScrollTop = scrollTop;
+        });
+        
+        contentWrapper.dataset.scrollListenerAttached = "true";
     }
 
     if(btnVoltar && !btnVoltar.dataset.listenerAttached) {
@@ -284,11 +459,21 @@ async function executeRenderLogic() {
 
         // Popula o select de aparelhos
         const select = document.getElementById('hp-master-select');
+        const floatingSelect = document.getElementById('hp-floating-select');
+        
         if (select && !select.dataset.populated) {
             select.innerHTML = '<option value="">VISÃO MACRO (TODOS)</option>';
             aparelhos.forEach(a => select.add(new Option(a, a)));
             select.value = currentProduct || '';
             select.dataset.populated = 'true';
+        }
+        
+        // Sincroniza o select flutuante
+        if (floatingSelect && !floatingSelect.dataset.populated) {
+            floatingSelect.innerHTML = '<option value="">VISÃO MACRO (TODOS)</option>';
+            aparelhos.forEach(a => floatingSelect.add(new Option(a, a)));
+            floatingSelect.value = currentProduct || '';
+            floatingSelect.dataset.populated = 'true';
         }
 
         // KPIs
@@ -413,7 +598,23 @@ async function executeRenderLogic() {
             if (diaSemanaAgg[dayPT] !== undefined) diaSemanaAgg[dayPT] = r.total || 0;
         });
         const labelsSemana = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado', 'Domingo'];
-        drawChart('hp-c-trend', 'bar', { labels: labelsSemana, values: labelsSemana.map(d => diaSemanaAgg[d]) }, false, true);
+        const valuesSemana = labelsSemana.map(d => diaSemanaAgg[d]);
+        
+        // Calcula a média
+        const mediaSemana = valuesSemana.reduce((a, b) => a + b, 0) / valuesSemana.length;
+        
+        // Cria escala de cores do menor para o maior
+        const minVal = Math.min(...valuesSemana);
+        const maxVal = Math.max(...valuesSemana);
+        const colorsSemana = valuesSemana.map(val => {
+            if (maxVal === minVal) return 'rgba(104, 91, 199, 0.8)';
+            const intensity = (val - minVal) / (maxVal - minVal);
+            // Escala de roxo: do mais claro (menor) ao mais escuro (maior)
+            const alpha = 0.3 + (intensity * 0.7); // De 0.3 a 1.0
+            return `rgba(104, 91, 199, ${alpha})`;
+        });
+        
+        drawChartWithAverage('hp-c-trend', 'bar', { labels: labelsSemana, values: valuesSemana, colors: colorsSemana }, mediaSemana, false, true);
 
     } catch (e) {
         console.error("Crash interceptado na renderização do Heatmap:", e);
@@ -752,6 +953,107 @@ function drawChart(id, type, data, isArea = false, showPercentage = false) {
             scales: {
                 y: { beginAtZero: true, grace: showPercentage ? '15%' : '0%', grid: { color: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)' }, ticks: { color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.4)', font: { family: 'Archivo', size: 10, weight: 600 } }, border: { display: false } },
                 x: { grid: { display: false }, ticks: { color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.4)', font: { family: 'Archivo', size: 9, weight: 700 } }, border: { display: false } }
+            }
+        }
+    });
+}
+
+// Função especial para gráfico com linha de média e escala de cores
+function drawChartWithAverage(id, type, data, average, isArea = false, showPercentage = false) {
+    const ctx = document.getElementById(id).getContext('2d');
+    const isDark = document.body.classList.contains('dark');
+    const totalData = showPercentage ? data.values.reduce((a, b) => a + b, 0) : 0;
+    
+    chartInstances[id] = new Chart(ctx, {
+        type: type,
+        data: { 
+            labels: data.labels, 
+            datasets: [
+                {
+                    type: 'bar',
+                    data: data.values, 
+                    backgroundColor: data.colors || '#685BC7',
+                    borderRadius: 6,
+                    borderWidth: 0
+                },
+                {
+                    type: 'line',
+                    label: 'Média',
+                    data: new Array(data.labels.length).fill(average),
+                    borderColor: 'rgba(139, 92, 246, 0.6)',
+                    borderWidth: 2,
+                    borderDash: [8, 4],
+                    pointRadius: 0,
+                    pointHoverRadius: 0,
+                    fill: false,
+                    tension: 0
+                }
+            ]
+        },
+        options: {
+            responsive: true, 
+            maintainAspectRatio: false, 
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: { 
+                    display: true,
+                    position: 'top',
+                    align: 'end',
+                    labels: {
+                        color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)',
+                        font: { family: 'Archivo', size: 9, weight: 700 },
+                        usePointStyle: true,
+                        pointStyle: 'line',
+                        padding: 10,
+                        filter: (item) => item.text === 'Média'
+                    }
+                },
+                datalabels: {
+                    display: showPercentage, 
+                    align: 'end', 
+                    anchor: 'end', 
+                    color: isDark ? '#ffffff' : '#131417', 
+                    font: { family: 'Archivo', size: 12, weight: 800 },
+                    formatter: (value, context) => {
+                        if (context.datasetIndex === 1) return null; // Não mostra label na linha de média
+                        return totalData === 0 ? '0%' : ((value / totalData) * 100).toFixed(1).replace('.', ',') + '%';
+                    }
+                },
+                tooltip: { 
+                    backgroundColor: isDark ? 'rgba(18, 19, 23, 0.9)' : 'rgba(255, 255, 255, 0.9)', 
+                    titleFont: { family: 'Archivo', size: 10, weight: 800 }, 
+                    bodyFont: { family: 'Archivo', size: 11, weight: 500 }, 
+                    padding: 12, 
+                    cornerRadius: 8,
+                    callbacks: {
+                        label: function(context) {
+                            if (context.datasetIndex === 1) {
+                                return `Média: ${Math.round(context.parsed.y).toLocaleString('pt-BR')}`;
+                            }
+                            return `Interações: ${Math.round(context.parsed.y).toLocaleString('pt-BR')}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: { 
+                    beginAtZero: true, 
+                    grace: showPercentage ? '15%' : '5%', 
+                    grid: { color: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)' }, 
+                    ticks: { 
+                        color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.4)', 
+                        font: { family: 'Archivo', size: 10, weight: 600 } 
+                    }, 
+                    border: { display: false } 
+                },
+                x: { 
+                    grid: { display: false }, 
+                    ticks: { 
+                        color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.4)', 
+                        font: { family: 'Archivo', size: 9, weight: 700 } 
+                    }, 
+                    border: { display: false } 
+                }
             }
         }
     });
