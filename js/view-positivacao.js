@@ -21,6 +21,67 @@ export const getPositivacaoHTML = () => {
             .hover-row:hover td { background-color: var(--hover-table); }
 
             #matrix-table { transition: opacity 0.3s ease; }
+            
+            /* Seletor de Modo de Cobertura */
+            .coverage-mode-selector {
+                display: flex;
+                background: var(--input-bg);
+                padding: 4px;
+                border-radius: 12px;
+                border: 1px solid var(--glass-border);
+                gap: 4px;
+            }
+            
+            .coverage-mode-btn {
+                padding: 6px 14px;
+                font-size: 9px;
+                font-weight: 800;
+                text-transform: uppercase;
+                letter-spacing: 0.1em;
+                border-radius: 8px;
+                border: none;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                background: transparent;
+            }
+            
+            body.dark .coverage-mode-btn {
+                color: rgba(255, 255, 255, 0.5);
+            }
+            
+            body:not(.dark) .coverage-mode-btn {
+                color: rgba(0, 0, 0, 0.5);
+            }
+            
+            .coverage-mode-btn.active {
+                background: #685BC7 !important;
+                color: white !important;
+                box-shadow: 0 2px 8px rgba(104, 91, 199, 0.3);
+            }
+            
+            .coverage-mode-btn:hover:not(.active) {
+                background: rgba(104, 91, 199, 0.1);
+            }
+            
+            /* Barra de Progresso de Cobertura */
+            .coverage-bar {
+                height: 8px;
+                background: var(--glass-border);
+                border-radius: 4px;
+                overflow: hidden;
+                position: relative;
+            }
+            
+            .coverage-bar-fill {
+                height: 100%;
+                border-radius: 4px;
+                transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            
+            .coverage-excellent { background: linear-gradient(90deg, #22c55e, #16a34a); }
+            .coverage-good { background: linear-gradient(90deg, #8b5cf6, #685BC7); }
+            .coverage-medium { background: linear-gradient(90deg, #f59e0b, #d97706); }
+            .coverage-low { background: linear-gradient(90deg, #ef4444, #dc2626); }
 
             /* Loading States */
             .skeleton-pulse { animation: skeleton-pulse 1.5s ease-in-out infinite; }
@@ -89,6 +150,24 @@ export const getPositivacaoHTML = () => {
                 </div>
             </div>
 
+            <div class="anim-cascade delay-3 glass-panel p-6 md:p-8 rounded-[2.5rem] flex flex-col mb-8 relative z-10">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-6 shrink-0">
+                    <div>
+                        <h4 class="ds-chart-title mb-2">Taxa de Cobertura por Linha de Produto</h4>
+                        <p class="text-[9px] font-semibold uppercase tracking-wider text-adaptive-muted">Análise de distribuição e presença</p>
+                    </div>
+                    
+                    <div class="coverage-mode-selector">
+                        <button id="coverage-mode-rede" class="coverage-mode-btn active">Por Rede</button>
+                        <button id="coverage-mode-shopping" class="coverage-mode-btn">Por Tipo de Loja</button>
+                    </div>
+                </div>
+                
+                <div id="coverage-container" class="overflow-auto w-full border border-[var(--glass-border)] rounded-2xl custom-scrollbar relative bg-[var(--table-wrapper-bg)] max-h-[600px]">
+                    <!-- Conteúdo dinâmico será inserido aqui -->
+                </div>
+            </div>
+
             <div class="anim-cascade delay-3 glass-panel p-6 md:p-8 rounded-[2.5rem] flex flex-col relative z-10">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-6 shrink-0">
                     <h4 class="ds-chart-title">Matriz de Execução e Presença</h4>
@@ -115,6 +194,7 @@ export const getPositivacaoHTML = () => {
 let currentMode = 'store';
 let unsubscribeData = null;
 let currentRenderToken = 0;
+let coverageMode = 'rede'; // Estado do seletor de cobertura (rede/shopping/loja)
 
 // Helper para aplicar fade suave nos KPIs
 function updateKPIWithFade(elementId, newContent, isHTML = false) {
@@ -186,6 +266,28 @@ export const renderPositivacao = () => {
         else { setActive(btnDevice); setInactive(btnStore); }
     }
 
+    // Configuração do Seletor de Cobertura
+    const btnCoverageRede = document.getElementById('coverage-mode-rede');
+    const btnCoverageShopping = document.getElementById('coverage-mode-shopping');
+
+    if (btnCoverageRede && btnCoverageShopping) {
+        btnCoverageRede.onclick = () => {
+            if (coverageMode === 'rede') return;
+            coverageMode = 'rede';
+            btnCoverageRede.classList.add('active');
+            btnCoverageShopping.classList.remove('active');
+            executeRenderLogic();
+        };
+
+        btnCoverageShopping.onclick = () => {
+            if (coverageMode === 'shopping') return;
+            coverageMode = 'shopping';
+            btnCoverageShopping.classList.add('active');
+            btnCoverageRede.classList.remove('active');
+            executeRenderLogic();
+        };
+    }
+
     // Conecta ao DataManager — reage a mudanças de filtro
     if (unsubscribeData) unsubscribeData();
     unsubscribeData = appData.subscribe(async () => {
@@ -233,11 +335,16 @@ async function executeRenderLogic() {
         const kpis    = dbData.kpis    || {};
         const produtos = dbData.produtos || [];
         const matriz  = dbData.matriz  || [];
+        const coberturaRede = dbData.cobertura_linha_rede || [];
+        const coberturaShopping = dbData.cobertura_linha_shopping || [];
+        const coberturaLoja = dbData.cobertura_linha_loja || [];
 
         // Sem dados para os filtros aplicados
         if (!kpis.total_lojas || kpis.total_lojas === 0) {
             matrixTable.innerHTML = `<tr><td class="p-8 text-center opacity-50 text-adaptive">Nenhum dado encontrado para os filtros atuais.</td></tr>`;
             if (productTable) productTable.innerHTML = '';
+            const coverageContainer = document.getElementById('coverage-container');
+            if (coverageContainer) coverageContainer.innerHTML = '';
             updateKPIWithFade('kp-lojas', '0');
             updateKPIWithFade('kp-mod', '0');
             updateKPIWithFade('kp-cap', '-');
@@ -253,6 +360,9 @@ async function executeRenderLogic() {
 
         // Tabela de produtos
         renderProductTable(productTable, produtos);
+        
+        // Tabela de cobertura
+        renderCoverageTable(coberturaRede, coberturaShopping, coberturaLoja);
 
         // Monta o mapa de presença para a matriz
         const presenceMap = {};
@@ -354,4 +464,138 @@ function renderDeviceMatrix(table, rows, cols, map) {
     });
 
     table.innerHTML = html + `</tbody>`;
+}
+
+// ==========================================
+// TABELA DE COBERTURA
+// ==========================================
+function renderCoverageTable(coberturaRede, coberturaShopping, coberturaLoja) {
+    const container = document.getElementById('coverage-container');
+    if (!container) return;
+
+    let html = '';
+
+    if (coverageMode === 'rede') {
+        // Agrupa por linha de produto
+        const linhasMap = {};
+        coberturaRede.forEach(item => {
+            if (!linhasMap[item.linha_de_produto]) {
+                linhasMap[item.linha_de_produto] = [];
+            }
+            linhasMap[item.linha_de_produto].push(item);
+        });
+
+        if (Object.keys(linhasMap).length === 0) {
+            container.innerHTML = '<div class="p-8 text-center opacity-50 text-adaptive">Nenhum dado de cobertura disponível</div>';
+            return;
+        }
+
+        html = `
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr>
+                        <th class="p-4 text-[9px] font-black text-adaptive-muted uppercase tracking-[0.2em] border-b table-border sticky top-0 left-0 z-30 bg-sticky shadow-[2px_2px_10px_rgba(0,0,0,0.05)] min-w-[150px]">Linha de Produto</th>
+                        <th class="p-4 text-[9px] font-black text-adaptive-muted uppercase tracking-[0.2em] border-b table-border sticky top-0 z-20 bg-sticky shadow-[0_2px_10px_rgba(0,0,0,0.02)] min-w-[120px]">Rede</th>
+                        <th class="p-4 text-[9px] font-black text-adaptive-muted uppercase tracking-[0.2em] border-b table-border text-center sticky top-0 z-20 bg-sticky shadow-[0_2px_10px_rgba(0,0,0,0.02)] w-[100px]">Lojas com Linha</th>
+                        <th class="p-4 text-[9px] font-black text-adaptive-muted uppercase tracking-[0.2em] border-b table-border text-center sticky top-0 z-20 bg-sticky shadow-[0_2px_10px_rgba(0,0,0,0.02)] w-[100px]">Total Lojas</th>
+                        <th class="p-4 text-[9px] font-black text-adaptive-muted uppercase tracking-[0.2em] border-b table-border sticky top-0 z-20 bg-sticky shadow-[0_2px_10px_rgba(0,0,0,0.02)] min-w-[200px]">Cobertura</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        Object.keys(linhasMap).sort().forEach(linha => {
+            const redes = linhasMap[linha].sort((a, b) => b.percentual_cobertura - a.percentual_cobertura);
+            
+            redes.forEach((item, idx) => {
+                const perc = item.percentual_cobertura || 0;
+                let coverageClass = 'coverage-low';
+                if (perc >= 80) coverageClass = 'coverage-excellent';
+                else if (perc >= 60) coverageClass = 'coverage-good';
+                else if (perc >= 40) coverageClass = 'coverage-medium';
+
+                html += `
+                    <tr class="hover-row transition-colors duration-200">
+                        ${idx === 0 ? `<td rowspan="${redes.length}" class="p-4 text-[11px] font-bold text-adaptive border-b table-border sticky left-0 z-10 bg-sticky shadow-[2px_0_10px_rgba(0,0,0,0.02)] align-top">${linha}</td>` : ''}
+                        <td class="p-4 text-[11px] font-semibold text-adaptive-strong border-b table-border">${item.rede}</td>
+                        <td class="p-4 text-[12px] font-black text-[#685BC7] border-b table-border text-center font-numbers">${item.lojas_com_linha}</td>
+                        <td class="p-4 text-[11px] font-semibold text-adaptive-muted border-b table-border text-center font-numbers">${item.total_lojas_rede}</td>
+                        <td class="p-4 border-b table-border">
+                            <div class="flex items-center gap-3">
+                                <div class="coverage-bar flex-1">
+                                    <div class="coverage-bar-fill ${coverageClass}" style="width: ${perc}%"></div>
+                                </div>
+                                <span class="text-[12px] font-black font-numbers text-adaptive min-w-[45px] text-right">${perc.toFixed(1).replace('.', ',')}%</span>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        });
+
+        html += `</tbody></table>`;
+
+    } else {
+        // Modo Shopping (Tipo de Loja)
+        // Agrupa por linha de produto
+        const linhasMap = {};
+        coberturaShopping.forEach(item => {
+            if (!linhasMap[item.linha_de_produto]) {
+                linhasMap[item.linha_de_produto] = [];
+            }
+            linhasMap[item.linha_de_produto].push(item);
+        });
+
+        if (Object.keys(linhasMap).length === 0) {
+            container.innerHTML = '<div class="p-8 text-center opacity-50 text-adaptive">Nenhum dado de cobertura disponível</div>';
+            return;
+        }
+
+        html = `
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr>
+                        <th class="p-4 text-[9px] font-black text-adaptive-muted uppercase tracking-[0.2em] border-b table-border sticky top-0 left-0 z-30 bg-sticky shadow-[2px_2px_10px_rgba(0,0,0,0.05)] min-w-[150px]">Linha de Produto</th>
+                        <th class="p-4 text-[9px] font-black text-adaptive-muted uppercase tracking-[0.2em] border-b table-border sticky top-0 z-20 bg-sticky shadow-[0_2px_10px_rgba(0,0,0,0.02)] min-w-[120px]">Tipo de Loja</th>
+                        <th class="p-4 text-[9px] font-black text-adaptive-muted uppercase tracking-[0.2em] border-b table-border text-center sticky top-0 z-20 bg-sticky shadow-[0_2px_10px_rgba(0,0,0,0.02)] w-[100px]">Lojas com Linha</th>
+                        <th class="p-4 text-[9px] font-black text-adaptive-muted uppercase tracking-[0.2em] border-b table-border text-center sticky top-0 z-20 bg-sticky shadow-[0_2px_10px_rgba(0,0,0,0.02)] w-[100px]">Total Lojas</th>
+                        <th class="p-4 text-[9px] font-black text-adaptive-muted uppercase tracking-[0.2em] border-b table-border sticky top-0 z-20 bg-sticky shadow-[0_2px_10px_rgba(0,0,0,0.02)] min-w-[200px]">Cobertura</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        Object.keys(linhasMap).sort().forEach(linha => {
+            const tipos = linhasMap[linha].sort((a, b) => b.percentual_cobertura - a.percentual_cobertura);
+            
+            tipos.forEach((item, idx) => {
+                const perc = item.percentual_cobertura || 0;
+                let coverageClass = 'coverage-low';
+                if (perc >= 80) coverageClass = 'coverage-excellent';
+                else if (perc >= 60) coverageClass = 'coverage-good';
+                else if (perc >= 40) coverageClass = 'coverage-medium';
+
+                html += `
+                    <tr class="hover-row transition-colors duration-200">
+                        ${idx === 0 ? `<td rowspan="${tipos.length}" class="p-4 text-[11px] font-bold text-adaptive border-b table-border sticky left-0 z-10 bg-sticky shadow-[2px_0_10px_rgba(0,0,0,0.02)] align-top">${linha}</td>` : ''}
+                        <td class="p-4 text-[11px] font-semibold text-adaptive-strong border-b table-border">${item.tipo}</td>
+                        <td class="p-4 text-[12px] font-black text-[#685BC7] border-b table-border text-center font-numbers">${item.lojas_com_linha}</td>
+                        <td class="p-4 text-[11px] font-semibold text-adaptive-muted border-b table-border text-center font-numbers">${item.total_lojas_tipo}</td>
+                        <td class="p-4 border-b table-border">
+                            <div class="flex items-center gap-3">
+                                <div class="coverage-bar flex-1">
+                                    <div class="coverage-bar-fill ${coverageClass}" style="width: ${perc}%"></div>
+                                </div>
+                                <span class="text-[12px] font-black font-numbers text-adaptive min-w-[45px] text-right">${perc.toFixed(1).replace('.', ',')}%</span>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        });
+
+        html += `</tbody></table>`;
+    }
+
+    container.innerHTML = html;
 }

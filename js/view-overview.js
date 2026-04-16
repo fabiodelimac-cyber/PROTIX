@@ -6,7 +6,7 @@ Chart.register(ChartDataLabels);
 let chartInstances = {};
 let insightTimeout = null;
 let unsubscribeData = null;
-let timelineMode = 'dia'; // Estado global do seletor da timeline
+let growthMode = 'week'; // Estado global do seletor de crescimento (day/week/month) - padrão: semana
 
 export const getOverviewHTML = () => {
     const showWelcome = !sessionStorage.getItem('ps_welcome_shown');
@@ -23,6 +23,33 @@ export const getOverviewHTML = () => {
             .text-glow-accent { text-shadow: var(--glow-accent); }
             .neon-accent { background: var(--neon-bg); }
             .divide-adaptive > div { border-color: var(--glass-border); }
+            
+            /* Indicador de Crescimento */
+            .growth-indicator {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                padding: 6px 12px;
+                border-radius: 12px;
+                font-size: 13px;
+                font-weight: 800;
+                margin-top: 8px;
+            }
+            .growth-positive {
+                background: rgba(34, 197, 94, 0.15);
+                color: #22c55e;
+                border: 1px solid rgba(34, 197, 94, 0.3);
+            }
+            .growth-negative {
+                background: rgba(239, 68, 68, 0.15);
+                color: #ef4444;
+                border: 1px solid rgba(239, 68, 68, 0.3);
+            }
+            .growth-neutral {
+                background: rgba(148, 163, 184, 0.15);
+                color: #94a3b8;
+                border: 1px solid rgba(148, 163, 184, 0.3);
+            }
 
             /* Loading States */
             .skeleton-pulse { animation: skeleton-pulse 1.5s ease-in-out infinite; }
@@ -49,6 +76,47 @@ export const getOverviewHTML = () => {
             
             @keyframes spin {
                 to { transform: rotate(360deg); }
+            }
+            
+            /* Seletor de Período de Crescimento */
+            .growth-period-selector {
+                display: flex;
+                background: var(--input-bg);
+                padding: 4px;
+                border-radius: 12px;
+                border: 1px solid var(--glass-border);
+                gap: 4px;
+            }
+            
+            .growth-period-btn {
+                padding: 6px 14px;
+                font-size: 9px;
+                font-weight: 800;
+                text-transform: uppercase;
+                letter-spacing: 0.1em;
+                border-radius: 8px;
+                border: none;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                background: transparent;
+            }
+            
+            body.dark .growth-period-btn {
+                color: rgba(255, 255, 255, 0.5);
+            }
+            
+            body:not(.dark) .growth-period-btn {
+                color: rgba(0, 0, 0, 0.5);
+            }
+            
+            .growth-period-btn.active {
+                background: #685BC7 !important;
+                color: white !important;
+                box-shadow: 0 2px 8px rgba(104, 91, 199, 0.3);
+            }
+            
+            .growth-period-btn:hover:not(.active) {
+                background: rgba(104, 91, 199, 0.1);
             }
 
             /* Insight Rotation Animation */
@@ -130,9 +198,13 @@ export const getOverviewHTML = () => {
                 <div class="flex-1 p-8 md:p-10 flex flex-col justify-start relative z-10">
                     <p class="ds-kpi-label mb-4">Volume de Sessões</p>
                     <h3 id="k-sess" class="ds-kpi-value text-4xl md:text-5xl text-glow">0</h3>
+                    <div id="k-sess-growth" class="growth-indicator growth-neutral mt-3" style="display: none;">
+                        <span id="k-sess-growth-icon">●</span>
+                        <span id="k-sess-growth-text">0%</span>
+                    </div>
                 </div>
                 <div class="flex-1 p-8 md:p-10 flex flex-col justify-start relative z-10">
-                    <p class="ds-kpi-label mb-4">Pontos de Venda (Lojas)</p>
+                    <p class="ds-kpi-label mb-4">Pontos de Venda</p>
                     <h3 id="k-sto" class="ds-kpi-value text-4xl md:text-5xl leading-tight">0</h3>
                 </div>
                 <div class="flex-1 p-8 md:p-10 flex flex-col justify-start relative z-10 group cursor-help">
@@ -153,18 +225,18 @@ export const getOverviewHTML = () => {
 
             <div class="anim-cascade delay-3 glass-panel p-8 md:p-10 rounded-[2.5rem] relative z-10 mb-6 md:mb-8">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-                    <h4 id="title-timeline" class="ds-chart-title">Volume de Interações por Dia</h4>
+                    <div>
+                        <h4 id="title-growth" class="ds-chart-title mb-2">Evolução de Interações por Semana</h4>
+                        <p id="subtitle-growth" class="text-[9px] font-semibold uppercase tracking-wider text-adaptive-muted">Análise de crescimento temporal</p>
+                    </div>
                     
-                    <div class="flex bg-[var(--input-bg)] p-1 rounded-2xl border border-[var(--glass-border)]">
-                        <button id="mode-dia" class="px-5 py-2 text-[9px] font-bold uppercase tracking-[0.1em] rounded-xl bg-[#685BC7] text-white shadow-lg transition-all duration-300">
-                            Por Dia
-                        </button>
-                        <button id="mode-semana" class="px-5 py-2 text-[9px] font-bold uppercase tracking-[0.1em] rounded-xl text-adaptive-strong hover:text-adaptive transition-all duration-300">
-                            Por Semana
-                        </button>
+                    <div class="growth-period-selector">
+                        <button id="growth-mode-day" class="growth-period-btn">Dia</button>
+                        <button id="growth-mode-week" class="growth-period-btn active">Semana</button>
+                        <button id="growth-mode-month" class="growth-period-btn">Mês</button>
                     </div>
                 </div>
-                <div class="chart-container" style="height: 280px;"><canvas id="c-timeline"></canvas></div>
+                <div class="chart-container" style="height: 320px;"><canvas id="c-growth"></canvas></div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mb-6 md:mb-8">
@@ -230,47 +302,57 @@ export const renderOverviewCharts = () => {
         }, 5000);
     }
 
-    // Configuração do Seletor da Timeline
-    const btnDia = document.getElementById('mode-dia');
-    const btnSemana = document.getElementById('mode-semana');
+    // Configuração do Seletor de Crescimento (Dia/Semana/Mês)
+    const btnGrowthDay = document.getElementById('growth-mode-day');
+    const btnGrowthWeek = document.getElementById('growth-mode-week');
+    const btnGrowthMonth = document.getElementById('growth-mode-month');
+    const titleGrowth = document.getElementById('title-growth');
 
-    const setActive = (btn) => {
-        btn.classList.add('bg-[#685BC7]', 'text-white', 'shadow-lg');
-        btn.classList.remove('text-adaptive-strong', 'hover:text-adaptive', 'bg-transparent');
-    };
-
-    const setInactive = (btn) => {
-        btn.classList.remove('bg-[#685BC7]', 'text-white', 'shadow-lg');
-        btn.classList.add('text-adaptive-strong', 'hover:text-adaptive', 'bg-transparent');
-    };
-
-    if (btnDia && btnSemana) {
-        btnDia.onclick = () => {
-            if(timelineMode === 'dia') return;
-            timelineMode = 'dia';
-            setActive(btnDia); setInactive(btnSemana);
-            updateTimelineTitle();
-        };
-
-        btnSemana.onclick = () => {
-            if(timelineMode === 'semana') return;
-            timelineMode = 'semana';
-            setActive(btnSemana); setInactive(btnDia);
-            updateTimelineTitle();
-        };
-
-        if (timelineMode === 'dia') { setActive(btnDia); setInactive(btnSemana); } 
-        else { setActive(btnSemana); setInactive(btnDia); }
-    }
-
-    function updateTimelineTitle() {
-        const titleEl = document.getElementById('title-timeline');
-        titleEl.style.opacity = 0; 
+    const updateGrowthTitle = () => {
+        if (!titleGrowth) return;
+        titleGrowth.style.opacity = 0;
         setTimeout(() => {
-            titleEl.innerText = timelineMode === 'semana' ? 'Volume de Interações por Semana' : 'Volume de Interações por Dia';
-            titleEl.style.opacity = 1; 
+            if (growthMode === 'day') {
+                titleGrowth.innerText = 'Evolução de Interações por Dia';
+            } else if (growthMode === 'week') {
+                titleGrowth.innerText = 'Evolução de Interações por Semana';
+            } else {
+                titleGrowth.innerText = 'Evolução de Interações por Mês';
+            }
+            titleGrowth.style.opacity = 1;
+        }, 150);
+    };
+
+    if (btnGrowthDay && btnGrowthWeek && btnGrowthMonth) {
+        btnGrowthDay.onclick = () => {
+            if(growthMode === 'day') return;
+            growthMode = 'day';
+            btnGrowthDay.classList.add('active');
+            btnGrowthWeek.classList.remove('active');
+            btnGrowthMonth.classList.remove('active');
+            updateGrowthTitle();
             executeRenderLogic();
-        }, 300);
+        };
+
+        btnGrowthWeek.onclick = () => {
+            if(growthMode === 'week') return;
+            growthMode = 'week';
+            btnGrowthWeek.classList.add('active');
+            btnGrowthDay.classList.remove('active');
+            btnGrowthMonth.classList.remove('active');
+            updateGrowthTitle();
+            executeRenderLogic();
+        };
+
+        btnGrowthMonth.onclick = () => {
+            if(growthMode === 'month') return;
+            growthMode = 'month';
+            btnGrowthMonth.classList.add('active');
+            btnGrowthDay.classList.remove('active');
+            btnGrowthWeek.classList.remove('active');
+            updateGrowthTitle();
+            executeRenderLogic();
+        };
     }
 
     // Passa a reagir aos filtros solicitando os dados do banco
@@ -457,8 +539,12 @@ async function executeRenderLogic() {
     updateKPIWithFade('k-dev', kpiSpinner, true);
     updateKPIWithFade('k-avg', kpiSpinner, true);
     
+    // Esconde o indicador de crescimento durante o loading
+    const growthIndicator = document.getElementById('k-sess-growth');
+    if (growthIndicator) growthIndicator.style.display = 'none';
+    
     // Mostra spinner nos gráficos
-    const chartContainers = ['c-timeline', 'c-time', 'c-rede', 'c-shop', 'c-linha'];
+    const chartContainers = ['c-time', 'c-rede', 'c-shop', 'c-linha', 'c-growth'];
     chartContainers.forEach(id => {
         const canvas = document.getElementById(id);
         if (canvas) {
@@ -507,11 +593,39 @@ async function executeRenderLogic() {
         const totalSess = dbData.kpis.total_sessions;
         const stores = dbData.kpis.unique_stores;
         const devices = dbData.kpis.unique_devices;
+        const growthRate = dbData.kpis.growth_rate || 0;
+        const previousSessions = dbData.kpis.previous_period_sessions || 0;
         
         updateKPIWithFade('k-sess', Math.round(totalSess).toLocaleString('pt-BR'));
         updateKPIWithFade('k-sto', stores.toString());
         updateKPIWithFade('k-dev', devices.toString());
         updateKPIWithFade('k-avg', stores ? Math.round(totalSess/stores).toLocaleString('pt-BR') : '0');
+        
+        // Indicador de Crescimento
+        const growthIndicator = document.getElementById('k-sess-growth');
+        const growthIcon = document.getElementById('k-sess-growth-icon');
+        const growthText = document.getElementById('k-sess-growth-text');
+        
+        if (growthIndicator && growthIcon && growthText && previousSessions > 0) {
+            growthIndicator.style.display = 'inline-flex';
+            
+            // Remove classes antigas
+            growthIndicator.classList.remove('growth-positive', 'growth-negative', 'growth-neutral');
+            
+            if (growthRate > 0) {
+                growthIndicator.classList.add('growth-positive');
+                growthIcon.innerText = '↑';
+                growthText.innerText = `+${growthRate.toFixed(1).replace('.', ',')}%`;
+            } else if (growthRate < 0) {
+                growthIndicator.classList.add('growth-negative');
+                growthIcon.innerText = '↓';
+                growthText.innerText = `${growthRate.toFixed(1).replace('.', ',')}%`;
+            } else {
+                growthIndicator.classList.add('growth-neutral');
+                growthIcon.innerText = '●';
+                growthText.innerText = '0%';
+            }
+        }
         
         // Tooltip: Aparelhos Ativos por Linha de Produto
         // Como a RPC não retorna linha_de_produto em 'aparelhos', vamos usar os dados brutos
@@ -560,16 +674,27 @@ async function executeRenderLogic() {
         const sortedLinhas = Object.keys(linhaAgg).sort((a,b) => linhaAgg[b] - linhaAgg[a]);
 
         // Disparo dos Gráficos
-        drawChart('c-timeline', 'line', aggregateTimeline((dbData.timeline || []), timelineMode), true);
         drawChart('c-time', 'line', aggregateData((dbData.faixa || []), 'faixa', true), true);
         drawChart('c-rede', 'bar', aggregateData((dbData.rede || []), 'rede', false, true));
         drawChart('c-shop', 'doughnut', { labels: ['Loja de Rua', 'Shopping'], values: [ruaTotal, shopTotal] });
         drawChart('c-linha', 'doughnut', { labels: sortedLinhas, values: sortedLinhas.map(l => linhaAgg[l]) });
+        
+        // Gráfico de Crescimento (com suporte a dia/semana/mês)
+        let growthData;
+        if (growthMode === 'day') {
+            growthData = dbData.timeline || [];
+        } else if (growthMode === 'week') {
+            growthData = dbData.weekly_growth || [];
+        } else {
+            growthData = dbData.monthly_growth || [];
+        }
+        drawGrowthChart('c-growth', growthData, growthMode);
 
     } catch (e) {
         console.error("Crash interceptado na renderização visual:", e);
     } finally {
         // Remove loading de todos os gráficos
+        const chartContainers = ['c-time', 'c-rede', 'c-shop', 'c-linha', 'c-growth'];
         chartContainers.forEach(id => {
             const canvas = document.getElementById(id);
             if (canvas) {
@@ -580,62 +705,6 @@ async function executeRenderLogic() {
             }
         });
     }
-}
-
-// ==========================================
-// TRATAMENTO DA TIMELINE (DIA VS SEMANA ISO)
-// ==========================================
-function getISOWeek(dateStr) {
-    if(!dateStr || dateStr === 'N/A') return { sort: 'N/A', label: 'N/A' };
-    const parts = dateStr.split('-');
-    if(parts.length !== 3) return { sort: dateStr, label: dateStr };
-    
-    const d = new Date(Date.UTC(parts[0], parts[1]-1, parts[2]));
-    const day = d.getUTCDay() || 7;
-    d.setUTCDate(d.getUTCDate() + 4 - day);
-    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-    const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
-    
-    return {
-        sort: `${d.getUTCFullYear()}${weekNo.toString().padStart(2,'0')}`,
-        label: `Semana ${weekNo}`
-    };
-}
-
-function aggregateTimeline(dataArray, mode) {
-    const grouped = {};
-    dataArray.forEach(o => {
-        const rawDate = o.pure_date || 'N/A';
-        let sortKey = rawDate;
-        let label = rawDate;
-        
-        if (mode === 'semana' && rawDate !== 'N/A') {
-            const weekInfo = getISOWeek(rawDate);
-            sortKey = weekInfo.sort;
-            label = weekInfo.label;
-        } else if (mode === 'dia' && rawDate !== 'N/A') {
-            const parts = rawDate.split('-');
-            if(parts.length === 3) {
-                const d = new Date(parts[0], parts[1]-1, parts[2]);
-                const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-                label = `${rawDate}\n${days[d.getDay()]}`;
-            }
-        }
-        
-        const sess = Number(o.total) || 0; // Alterado para ler do objeto agrupado do Banco
-        const linha = o.linha_de_produto || 'N/A';
-        
-        if (!grouped[sortKey]) grouped[sortKey] = { label, total: 0, linhas: {} };
-        grouped[sortKey].total += sess;
-        grouped[sortKey].linhas[linha] = (grouped[sortKey].linhas[linha] || 0) + sess;
-    });
-    
-    const entries = Object.entries(grouped).sort((a,b) => a[0].localeCompare(b[0]));
-    return {
-        labels: entries.map(e => e[1].label),
-        values: entries.map(e => e[1].total),
-        tooltipData: entries.reduce((acc, e) => { acc[e[1].label] = e[1].linhas; return acc; }, {})
-    };
 }
 
 // ==========================================
@@ -880,4 +949,195 @@ function drawChart(id, type, data, isArea = false, isH = false) {
     };
 
     chartInstances[id] = new Chart(ctx, chartConfig);
+}
+
+// ==========================================
+// GRÁFICO DE CRESCIMENTO TEMPORAL
+// ==========================================
+function drawGrowthChart(id, data, mode) {
+    const ctx = document.getElementById(id).getContext('2d');
+    const isDark = document.body.classList.contains('dark');
+    
+    if (!data || data.length === 0) {
+        // Sem dados, mostra mensagem
+        const canvas = document.getElementById(id);
+        const container = canvas.parentElement;
+        container.innerHTML = '<div class="flex items-center justify-center h-full text-adaptive-muted text-sm">Dados insuficientes para análise de crescimento</div>';
+        return;
+    }
+    
+    const labelColor = isDark ? '#FFFFFF' : '#131417';
+    const gridColor = isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.03)';
+    const tickColor = isDark ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.4)';
+    const tooltipBg = isDark ? 'rgba(18, 19, 23, 0.95)' : 'rgba(255, 255, 255, 0.95)';
+    const tooltipTitle = isDark ? '#ffffff' : '#131417';
+    const tooltipBody = isDark ? 'rgba(255, 255, 255, 0.8)' : 'rgba(19, 20, 23, 0.8)';
+    const tooltipBorder = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)';
+    
+    let labels, values;
+    
+    if (mode === 'day') {
+        // Agrupa por dia (soma todas as linhas de produto)
+        const dayMap = {};
+        data.forEach(d => {
+            const date = d.pure_date;
+            if (!dayMap[date]) dayMap[date] = 0;
+            dayMap[date] += d.total || 0;
+        });
+        
+        const sortedDays = Object.keys(dayMap).sort();
+        labels = sortedDays.map(d => {
+            const parts = d.split('-');
+            if (parts.length === 3) {
+                const dt = new Date(parts[0], parts[1]-1, parts[2]);
+                const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+                return `${d}\n${days[dt.getDay()]}`;
+            }
+            return d;
+        });
+        values = sortedDays.map(d => dayMap[d]);
+    } else if (mode === 'week') {
+        labels = data.map(d => d.week_label);
+        values = data.map(d => d.total);
+    } else {
+        labels = data.map(d => d.month_label);
+        values = data.map(d => d.total);
+    }
+    
+    // Calcula variação percentual entre períodos
+    const growthRates = values.map((val, idx) => {
+        if (idx === 0) return 0;
+        const prev = values[idx - 1];
+        if (prev === 0) return 0;
+        return ((val - prev) / prev) * 100;
+    });
+    
+    // Cores baseadas no crescimento
+    const colors = values.map((val, idx) => {
+        if (idx === 0) return '#685BC7';
+        const rate = growthRates[idx];
+        if (rate > 0) return '#22c55e'; // Verde para crescimento
+        if (rate < 0) return '#ef4444'; // Vermelho para queda
+        return '#94a3b8'; // Cinza para estável
+    });
+    
+    const grad = ctx.createLinearGradient(0, 0, 0, 400);
+    grad.addColorStop(0, 'rgba(104, 91, 199, 0.25)');
+    grad.addColorStop(1, 'rgba(104, 91, 199, 0)');
+    
+    chartInstances[id] = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: values,
+                backgroundColor: grad,
+                borderColor: '#685BC7',
+                fill: true,
+                tension: 0.4,
+                borderWidth: 3,
+                pointRadius: mode === 'day' ? 3 : 6,
+                pointHoverRadius: mode === 'day' ? 5 : 8,
+                pointBackgroundColor: colors,
+                pointBorderColor: colors,
+                pointBorderWidth: 2
+            }]
+        },
+        plugins: [crosshairPlugin],
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: tooltipBg,
+                    titleColor: tooltipTitle,
+                    bodyColor: tooltipBody,
+                    titleFont: { family: 'Archivo', size: 10, weight: 800 },
+                    bodyFont: { family: 'Archivo', size: 11, weight: 500 },
+                    borderColor: tooltipBorder,
+                    borderWidth: 1,
+                    padding: 12,
+                    cornerRadius: 12,
+                    callbacks: {
+                        title: ctx => {
+                            let lbl = ctx[0].label;
+                            if (typeof lbl === 'string' && lbl.includes('\n')) {
+                                return lbl.replace('\n', ' - ');
+                            }
+                            return lbl;
+                        },
+                        label: ctx => {
+                            const idx = ctx.dataIndex;
+                            const val = Math.round(ctx.parsed.y).toLocaleString('pt-BR');
+                            
+                            if (idx === 0) {
+                                return `Interações: ${val}`;
+                            }
+                            
+                            const rate = growthRates[idx];
+                            const sign = rate > 0 ? '+' : '';
+                            const rateStr = `${sign}${rate.toFixed(1).replace('.', ',')}%`;
+                            
+                            return [
+                                `Interações: ${val}`,
+                                `Variação: ${rateStr}`
+                            ];
+                        }
+                    }
+                },
+                datalabels: {
+                    display: mode !== 'day', // Esconde labels no modo dia para não poluir
+                    font: { family: 'Archivo', size: 10, weight: 800 },
+                    formatter: (value, ctx) => {
+                        const idx = ctx.dataIndex;
+                        if (idx === 0) return Math.round(value).toLocaleString('pt-BR');
+                        
+                        const rate = growthRates[idx];
+                        if (Math.abs(rate) < 0.1) return Math.round(value).toLocaleString('pt-BR');
+                        
+                        const sign = rate > 0 ? '↑' : '↓';
+                        return `${sign} ${Math.round(value).toLocaleString('pt-BR')}`;
+                    },
+                    anchor: 'end',
+                    align: 'top',
+                    color: (ctx) => {
+                        const idx = ctx.dataIndex;
+                        if (idx === 0) return labelColor;
+                        const rate = growthRates[idx];
+                        if (rate > 0) return '#22c55e';
+                        if (rate < 0) return '#ef4444';
+                        return labelColor;
+                    },
+                    textAlign: 'center',
+                    offset: 8
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grace: '15%',
+                    grid: { color: gridColor, drawBorder: false },
+                    ticks: {
+                        color: tickColor,
+                        font: { family: 'Archivo', size: 10, weight: 600 }
+                    },
+                    border: { display: false }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: {
+                        color: tickColor,
+                        font: { family: 'Archivo', size: mode === 'day' ? 8 : 9, weight: 700 },
+                        maxRotation: mode === 'day' ? 90 : 45,
+                        minRotation: mode === 'day' ? 45 : 0,
+                        autoSkip: mode === 'day',
+                        maxTicksLimit: mode === 'day' ? 20 : undefined
+                    },
+                    border: { display: false }
+                }
+            }
+        }
+    });
 }

@@ -7,6 +7,7 @@ let chartInstances = {};
 let currentProduct = null;
 let unsubscribeData = null;
 let currentRenderToken = 0;
+let peakSlideInterval = null; // Intervalo para alternar entre picos
 
 // Helper para aplicar fade suave nos KPIs
 function updateKPIWithFade(elementId, newContent, isHTML = false) {
@@ -89,6 +90,37 @@ export const getHeatProdutosHTML = () => {
             
             @keyframes spin {
                 to { transform: rotate(360deg); }
+            }
+            
+            /* Animação de Slide para KPI Alternado */
+            .kpi-slide-container {
+                position: relative;
+                overflow: hidden;
+                min-height: 80px;
+            }
+            
+            .kpi-slide-item {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s ease;
+            }
+            
+            .kpi-slide-item.active {
+                transform: translateY(0);
+                opacity: 1;
+                position: relative;
+            }
+            
+            .kpi-slide-item.slide-out-up {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+            
+            .kpi-slide-item.slide-in-down {
+                transform: translateY(100%);
+                opacity: 0;
             }
             
             /* Filtro Flutuante */
@@ -211,9 +243,19 @@ export const getHeatProdutosHTML = () => {
                     <p class="ds-kpi-label mb-3">Interações Globais</p>
                     <h3 id="hp-k-vol" class="ds-kpi-value text-2xl md:text-3xl text-glow">0</h3>
                 </div>
-                <div class="w-full md:w-1/4 p-6 md:p-8 flex flex-col justify-start shrink-0">
-                    <p class="ds-kpi-label mb-3">Pico de Demanda</p>
-                    <h3 id="hp-k-peak" class="ds-kpi-value text-2xl md:text-3xl leading-tight">-</h3>
+                <div class="w-full md:w-1/4 p-6 md:p-8 flex flex-col justify-start shrink-0 kpi-slide-container">
+                    <!-- Item 1: Pico de Demanda -->
+                    <div id="hp-peak-primary" class="kpi-slide-item active">
+                        <p class="ds-kpi-label mb-3">Pico de Demanda</p>
+                        <h3 id="hp-k-peak" class="ds-kpi-value text-2xl md:text-3xl leading-tight">-</h3>
+                        <p id="hp-k-peak-sub" class="ds-helper-text text-adaptive-muted mt-2 opacity-60">-</p>
+                    </div>
+                    <!-- Item 2: Pico Secundário -->
+                    <div id="hp-peak-secondary" class="kpi-slide-item slide-in-down">
+                        <p class="ds-kpi-label mb-3">Pico Secundário</p>
+                        <h3 id="hp-k-peak-sec" class="ds-kpi-value text-2xl md:text-3xl leading-tight">-</h3>
+                        <p id="hp-k-peak-sec-sub" class="ds-helper-text text-adaptive-muted mt-2 opacity-60">-</p>
+                    </div>
                 </div>
                 <div class="flex-1 p-6 md:p-8 flex flex-col justify-start relative neon-accent">
                     <p class="ds-kpi-label mb-3 relative z-10 text-[#685BC7]">PDV de Maior Interação</p>
@@ -282,6 +324,44 @@ export const getHeatProdutosHTML = () => {
                 <h4 class="ds-chart-title mb-8">Comparativo por Dia da Semana</h4>
                 <div class="chart-container" style="height: 300px;"><canvas id="hp-c-trend"></canvas></div>
             </div>
+
+            <!-- Índice de Consistência - OCULTO TEMPORARIAMENTE -->
+            <!--
+            <div class="anim-cascade delay-4 glass-panel p-8 md:p-10 rounded-[2.5rem] mb-8">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                    <div>
+                        <h4 class="ds-chart-title mb-2">Índice de Consistência</h4>
+                        <p class="text-xs text-adaptive-muted uppercase tracking-wider">Previsibilidade do comportamento por dia da semana</p>
+                    </div>
+                    <div class="flex items-center gap-4 px-6 py-3 glass-panel rounded-2xl">
+                        <div class="text-center">
+                            <p class="text-[8px] font-black uppercase tracking-widest text-adaptive-muted mb-1">Desvio Padrão</p>
+                            <p id="hp-consistency-std" class="text-lg font-black text-adaptive font-numbers">-</p>
+                        </div>
+                        <div class="h-8 w-px bg-white/10"></div>
+                        <div class="text-center">
+                            <p class="text-[8px] font-black uppercase tracking-widest text-adaptive-muted mb-1">Coef. Variação</p>
+                            <p id="hp-consistency-cv" class="text-lg font-black font-numbers">-</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="chart-container" style="height: 300px;"><canvas id="hp-c-consistency"></canvas></div>
+                <div class="mt-4 flex items-center justify-center gap-6 text-xs">
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                        <span class="text-adaptive-muted">Alta Consistência (CV &lt; 20%)</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                        <span class="text-adaptive-muted">Média Consistência (CV 20-40%)</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                        <span class="text-adaptive-muted">Baixa Consistência (CV &gt; 40%)</span>
+                    </div>
+                </div>
+            </div>
+            -->
         </div>
     `;
 };
@@ -303,6 +383,12 @@ export const destroyHeatProdutosCharts = () => {
     const contentWrapper = document.getElementById('app-content-wrapper');
     if (contentWrapper) {
         contentWrapper.dataset.scrollListenerAttached = '';
+    }
+    
+    // Limpa o intervalo de alternância de picos
+    if (peakSlideInterval) {
+        clearInterval(peakSlideInterval);
+        peakSlideInterval = null;
     }
 
     if (unsubscribeData) {
@@ -415,7 +501,7 @@ async function executeRenderLogic() {
     container.innerHTML = '<div class="chart-loading"><div class="spinner"></div></div>';
     
     // Mostra spinner nos gráficos
-    const chartContainers = ['hp-c-radar', 'hp-c-canal', 'hp-c-semana', 'hp-c-trend'];
+    const chartContainers = ['hp-c-radar', 'hp-c-canal', 'hp-c-semana', 'hp-c-trend']; // 'hp-c-consistency' comentado
     chartContainers.forEach(id => {
         const canvas = document.getElementById(id);
         if (canvas) {
@@ -478,7 +564,44 @@ async function executeRenderLogic() {
 
         // KPIs
         updateKPIWithFade('hp-k-vol', Math.round(kpis.total_sessions || 0).toLocaleString('pt-BR'));
-        updateKPIWithFade('hp-k-peak', kpis.peak_label || '-');
+        
+        // Pico de Demanda (Principal)
+        const peakPrimaryDay = kpis.peak_primary_day || '';
+        const peakPrimaryHour = kpis.peak_primary_hour;
+        const peakPrimaryTotal = kpis.peak_primary_total;
+        
+        if (peakPrimaryDay && peakPrimaryHour !== null && peakPrimaryHour !== undefined) {
+            document.getElementById('hp-k-peak').innerText = `${peakPrimaryDay}, ${peakPrimaryHour}h`;
+            const subEl = document.getElementById('hp-k-peak-sub');
+            if (subEl && peakPrimaryTotal) {
+                subEl.innerText = `${Math.round(peakPrimaryTotal).toLocaleString('pt-BR')} interações`;
+            }
+        } else {
+            document.getElementById('hp-k-peak').innerText = '-';
+            const subEl = document.getElementById('hp-k-peak-sub');
+            if (subEl) subEl.innerText = '-';
+        }
+        
+        // Pico Secundário
+        const peakSecondaryDay = kpis.peak_secondary_day || '';
+        const peakSecondaryHour = kpis.peak_secondary_hour;
+        const peakSecondaryTotal = kpis.peak_secondary_total;
+        
+        if (peakSecondaryDay && peakSecondaryHour !== null && peakSecondaryHour !== undefined) {
+            document.getElementById('hp-k-peak-sec').innerText = `${peakSecondaryDay}, ${peakSecondaryHour}h`;
+            const subEl = document.getElementById('hp-k-peak-sec-sub');
+            if (subEl && peakSecondaryTotal) {
+                subEl.innerText = `${Math.round(peakSecondaryTotal).toLocaleString('pt-BR')} interações`;
+            }
+        } else {
+            document.getElementById('hp-k-peak-sec').innerText = '-';
+            const subEl = document.getElementById('hp-k-peak-sec-sub');
+            if (subEl) subEl.innerText = '-';
+        }
+        
+        // Inicia a alternância entre picos
+        startPeakSlideshow(peakSecondaryDay && peakSecondaryHour !== null && peakSecondaryHour !== undefined);
+        
         updateKPIWithFade('hp-k-top', kpis.top_store || '-');
 
         // Monta estruturas para o heatmap
@@ -616,11 +739,37 @@ async function executeRenderLogic() {
         
         drawChartWithAverage('hp-c-trend', 'bar', { labels: labelsSemana, values: valuesSemana, colors: colorsSemana }, mediaSemana, false, true);
 
+        // Índice de Consistência - OCULTO TEMPORARIAMENTE
+        /*
+        // Calcula desvio padrão e coeficiente de variação
+        const stdDev = Math.sqrt(valuesSemana.reduce((sum, val) => sum + Math.pow(val - mediaSemana, 2), 0) / valuesSemana.length);
+        const coefficientOfVariation = mediaSemana > 0 ? (stdDev / mediaSemana) * 100 : 0;
+        
+        // Atualiza KPIs de consistência
+        document.getElementById('hp-consistency-std').innerText = Math.round(stdDev).toLocaleString('pt-BR');
+        
+        const cvEl = document.getElementById('hp-consistency-cv');
+        const cvValue = coefficientOfVariation.toFixed(1);
+        cvEl.innerText = `${cvValue}%`;
+        
+        // Cor do coeficiente baseado no valor
+        if (coefficientOfVariation < 20) {
+            cvEl.style.color = '#22c55e'; // Verde - Alta consistência
+        } else if (coefficientOfVariation < 40) {
+            cvEl.style.color = '#eab308'; // Amarelo - Média consistência
+        } else {
+            cvEl.style.color = '#ef4444'; // Vermelho - Baixa consistência
+        }
+        
+        // Desenha gráfico de dispersão
+        drawConsistencyChart('hp-c-consistency', labelsSemana, valuesSemana, mediaSemana, stdDev, coefficientOfVariation);
+        */
+
     } catch (e) {
         console.error("Crash interceptado na renderização do Heatmap:", e);
     } finally {
         // Remove loading de todos os gráficos
-        const chartContainers = ['hp-c-radar', 'hp-c-canal', 'hp-c-semana', 'hp-c-trend'];
+        const chartContainers = ['hp-c-radar', 'hp-c-canal', 'hp-c-semana', 'hp-c-trend']; // 'hp-c-consistency' comentado
         chartContainers.forEach(id => {
             const canvas = document.getElementById(id);
             if (canvas) {
@@ -1057,4 +1206,222 @@ function drawChartWithAverage(id, type, data, average, isArea = false, showPerce
             }
         }
     });
+}
+
+// Função para gráfico de consistência (dispersão com bandas)
+function drawConsistencyChart(id, labels, values, mean, stdDev, cv) {
+    const ctx = document.getElementById(id).getContext('2d');
+    const isDark = document.body.classList.contains('dark');
+    
+    // Define cor baseado no coeficiente de variação
+    let pointColor, bandColor;
+    if (cv < 20) {
+        pointColor = 'rgba(34, 197, 94, 0.8)'; // Verde
+        bandColor = 'rgba(34, 197, 94, 0.1)';
+    } else if (cv < 40) {
+        pointColor = 'rgba(234, 179, 8, 0.8)'; // Amarelo
+        bandColor = 'rgba(234, 179, 8, 0.1)';
+    } else {
+        pointColor = 'rgba(239, 68, 68, 0.8)'; // Vermelho
+        bandColor = 'rgba(239, 68, 68, 0.1)';
+    }
+    
+    // Cria datasets
+    const scatterData = labels.map((label, index) => ({
+        x: index,
+        y: values[index]
+    }));
+    
+    chartInstances[id] = new Chart(ctx, {
+        type: 'scatter',
+        data: {
+            labels: labels,
+            datasets: [
+                // Banda superior (média + 1 desvio padrão)
+                {
+                    type: 'line',
+                    label: '+1 Desvio',
+                    data: labels.map(() => mean + stdDev),
+                    borderColor: 'rgba(139, 92, 246, 0.3)',
+                    borderWidth: 1,
+                    borderDash: [4, 4],
+                    pointRadius: 0,
+                    fill: false,
+                    tension: 0
+                },
+                // Linha de média
+                {
+                    type: 'line',
+                    label: 'Média',
+                    data: labels.map(() => mean),
+                    borderColor: 'rgba(139, 92, 246, 0.6)',
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    fill: false,
+                    tension: 0
+                },
+                // Banda inferior (média - 1 desvio padrão)
+                {
+                    type: 'line',
+                    label: '-1 Desvio',
+                    data: labels.map(() => Math.max(0, mean - stdDev)),
+                    borderColor: 'rgba(139, 92, 246, 0.3)',
+                    borderWidth: 1,
+                    borderDash: [4, 4],
+                    pointRadius: 0,
+                    fill: '+1',
+                    backgroundColor: bandColor,
+                    tension: 0
+                },
+                // Pontos de dispersão
+                {
+                    type: 'scatter',
+                    label: 'Interações',
+                    data: scatterData,
+                    backgroundColor: pointColor,
+                    borderColor: pointColor,
+                    borderWidth: 2,
+                    pointRadius: 8,
+                    pointHoverRadius: 12,
+                    pointStyle: 'circle'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'point', intersect: true },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    align: 'end',
+                    labels: {
+                        color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)',
+                        font: { family: 'Archivo', size: 9, weight: 700 },
+                        usePointStyle: true,
+                        padding: 10,
+                        filter: (item) => item.text === 'Média' || item.text === 'Interações'
+                    }
+                },
+                datalabels: { display: false },
+                tooltip: {
+                    backgroundColor: isDark ? 'rgba(18, 19, 23, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+                    titleFont: { family: 'Archivo', size: 10, weight: 800 },
+                    bodyFont: { family: 'Archivo', size: 11, weight: 500 },
+                    padding: 12,
+                    cornerRadius: 8,
+                    callbacks: {
+                        title: function(context) {
+                            if (context[0].datasetIndex === 3) {
+                                return labels[context[0].parsed.x];
+                            }
+                            return '';
+                        },
+                        label: function(context) {
+                            if (context.datasetIndex === 3) {
+                                const value = Math.round(context.parsed.y);
+                                const diff = value - mean;
+                                const diffPercent = mean > 0 ? ((diff / mean) * 100).toFixed(1) : 0;
+                                const sign = diff >= 0 ? '+' : '';
+                                return [
+                                    `Interações: ${value.toLocaleString('pt-BR')}`,
+                                    `Desvio: ${sign}${Math.round(diff).toLocaleString('pt-BR')} (${sign}${diffPercent}%)`
+                                ];
+                            }
+                            return '';
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grace: '10%',
+                    grid: { color: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)' },
+                    ticks: {
+                        color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.4)',
+                        font: { family: 'Archivo', size: 10, weight: 600 }
+                    },
+                    border: { display: false },
+                    title: {
+                        display: true,
+                        text: 'Interações',
+                        color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.5)',
+                        font: { family: 'Archivo', size: 10, weight: 700 }
+                    }
+                },
+                x: {
+                    type: 'category',
+                    labels: labels,
+                    grid: { display: false },
+                    ticks: {
+                        color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.4)',
+                        font: { family: 'Archivo', size: 9, weight: 700 }
+                    },
+                    border: { display: false }
+                }
+            }
+        }
+    });
+}
+
+// ==========================================
+// ALTERNÂNCIA ENTRE PICOS (SLIDESHOW)
+// ==========================================
+function startPeakSlideshow(hasSecondary) {
+    // Limpa intervalo anterior se existir
+    if (peakSlideInterval) {
+        clearInterval(peakSlideInterval);
+        peakSlideInterval = null;
+    }
+    
+    // Se não há pico secundário, não inicia o slideshow
+    if (!hasSecondary) {
+        const primaryEl = document.getElementById('hp-peak-primary');
+        const secondaryEl = document.getElementById('hp-peak-secondary');
+        
+        if (primaryEl) {
+            primaryEl.classList.add('active');
+            primaryEl.classList.remove('slide-out-up');
+        }
+        if (secondaryEl) {
+            secondaryEl.classList.remove('active');
+            secondaryEl.classList.add('slide-in-down');
+        }
+        return;
+    }
+    
+    let currentSlide = 0; // 0 = primary, 1 = secondary
+    
+    const primaryEl = document.getElementById('hp-peak-primary');
+    const secondaryEl = document.getElementById('hp-peak-secondary');
+    
+    if (!primaryEl || !secondaryEl) return;
+    
+    // Função para alternar slides
+    const switchSlide = () => {
+        if (currentSlide === 0) {
+            // Mostra secundário, esconde primário
+            primaryEl.classList.remove('active');
+            primaryEl.classList.add('slide-out-up');
+            
+            secondaryEl.classList.remove('slide-in-down');
+            secondaryEl.classList.add('active');
+            
+            currentSlide = 1;
+        } else {
+            // Mostra primário, esconde secundário
+            secondaryEl.classList.remove('active');
+            secondaryEl.classList.add('slide-in-down');
+            
+            primaryEl.classList.remove('slide-out-up');
+            primaryEl.classList.add('active');
+            
+            currentSlide = 0;
+        }
+    };
+    
+    // Alterna a cada 5 segundos
+    peakSlideInterval = setInterval(switchSlide, 5000);
 }

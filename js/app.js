@@ -9,6 +9,7 @@ import { appData } from './services/dataManager.js';
 import { getOverviewHTML, renderOverviewCharts, destroyOverviewCharts } from "./view-overview.js";
 import { getPositivacaoHTML, renderPositivacao } from "./view-positivacao.js";
 import { getHeatProdutosHTML, renderHeatProdutos, destroyHeatProdutosCharts } from "./view-heat-produtos.js";
+import { getPerformanceHTML, renderPerformance, destroyPerformanceCharts } from "./view-performance.js";
 import { getAboutHTML, initAbout } from "./view-about.js";
 
 const viewSocial = document.getElementById('login-social-view');
@@ -233,6 +234,8 @@ function renderActiveView() {
         renderPositivacao();
     } else if (currentRoute === 'view-heat-produtos') {
         renderHeatProdutos();
+    } else if (currentRoute === 'view-performance') {
+        renderPerformance();
     }
 }
 
@@ -251,6 +254,7 @@ navItems.forEach(btn => {
         setTimeout(() => {
             try { destroyOverviewCharts(); } catch(e){}
             try { destroyHeatProdutosCharts(); } catch(e){}
+            try { destroyPerformanceCharts(); } catch(e){}
             
             if(target === 'view-overview') {
                 appContent.innerHTML = getOverviewHTML();
@@ -260,6 +264,9 @@ navItems.forEach(btn => {
                 renderActiveView();
             } else if (target === 'view-heat-produtos') {
                 appContent.innerHTML = getHeatProdutosHTML();
+                renderActiveView();
+            } else if (target === 'view-performance') {
+                appContent.innerHTML = getPerformanceHTML();
                 renderActiveView();
             } else {
                 appContent.innerHTML = `<div class="h-[60vh] flex flex-col items-center justify-center text-center"><span class="text-4xl mb-4">🚧</span><h2 class="ds-title text-gray-400 uppercase mt-4">Módulo em Desenvolvimento</h2><p class="ds-helper-text text-gray-600 mt-2">A página será liberada na próxima atualização.</p></div>`;
