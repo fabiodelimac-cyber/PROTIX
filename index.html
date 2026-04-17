@@ -27,7 +27,7 @@
         .ds-chart-title { font-family: 'Archivo', sans-serif; font-size: 13px; font-weight: 600; font-stretch: 125%; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.3em; }
         .ds-kpi-value { font-family: 'Michroma', sans-serif; font-weight: 400; color: var(--text-main); }
         .ds-kpi-label { font-family: 'Archivo', sans-serif; font-size: 11px; font-weight: 600; font-stretch: 125%; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.3em; }
-        .ds-filter-label { font-family: 'Archivo', sans-serif; font-weight: 800; font-stretch: 100%; text-transform: uppercase; font-size: 9px; color: var(--text-main); opacity: 0.7; }
+        .ds-filter-label { font-family: 'Archivo', sans-serif; font-weight: 300; font-stretch: 110%; text-transform: uppercase; font-size: 9px; color: var(--text-main); opacity: 0.7; }
         .ds-filter-input { font-weight: 600; font-stretch: 100%; font-size: 12px; }
         .ds-sidebar-item { font-weight: 600; font-stretch: 100%; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
         .ds-sidebar-title { font-weight: 800; font-stretch: 100%; font-size: 9px; color: var(--text-muted-strong); text-transform: uppercase; }
@@ -109,7 +109,7 @@
             right: 0;
             height: 30px;
             pointer-events: none;
-            z-index: 101;
+            z-index: 1;
             opacity: 0;
             transition: opacity 0.3s ease;
         }
@@ -221,17 +221,26 @@
         ============================================= */
        #filterbar-row {
     display: flex; align-items: flex-end; justify-content: center; flex-wrap: wrap;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative; 
-    z-index: 100; /* Garante que os dropdowns fiquem acima de qualquer view */
+    z-index: 100;
 }
 
 #filterbar-row.filters-hidden {
-    max-height: 0; opacity: 0; transform: translateY(-10px); pointer-events: none; gap: 0; margin: 0;
+    max-height: 0; opacity: 0; transform: translateY(-12px); pointer-events: none; gap: 0; margin: 0; overflow: hidden;
+    transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                gap 0.3s ease,
+                margin 0.3s ease;
 }
 
 #filterbar-row.filters-open {
-    max-height: 400px; opacity: 1; transform: translateY(0); pointer-events: auto; gap: 12px; margin-top: 10px;
+    max-height: 400px; opacity: 1; transform: translateY(0); pointer-events: auto; gap: 12px; margin-top: 10px; overflow: visible;
+    transition: max-height 0.4s cubic-bezier(0.0, 0, 0.2, 1),
+                opacity 0.3s cubic-bezier(0.0, 0, 0.2, 1) 0.05s,
+                transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+                gap 0.3s ease,
+                margin 0.3s ease;
 }
 
         @media (max-width: 768px) {
@@ -283,7 +292,7 @@
         /* =============================================
            FILTROS / SELECTS GLASSMORFISMO 
         ============================================= */
-        select, .slicer-btn { 
+        body.dark select, body.dark .slicer-btn { 
             background-color: rgba(0, 0, 0, 0.45) !important;
             backdrop-filter: blur(12px) !important;
             -webkit-backdrop-filter: blur(12px) !important;
@@ -291,17 +300,31 @@
             border: 1px solid rgba(255, 255, 255, 0.15) !important;
             outline: none;
         }
+        body:not(.dark) select, body:not(.dark) .slicer-btn { 
+            background-color: rgba(255, 255, 255, 0.8) !important;
+            backdrop-filter: blur(12px) !important;
+            -webkit-backdrop-filter: blur(12px) !important;
+            color: #0f172a !important;
+            border: 1px solid rgba(15, 23, 42, 0.12) !important;
+            outline: none;
+        }
         select:focus, .slicer-btn:focus { border-color: #685BC7 !important; }
-        option { background-color: #131417; color: #ffffff; }
+        body.dark option { background-color: #131417; color: #ffffff; }
+        body:not(.dark) option { background-color: #ffffff; color: #0f172a; }
 
         select {
             padding-right: 32px !important; text-overflow: ellipsis; white-space: nowrap; overflow: hidden; appearance: none; 
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23ffffff'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E"); 
             background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 1.1em;
         }
+        
+        body.dark select:not(#hp-master-select):not(#hp-floating-select) {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23ffffff'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E"); 
+        }
+        body:not(.dark) select:not(#hp-master-select):not(#hp-floating-select) {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%230f172a'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E"); 
+        }
 
-        body.dark .slicer-panel { background-color: #17191e; border-color: rgba(255,255,255,0.08); backdrop-filter: blur(20px); }
-        body:not(.dark) .slicer-panel { background-color: rgba(255,255,255,0.96); border-color: rgba(255,255,255,1); backdrop-filter: blur(20px); }
+        /* slicer-panel base styles moved to glassmorfismo section below */
 
         /* =============================================
            SCROLLBAR
@@ -314,6 +337,141 @@
 
         #date-slicer-container { position: relative; z-index: 100; }
         #date-slicer-panel { position: absolute; top: calc(100% + 8px); left: 0; min-width: 260px; }
+
+        #shop-slicer-container { position: relative; z-index: 99; }
+        #shop-slicer-panel { position: absolute; top: calc(100% + 8px); left: 0; min-width: 260px; }
+
+        #pdv-slicer-container { position: relative; z-index: 98; }
+        #pdv-slicer-panel { position: absolute; top: calc(100% + 8px); left: 0; min-width: 260px; }
+
+        #linha-slicer-container { position: relative; z-index: 97; }
+        #linha-slicer-panel { position: absolute; top: calc(100% + 8px); left: 0; min-width: 260px; }
+
+        #regional-slicer-container { position: relative; z-index: 96; }
+        #regional-slicer-panel { position: absolute; top: calc(100% + 8px); left: 0; min-width: 260px; }
+
+        #p8020-slicer-container { position: relative; z-index: 95; }
+        #p8020-slicer-panel { position: absolute; top: calc(100% + 8px); left: 0; min-width: 260px; }
+
+        #vis-slicer-container { position: relative; z-index: 94; }
+        #vis-slicer-panel { position: absolute; top: calc(100% + 8px); left: 0; min-width: 260px; }
+
+        /* Fonte Archivo peso 300 width 110% para todos os filtros */
+        .ds-filter-input, .slicer-btn, select {
+            font-family: 'Archivo', sans-serif !important;
+            font-weight: 300 !important;
+            font-stretch: 110% !important;
+        }
+
+        /* Fonte Archivo 300/110% para TODOS os textos dentro dos painéis de filtro */
+        .slicer-panel,
+        .slicer-panel * {
+            font-family: 'Archivo', sans-serif !important;
+            font-weight: 300 !important;
+            font-stretch: 110% !important;
+        }
+
+        /* Botão LIMPAR mantém peso mais forte para legibilidade */
+        .slicer-panel button {
+            font-weight: 500 !important;
+        }
+
+        /* =============================================
+           SLICER PANEL GLASSMORFISMO
+        ============================================= */
+        body.dark .slicer-panel {
+            background: rgba(15, 16, 19, 0.72) !important;
+            backdrop-filter: blur(24px) saturate(180%) !important;
+            -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.04) inset !important;
+        }
+        body:not(.dark) .slicer-panel {
+            background: rgba(255, 255, 255, 0.72) !important;
+            backdrop-filter: blur(24px) saturate(180%) !important;
+            -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+            border: 1px solid rgba(255, 255, 255, 0.9) !important;
+            box-shadow: 0 20px 60px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(255,255,255,0.5) inset !important;
+        }
+
+        /* =============================================
+           SLICER PANEL OPEN/CLOSE ANIMATION
+        ============================================= */
+        .slicer-panel {
+            transform-origin: top center;
+            opacity: 0;
+            clip-path: inset(0 0 100% 0 round 12px);
+            pointer-events: none;
+            transition: clip-path 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                        opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .slicer-panel.panel-open {
+            opacity: 1;
+            clip-path: inset(0 0 0 0 round 12px);
+            pointer-events: auto;
+        }
+
+        /* =============================================
+           SLICER BUTTON ACTIVE STATE (dropdown aberto)
+        ============================================= */
+        .slicer-btn {
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .slicer-btn:active {
+            transform: scale(0.93);
+        }
+
+        .slicer-btn.slicer-active {
+            border-color: #685BC7 !important;
+            box-shadow: 0 0 12px rgba(104, 91, 199, 0.35);
+        }
+
+        body:not(.dark) .slicer-btn.slicer-active {
+            border-color: #685BC7 !important;
+            box-shadow: 0 0 12px rgba(104, 91, 199, 0.2);
+            background-color: rgba(104, 91, 199, 0.08) !important;
+        }
+
+        /* =============================================
+           SLICER PANEL LIGHT MODE TEXT COLORS
+        ============================================= */
+        body:not(.dark) .slicer-panel {
+            color: #0f172a !important;
+        }
+
+        body:not(.dark) .slicer-panel span,
+        body:not(.dark) .slicer-panel div,
+        body:not(.dark) .slicer-panel label {
+            color: #0f172a !important;
+        }
+
+        /* Muted text in light mode */
+        body:not(.dark) .slicer-panel .text-white\/40,
+        body:not(.dark) .slicer-panel .text-white\/50,
+        body:not(.dark) .slicer-panel .text-white\/60 {
+            color: #64748b !important;
+        }
+
+        body:not(.dark) .slicer-panel .text-white\/80,
+        body:not(.dark) .slicer-panel .text-white\/90 {
+            color: #1e293b !important;
+        }
+
+        /* Borders in light mode */
+        body:not(.dark) .slicer-panel .border-white\/10 {
+            border-color: rgba(15, 23, 42, 0.1) !important;
+        }
+
+        /* Hover backgrounds in light mode */
+        body:not(.dark) .slicer-panel .hover\:bg-white\/5:hover {
+            background-color: rgba(15, 23, 42, 0.04) !important;
+        }
+
+        body:not(.dark) .slicer-panel .hover\:bg-white\/10:hover {
+            background-color: rgba(15, 23, 42, 0.06) !important;
+        }
 
         .bg-mesh { background: linear-gradient(-45deg, #131417, #1c1e22, #2a2552, #131417); background-size: 400% 400%; animation: meshGradient 10s ease infinite; }
         @keyframes meshGradient { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
@@ -508,17 +666,58 @@
                         <label class="ds-filter-label">Período</label>
                         <button id="btn-date-slicer" class="slicer-btn p-2 rounded-xl ds-filter-input border flex justify-between items-center transition-all" style="min-width:130px;">
                             <span id="date-slicer-label" class="truncate text-left" style="width:85%;">TODOS</span>
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="#ffffff" style="width:14px;height:14px;flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" style="width:14px;height:14px;flex-shrink:0;opacity:0.5;"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
                         </button>
-                        <div id="date-slicer-panel" class="hidden slicer-panel border rounded-xl shadow-2xl custom-scrollbar p-4" style="position:absolute; top:calc(100% + 8px); left:0; min-width:260px; max-height:350px; overflow-y:auto; z-index:100; color:var(--text-main);"></div>
+                        <div id="date-slicer-panel" class="slicer-panel border rounded-xl shadow-2xl custom-scrollbar p-4" style="position:absolute; top:calc(100% + 8px); left:0; min-width:260px; max-height:350px; overflow-y:auto; z-index:100; color:var(--text-main);"></div>
                     </div>
-                    <div style="display:flex;flex-direction:column;gap:4px;"><label class="ds-filter-label">Shopping</label><select id="f-shop" class="ds-filter-input p-2 rounded-xl"></select></div>
-                    <div style="display:flex;flex-direction:column;gap:4px;"><label class="ds-filter-label">Rede</label><select id="f-rede" class="ds-filter-input p-2 rounded-xl"></select></div>
-                    <div style="display:flex;flex-direction:column;gap:4px;"><label class="ds-filter-label">PDV</label><select id="f-store" class="ds-filter-input p-2 rounded-xl"></select></div>
-                    <div style="display:flex;flex-direction:column;gap:4px;"><label class="ds-filter-label">Linha</label><select id="f-linha" class="ds-filter-input p-2 rounded-xl"></select></div>
-                    <div style="display:flex;flex-direction:column;gap:4px;"><label class="ds-filter-label">Regional</label><select id="f-reg" class="ds-filter-input p-2 rounded-xl"></select></div>
-                    <div style="display:flex;flex-direction:column;gap:4px;"><label class="ds-filter-label">80/20</label><select id="f-8020" class="ds-filter-input p-2 rounded-xl"></select></div>
-                    <div style="display:flex;flex-direction:column;gap:4px;"><label class="ds-filter-label">Visibilidade</label><select id="f-vis" class="ds-filter-input p-2 rounded-xl"></select></div>
+                    <div style="display:flex; flex-direction:column; gap:4px; position:relative; z-index:99;" id="shop-slicer-container">
+                        <label class="ds-filter-label">Localidade</label>
+                        <button id="btn-shop-slicer" class="slicer-btn p-2 rounded-xl ds-filter-input border flex justify-between items-center transition-all" style="min-width:130px;">
+                            <span id="shop-slicer-label" class="truncate text-left" style="width:85%;">TODOS</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" style="width:14px;height:14px;flex-shrink:0;opacity:0.5;"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+                        </button>
+                        <div id="shop-slicer-panel" class="slicer-panel border rounded-xl shadow-2xl custom-scrollbar p-4" style="position:absolute; top:calc(100% + 8px); left:0; min-width:260px; max-height:350px; overflow-y:auto; z-index:99; color:var(--text-main);"></div>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:4px; position:relative; z-index:98;" id="pdv-slicer-container">
+                        <label class="ds-filter-label">Rede/PDV</label>
+                        <button id="btn-pdv-slicer" class="slicer-btn p-2 rounded-xl ds-filter-input border flex justify-between items-center transition-all" style="min-width:130px;">
+                            <span id="pdv-slicer-label" class="truncate text-left" style="width:85%;">TODOS</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" style="width:14px;height:14px;flex-shrink:0;opacity:0.5;"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+                        </button>
+                        <div id="pdv-slicer-panel" class="slicer-panel border rounded-xl shadow-2xl custom-scrollbar p-4" style="position:absolute; top:calc(100% + 8px); left:0; min-width:260px; max-height:350px; overflow-y:auto; z-index:98; color:var(--text-main);"></div>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:4px; position:relative; z-index:97;" id="linha-slicer-container">
+                        <label class="ds-filter-label">Linha</label>
+                        <button id="btn-linha-slicer" class="slicer-btn p-2 rounded-xl ds-filter-input border flex justify-between items-center transition-all" style="min-width:130px;">
+                            <span id="linha-slicer-label" class="truncate text-left" style="width:85%;">TODOS</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" style="width:14px;height:14px;flex-shrink:0;opacity:0.5;"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+                        </button>
+                        <div id="linha-slicer-panel" class="slicer-panel border rounded-xl shadow-2xl custom-scrollbar p-4" style="position:absolute; top:calc(100% + 8px); left:0; min-width:260px; max-height:350px; overflow-y:auto; z-index:97; color:var(--text-main);"></div>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:4px; position:relative; z-index:96;" id="regional-slicer-container">
+                        <label class="ds-filter-label">Regional</label>
+                        <button id="btn-regional-slicer" class="slicer-btn p-2 rounded-xl ds-filter-input border flex justify-between items-center transition-all" style="min-width:130px;">
+                            <span id="regional-slicer-label" class="truncate text-left" style="width:85%;">TODOS</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" style="width:14px;height:14px;flex-shrink:0;opacity:0.5;"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+                        </button>
+                        <div id="regional-slicer-panel" class="slicer-panel border rounded-xl shadow-2xl custom-scrollbar p-4" style="position:absolute; top:calc(100% + 8px); left:0; min-width:260px; max-height:350px; overflow-y:auto; z-index:96; color:var(--text-main);"></div>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:4px; position:relative; z-index:95;" id="p8020-slicer-container">
+                        <label class="ds-filter-label">80/20</label>
+                        <button id="btn-p8020-slicer" class="slicer-btn p-2 rounded-xl ds-filter-input border flex justify-between items-center transition-all" style="min-width:130px;">
+                            <span id="p8020-slicer-label" class="truncate text-left" style="width:85%;">TODOS</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" style="width:14px;height:14px;flex-shrink:0;opacity:0.5;"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+                        </button>
+                        <div id="p8020-slicer-panel" class="slicer-panel border rounded-xl shadow-2xl custom-scrollbar p-4" style="position:absolute; top:calc(100% + 8px); left:0; min-width:260px; max-height:350px; overflow-y:auto; z-index:95; color:var(--text-main);"></div>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:4px; position:relative; z-index:94;" id="vis-slicer-container">
+                        <label class="ds-filter-label">Visibilidade</label>
+                        <button id="btn-vis-slicer" class="slicer-btn p-2 rounded-xl ds-filter-input border flex justify-between items-center transition-all" style="min-width:130px;">
+                            <span id="vis-slicer-label" class="truncate text-left" style="width:85%;">TODOS</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" style="width:14px;height:14px;flex-shrink:0;opacity:0.5;"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+                        </button>
+                        <div id="vis-slicer-panel" class="slicer-panel border rounded-xl shadow-2xl custom-scrollbar p-4" style="position:absolute; top:calc(100% + 8px); left:0; min-width:260px; max-height:350px; overflow-y:auto; z-index:94; color:var(--text-main);"></div>
+                    </div>
                 </div>
 
             </div>

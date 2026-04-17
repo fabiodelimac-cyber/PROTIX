@@ -129,7 +129,7 @@ export const getHeatProdutosHTML = () => {
                 top: 0;
                 left: 0;
                 right: 0;
-                z-index: 90;
+                z-index: 50;
                 padding: 16px 24px;
                 transform: translateY(-100%);
                 transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease;
@@ -167,19 +167,21 @@ export const getHeatProdutosHTML = () => {
                 margin: 0 auto;
                 padding: 16px 24px;
                 border-radius: 20px;
-                backdrop-filter: blur(24px);
-                -webkit-backdrop-filter: blur(24px);
-                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+                backdrop-filter: blur(24px) saturate(180%);
+                -webkit-backdrop-filter: blur(24px) saturate(180%);
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             }
             
             body.dark #hp-floating-filter-inner {
-                background: rgba(15, 16, 19, 0.85);
-                border: 1px solid rgba(255, 255, 255, 0.1);
+                background: rgba(15, 16, 19, 0.72);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.04) inset;
             }
             
             body:not(.dark) #hp-floating-filter-inner {
-                background: rgba(255, 255, 255, 0.85);
-                border: 1px solid rgba(255, 255, 255, 0.95);
+                background: rgba(255, 255, 255, 0.72);
+                border: 1px solid rgba(255, 255, 255, 0.9);
+                box-shadow: 0 20px 60px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(255,255,255,0.5) inset;
             }
             
             #hp-floating-select {
@@ -191,35 +193,48 @@ export const getHeatProdutosHTML = () => {
                 cursor: pointer;
                 backdrop-filter: blur(12px);
                 appearance: none;
-                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23ffffff'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
                 background-repeat: no-repeat;
                 background-position: right 12px center;
                 background-size: 1.1em;
                 padding-right: 40px;
+                font-family: 'Archivo', sans-serif;
+                font-weight: 300;
+                font-stretch: 110%;
+                font-size: 12px;
             }
             
             body.dark #hp-floating-select {
                 background-color: rgba(0, 0, 0, 0.45);
                 border: 1px solid rgba(255, 255, 255, 0.15);
                 color: #ffffff;
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23ffffff'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
             }
             
             body:not(.dark) #hp-floating-select {
                 background-color: rgba(255, 255, 255, 0.9);
                 border: 1px solid rgba(0, 0, 0, 0.1);
                 color: #131417;
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%230f172a'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
             }
             
             #hp-floating-select:focus {
                 border-color: #685BC7;
+            }
+
+            body.dark #hp-master-select {
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23ffffff'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+            }
+            
+            body:not(.dark) #hp-master-select {
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%230f172a'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
             }
         </style>
 
         <!-- Filtro Flutuante -->
         <div id="hp-floating-filter" class="filters-closed">
             <div id="hp-floating-filter-inner">
-                <label class="ds-filter-label mb-2 block text-center">Modelo Alvo</label>
-                <select id="hp-floating-select" class="ds-filter-input font-semibold">
+                <label class="ds-filter-label mb-2 block text-center" style="font-family:'Archivo',sans-serif; font-weight:300; font-stretch:110%;">Modelo Alvo</label>
+                <select id="hp-floating-select">
                     <option value="">VISÃO MACRO (TODOS)</option>
                 </select>
             </div>
@@ -231,8 +246,8 @@ export const getHeatProdutosHTML = () => {
                     <h2 class="ds-title">Heatmap Operacional</h2>
                 </div>
                 <div class="w-full md:w-1/3 relative z-10">
-                    <label class="ds-filter-label mb-2 block">Selecione o Modelo Alvo</label>
-                    <select id="hp-master-select" class="w-full p-3 rounded-xl ds-filter-input input-adaptive focus:border-[#685BC7] outline-none transition-colors cursor-pointer backdrop-blur-md appearance-none">
+                    <label class="ds-filter-label mb-2 block" style="font-family:'Archivo',sans-serif; font-weight:300; font-stretch:110%;">Modelo Alvo</label>
+                    <select id="hp-master-select" class="w-full p-3 rounded-xl ds-filter-input input-adaptive focus:border-[#685BC7] outline-none transition-colors cursor-pointer backdrop-blur-md" style="font-family:'Archivo',sans-serif; font-weight:300; font-stretch:110%; font-size:12px; appearance:none; background-repeat:no-repeat; background-position:right 12px center; background-size:1.1em; padding-right:40px;">
                         <option value="">Carregando produtos...</option>
                     </select>
                 </div>

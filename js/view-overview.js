@@ -529,6 +529,8 @@ function startInsightRotation(dbData) {
 }
 
 async function executeRenderLogic() {
+    console.log('🎬 Overview: executeRenderLogic chamado');
+    
     // 1. Gera um "ticket" exclusivo para este clico de renderização
     const renderToken = ++currentRenderToken;
 

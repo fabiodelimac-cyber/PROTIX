@@ -340,13 +340,7 @@ async function initData() {
 
 // --- CONEXÃO DOS FILTROS DA UI COM O DATAMANAGER ---
 const filterKeys = {
-    'f-shop': 'shopping', 
-    'f-rede': 'rede', 
-    'f-store': 'store_name', 
-    'f-linha': 'linha_de_produto', 
-    'f-reg': 'regional', 
-    'f-8020': 'p8020', 
-    'f-vis': 'visibilidade'
+    // Removido f-rede, f-linha, f-reg, f-8020, f-vis - agora são slicers
 };
 
 function setupGlobalFilters() {
@@ -370,14 +364,136 @@ function setupGlobalFilters() {
         const newBtnDate = btnDate.cloneNode(true);
         btnDate.parentNode.replaceChild(newBtnDate, btnDate);
         newBtnDate.addEventListener('click', (e) => {
-            e.stopPropagation(); // Evita que clique feche imediatamente
-            panelDate.classList.toggle('hidden');
+            e.stopPropagation();
+            const isOpen = panelDate.classList.contains('panel-open');
+            closeOtherPanels(['date-slicer-panel']);
+            if (!isOpen) {
+                panelDate.classList.add('panel-open');
+                newBtnDate.classList.add('slicer-active');
+            } else {
+                panelDate.classList.remove('panel-open');
+                newBtnDate.classList.remove('slicer-active');
+            }
         });
 
         // Fecha o painel se clicar fora dele
         document.addEventListener('click', (e) => {
             if (!newBtnDate.contains(e.target) && !panelDate.contains(e.target)) {
-                panelDate.classList.add('hidden');
+                panelDate.classList.remove('panel-open');
+                newBtnDate.classList.remove('slicer-active');
+            }
+        });
+    }
+
+    // 3. Configura o botão do Filtro de Shopping Hierárquico
+    const btnShop = document.getElementById('btn-shop-slicer');
+    const panelShop = document.getElementById('shop-slicer-panel');
+    if (btnShop && panelShop) {
+        const newBtnShop = btnShop.cloneNode(true);
+        btnShop.parentNode.replaceChild(newBtnShop, btnShop);
+        newBtnShop.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isOpen = panelShop.classList.contains('panel-open');
+            closeOtherPanels(['shop-slicer-panel']);
+            if (!isOpen) {
+                panelShop.classList.add('panel-open');
+                newBtnShop.classList.add('slicer-active');
+            } else {
+                panelShop.classList.remove('panel-open');
+                newBtnShop.classList.remove('slicer-active');
+            }
+        });
+
+        // Fecha o painel se clicar fora dele
+        document.addEventListener('click', (e) => {
+            if (!newBtnShop.contains(e.target) && !panelShop.contains(e.target)) {
+                panelShop.classList.remove('panel-open');
+                newBtnShop.classList.remove('slicer-active');
+            }
+        });
+    }
+
+    // 4. Configura o botão do Filtro de PDV Hierárquico
+    const btnPdv = document.getElementById('btn-pdv-slicer');
+    const panelPdv = document.getElementById('pdv-slicer-panel');
+    if (btnPdv && panelPdv) {
+        const newBtnPdv = btnPdv.cloneNode(true);
+        btnPdv.parentNode.replaceChild(newBtnPdv, btnPdv);
+        newBtnPdv.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isOpen = panelPdv.classList.contains('panel-open');
+            closeOtherPanels(['pdv-slicer-panel']);
+            if (!isOpen) {
+                panelPdv.classList.add('panel-open');
+                newBtnPdv.classList.add('slicer-active');
+            } else {
+                panelPdv.classList.remove('panel-open');
+                newBtnPdv.classList.remove('slicer-active');
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!newBtnPdv.contains(e.target) && !panelPdv.contains(e.target)) {
+                panelPdv.classList.remove('panel-open');
+                newBtnPdv.classList.remove('slicer-active');
+            }
+        });
+    }
+
+    // 5-8. Configura os filtros simples (Linha, Regional, 80/20, Visibilidade)
+    const simpleSlicers = [
+        { id: 'linha', field: 'linha_de_produto', title: 'LINHA DE PRODUTO' },
+        { id: 'regional', field: 'regional', title: 'REGIONAL' },
+        { id: 'p8020', field: 'p8020', title: '80/20' },
+        { id: 'vis', field: 'visibilidade', title: 'VISIBILIDADE' }
+    ];
+
+    simpleSlicers.forEach(slicer => {
+        const btn = document.getElementById(`btn-${slicer.id}-slicer`);
+        const panel = document.getElementById(`${slicer.id}-slicer-panel`);
+        if (btn && panel) {
+            const newBtn = btn.cloneNode(true);
+            btn.parentNode.replaceChild(newBtn, btn);
+            newBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isOpen = panel.classList.contains('panel-open');
+                closeOtherPanels([`${slicer.id}-slicer-panel`]);
+                if (!isOpen) {
+                    panel.classList.add('panel-open');
+                    newBtn.classList.add('slicer-active');
+                } else {
+                    panel.classList.remove('panel-open');
+                    newBtn.classList.remove('slicer-active');
+                }
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!newBtn.contains(e.target) && !panel.contains(e.target)) {
+                    panel.classList.remove('panel-open');
+                    newBtn.classList.remove('slicer-active');
+                }
+            });
+        }
+    });
+
+    // Função para fechar outros painéis com animação
+    function closeOtherPanels(except = []) {
+        const allPanels = ['date-slicer-panel', 'shop-slicer-panel', 'pdv-slicer-panel', 'linha-slicer-panel', 'regional-slicer-panel', 'p8020-slicer-panel', 'vis-slicer-panel'];
+        const panelToBtnMap = {
+            'date-slicer-panel': 'btn-date-slicer',
+            'shop-slicer-panel': 'btn-shop-slicer',
+            'pdv-slicer-panel': 'btn-pdv-slicer',
+            'linha-slicer-panel': 'btn-linha-slicer',
+            'regional-slicer-panel': 'btn-regional-slicer',
+            'p8020-slicer-panel': 'btn-p8020-slicer',
+            'vis-slicer-panel': 'btn-vis-slicer'
+        };
+        allPanels.forEach(panelId => {
+            if (!except.includes(panelId)) {
+                const panel = document.getElementById(panelId);
+                if (panel) panel.classList.remove('panel-open');
+                const btn = document.getElementById(panelToBtnMap[panelId]);
+                if (btn) btn.classList.remove('slicer-active');
             }
         });
     }
@@ -465,8 +581,7 @@ function updateDropdownUI() {
 
         labelDate.innerText = activeDates.length === 0 ? "TODOS OS PERÍODOS" : `${activeDates.length} DIA(S) FILTRADO(S)`;
 
-        let htmlPanel = `<div class="mb-3 border-b border-white/10 pb-3 flex justify-between items-center">
-            <span class="text-xs font-bold text-white/50">SELECIONE O PERÍODO</span>
+        let htmlPanel = `<div class="mb-3 border-b border-white/10 pb-3 flex justify-end items-center">
             <button id="btn-clear-dates" class="text-[10px] bg-red-500/20 text-red-400 px-2 py-1 rounded hover:bg-red-500/40 transition-colors">LIMPAR</button>
         </div>`;
 
@@ -594,4 +709,343 @@ function updateDropdownUI() {
             appData.setFilter('pure_date', selected);
         }
     }
+
+    // --- 3. ATUALIZA O FILTRO DE SHOPPING HIERÁRQUICO COM CHECKBOXES ---
+    const panelShop = document.getElementById('shop-slicer-panel');
+    const labelShop = document.getElementById('shop-slicer-label');
+    
+    if (panelShop && labelShop) {
+        const openFolders = Array.from(panelShop.querySelectorAll('.folder-content:not(.hidden)')).map(el => el.id);
+        
+        let dataForShopFilter = raw.filter(item => {
+            let matches = true;
+            for (const fKey in currentFilters) {
+                if (fKey === 'shopping') continue; 
+                const filterValue = currentFilters[fKey];
+                if (Array.isArray(filterValue)) {
+                    if (filterValue.length > 0 && !filterValue.includes(item[fKey])) matches = false;
+                } else {
+                    if (filterValue && item[fKey] && String(item[fKey]) !== String(filterValue)) matches = false;
+                }
+            }
+            return matches;
+        });
+
+        const availableShops = [...new Set(dataForShopFilter.map(d => d.shopping))].filter(x => x && x !== 'N/A').sort();
+
+        // Separa: "LOJA DE RUA" = item individual, qualquer outro = agrupado sob "Shoppings"
+        const lojaDeRua = availableShops.filter(shop => shop.toUpperCase().includes('LOJA DE RUA'));
+        const shoppings = availableShops.filter(shop => !shop.toUpperCase().includes('LOJA DE RUA'));
+
+        let activeShops = currentFilters['shopping'] || [];
+        if (!Array.isArray(activeShops)) activeShops = [activeShops];
+
+        labelShop.innerText = activeShops.length === 0 ? "TODOS" : `${activeShops.length} SELECIONADO(S)`;
+
+        // Preserva estado de expand/collapse
+        const openShopFolders = Array.from(panelShop.querySelectorAll('.folder-content:not(.hidden)')).map(el => el.id);
+
+        let htmlPanel = `<div class="mb-3 border-b border-white/10 pb-3 flex justify-end items-center">
+            <button id="btn-clear-shops" class="text-[10px] bg-red-500/20 text-red-400 px-2 py-1 rounded hover:bg-red-500/40 transition-colors">LIMPAR</button>
+        </div>`;
+
+        // Loja de Rua (item individual, sem hierarquia)
+        if (lojaDeRua.length > 0) {
+            lojaDeRua.forEach(shop => {
+                const isChecked = activeShops.includes(shop) ? 'checked' : '';
+                htmlPanel += `
+                <div class="flex items-center gap-2 p-2 rounded-md hover:bg-white/10 transition-colors mb-1">
+                    <input type="checkbox" value="${shop}" class="cb-shop accent-[#8b5cf6] w-4 h-4 cursor-pointer" ${isChecked}>
+                    <span class="text-sm font-bold text-white/90 cursor-pointer" onclick="this.previousElementSibling.click()">🏬 ${shop.toUpperCase()}</span>
+                </div>`;
+            });
+        }
+
+        // Shoppings (hierárquico: pai "SHOPPINGS" com filhos expansíveis)
+        if (shoppings.length > 0) {
+            const idShopFolder = 'f-shop-group';
+            htmlPanel += `<div class="mb-2 mt-1">
+                <div class="flex items-center gap-2 p-1.5 rounded-md hover:bg-white/5 transition-colors">
+                    <input type="checkbox" class="cb-shop-parent accent-[#685BC7] w-4 h-4 cursor-pointer">
+                    <div class="folder-toggle flex-1 flex justify-between items-center cursor-pointer font-black text-sm" data-target="${idShopFolder}">
+                        🏢 SHOPPINGS <span class="arrow text-[10px] transition-transform duration-200 ${openShopFolders.includes(idShopFolder) ? 'rotate-180' : ''}">▼</span>
+                    </div>
+                </div>
+                <div id="${idShopFolder}" class="folder-content ${openShopFolders.includes(idShopFolder) ? '' : 'hidden'} pl-4 border-l border-white/10 mt-1">`;
+
+            shoppings.forEach(shop => {
+                const isChecked = activeShops.includes(shop) ? 'checked' : '';
+                htmlPanel += `
+                <div class="flex items-center gap-2 p-1.5 rounded-md hover:bg-white/10 transition-colors">
+                    <input type="checkbox" value="${shop}" class="cb-shop accent-[#8b5cf6] w-3.5 h-3.5 cursor-pointer" ${isChecked}>
+                    <span class="text-xs text-white/80 cursor-pointer" onclick="this.previousElementSibling.click()">${shop.toUpperCase()}</span>
+                </div>`;
+            });
+
+            htmlPanel += `</div></div>`;
+        }
+
+        panelShop.innerHTML = htmlPanel;
+
+        // --- Sincroniza checkbox pai "Shoppings" ---
+        function syncShopParent() {
+            const cbParent = panelShop.querySelector('.cb-shop-parent');
+            if (!cbParent) return;
+            const folder = document.getElementById('f-shop-group');
+            if (!folder) return;
+            const children = Array.from(folder.querySelectorAll('.cb-shop'));
+            const checkedCount = children.filter(c => c.checked).length;
+            if (checkedCount === 0) { cbParent.checked = false; cbParent.indeterminate = false; }
+            else if (checkedCount === children.length) { cbParent.checked = true; cbParent.indeterminate = false; }
+            else { cbParent.checked = false; cbParent.indeterminate = true; }
+        }
+        syncShopParent();
+
+        // Expand/collapse
+        panelShop.querySelectorAll('.folder-toggle').forEach(el => {
+            el.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const targetId = el.getAttribute('data-target');
+                const content = document.getElementById(targetId);
+                const arrow = el.querySelector('.arrow');
+                content.classList.toggle('hidden');
+                arrow.classList.toggle('rotate-180');
+            });
+        });
+
+        // Pai seleciona/deseleciona todos os filhos
+        const cbShopParent = panelShop.querySelector('.cb-shop-parent');
+        if (cbShopParent) {
+            cbShopParent.addEventListener('change', (e) => {
+                const folder = document.getElementById('f-shop-group');
+                if (folder) folder.querySelectorAll('.cb-shop').forEach(cb => cb.checked = e.target.checked);
+                syncShopParent();
+                const selected = Array.from(panelShop.querySelectorAll('.cb-shop:checked')).map(cb => cb.value);
+                appData.setFilter('shopping', selected);
+            });
+        }
+
+        // Filhos atualizam pai
+        panelShop.querySelectorAll('.cb-shop').forEach(cb => {
+            cb.addEventListener('change', () => {
+                syncShopParent();
+                const selected = Array.from(panelShop.querySelectorAll('.cb-shop:checked')).map(cb => cb.value);
+                appData.setFilter('shopping', selected);
+            });
+        });
+
+        // Botão limpar
+        const btnClearShops = document.getElementById('btn-clear-shops');
+        if (btnClearShops) {
+            btnClearShops.addEventListener('click', () => {
+                panelShop.querySelectorAll('.cb-shop').forEach(cb => cb.checked = false);
+                syncShopParent();
+                appData.setFilter('shopping', []);
+            });
+        }
+    }
+
+    // --- 4. ATUALIZA O FILTRO DE PDV HIERÁRQUICO (REDE -> PDV) ---
+    const panelPdv = document.getElementById('pdv-slicer-panel');
+    const labelPdv = document.getElementById('pdv-slicer-label');
+    
+    if (panelPdv && labelPdv) {
+        const openFolders = Array.from(panelPdv.querySelectorAll('.folder-content:not(.hidden)')).map(el => el.id);
+        
+        let dataForPdvFilter = raw.filter(item => {
+            let matches = true;
+            for (const fKey in currentFilters) {
+                if (fKey === 'store_name') continue; 
+                const filterValue = currentFilters[fKey];
+                if (Array.isArray(filterValue)) {
+                    if (filterValue.length > 0 && !filterValue.includes(item[fKey])) matches = false;
+                } else {
+                    if (filterValue && item[fKey] && String(item[fKey]) !== String(filterValue)) matches = false;
+                }
+            }
+            return matches;
+        });
+
+        // Agrupa PDVs por rede
+        const pdvsByRede = {};
+        dataForPdvFilter.forEach(item => {
+            const rede = item.rede;
+            const pdv = item.store_name;
+            if (rede && pdv && rede !== 'N/A' && pdv !== 'N/A') {
+                if (!pdvsByRede[rede]) pdvsByRede[rede] = new Set();
+                pdvsByRede[rede].add(pdv);
+            }
+        });
+
+        // Converte Sets para arrays e ordena
+        Object.keys(pdvsByRede).forEach(rede => {
+            pdvsByRede[rede] = Array.from(pdvsByRede[rede]).sort();
+        });
+
+        let activePdvs = currentFilters['store_name'] || [];
+        if (!Array.isArray(activePdvs)) activePdvs = [activePdvs];
+
+        labelPdv.innerText = activePdvs.length === 0 ? "TODOS" : `${activePdvs.length} PDV(S) SELECIONADO(S)`;
+
+        // Preserva estado de expand/collapse
+        const openPdvFolders = Array.from(panelPdv.querySelectorAll('.folder-content:not(.hidden)')).map(el => el.id);
+
+        let htmlPanel = `<div class="mb-3 border-b border-white/10 pb-3 flex justify-end items-center">
+            <button id="btn-clear-pdvs" class="text-[10px] bg-red-500/20 text-red-400 px-2 py-1 rounded hover:bg-red-500/40 transition-colors">LIMPAR</button>
+        </div>`;
+
+        Object.keys(pdvsByRede).sort().forEach(rede => {
+            const idRedeFolder = `f-rede-${rede.replace(/\s+/g, '_')}`;
+            const redeChildren = pdvsByRede[rede];
+            
+            htmlPanel += `<div class="mb-2">
+                <div class="flex items-center gap-2 p-1.5 rounded-md hover:bg-white/5 transition-colors">
+                    <input type="checkbox" class="cb-rede-parent accent-[#685BC7] w-4 h-4 cursor-pointer" data-rede="${rede}">
+                    <div class="folder-toggle flex-1 flex items-center cursor-pointer" data-target="${idRedeFolder}">
+                        <span class="flex-1">${rede.toUpperCase()}</span>
+                        <span class="text-[10px] text-white/40 tabular-nums text-right min-w-[28px] mr-2">${redeChildren.length}</span>
+                        <span class="arrow text-[10px] transition-transform duration-200 ${openPdvFolders.includes(idRedeFolder) ? 'rotate-180' : ''}">▼</span>
+                    </div>
+                </div>
+                <div id="${idRedeFolder}" class="folder-content ${openPdvFolders.includes(idRedeFolder) ? '' : 'hidden'} pl-4 border-l border-white/10 mt-1">`;
+
+            redeChildren.forEach(pdv => {
+                const isChecked = activePdvs.includes(pdv) ? 'checked' : '';
+                // Extrai nome curto do PDV (antes do " - SPC")
+                const shortName = pdv.split(' - SPC')[0] || pdv;
+                htmlPanel += `
+                <div class="flex items-center gap-2 p-1 rounded-md hover:bg-white/10 transition-colors">
+                    <input type="checkbox" value="${pdv}" class="cb-pdv accent-[#8b5cf6] w-3 h-3 cursor-pointer" data-rede="${rede}" ${isChecked}>
+                    <span class="text-[11px] text-white/80 cursor-pointer" onclick="this.previousElementSibling.click()" title="${pdv.toUpperCase()}">${shortName.toUpperCase()}</span>
+                </div>`;
+            });
+
+            htmlPanel += `</div></div>`;
+        });
+
+        panelPdv.innerHTML = htmlPanel;
+
+        // --- Sincroniza checkboxes pai (Rede) ---
+        function syncPdvParents() {
+            panelPdv.querySelectorAll('.cb-rede-parent').forEach(cbParent => {
+                const rede = cbParent.getAttribute('data-rede');
+                const children = Array.from(panelPdv.querySelectorAll(`.cb-pdv[data-rede="${rede}"]`));
+                const checkedCount = children.filter(c => c.checked).length;
+                if (checkedCount === 0) { cbParent.checked = false; cbParent.indeterminate = false; }
+                else if (checkedCount === children.length) { cbParent.checked = true; cbParent.indeterminate = false; }
+                else { cbParent.checked = false; cbParent.indeterminate = true; }
+            });
+        }
+        syncPdvParents();
+
+        // Expand/collapse
+        panelPdv.querySelectorAll('.folder-toggle').forEach(el => {
+            el.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const targetId = el.getAttribute('data-target');
+                const content = document.getElementById(targetId);
+                const arrow = el.querySelector('.arrow');
+                content.classList.toggle('hidden');
+                arrow.classList.toggle('rotate-180');
+            });
+        });
+
+        // Pai seleciona/deseleciona todos os filhos da rede
+        panelPdv.querySelectorAll('.cb-rede-parent').forEach(cbParent => {
+            cbParent.addEventListener('change', (e) => {
+                const rede = e.target.getAttribute('data-rede');
+                panelPdv.querySelectorAll(`.cb-pdv[data-rede="${rede}"]`).forEach(cb => cb.checked = e.target.checked);
+                syncPdvParents();
+                const selected = Array.from(panelPdv.querySelectorAll('.cb-pdv:checked')).map(cb => cb.value);
+                appData.setFilter('store_name', selected);
+            });
+        });
+
+        // Filhos atualizam pai
+        panelPdv.querySelectorAll('.cb-pdv').forEach(cb => {
+            cb.addEventListener('change', () => {
+                syncPdvParents();
+                const selected = Array.from(panelPdv.querySelectorAll('.cb-pdv:checked')).map(cb => cb.value);
+                appData.setFilter('store_name', selected);
+            });
+        });
+
+        // Botão limpar
+        const btnClearPdvs = document.getElementById('btn-clear-pdvs');
+        if (btnClearPdvs) {
+            btnClearPdvs.addEventListener('click', () => {
+                panelPdv.querySelectorAll('.cb-pdv').forEach(cb => cb.checked = false);
+                syncPdvParents();
+                appData.setFilter('store_name', []);
+            });
+        }
+    }
+
+    // --- 5-8. ATUALIZA OS FILTROS SIMPLES (LINHA, REGIONAL, 80/20, VISIBILIDADE) ---
+    const simpleFilters = [
+        { id: 'linha', field: 'linha_de_produto', title: 'LINHA DE PRODUTO' },
+        { id: 'regional', field: 'regional', title: 'REGIONAL' },
+        { id: 'p8020', field: 'p8020', title: '80/20' },
+        { id: 'vis', field: 'visibilidade', title: 'VISIBILIDADE' }
+    ];
+
+    simpleFilters.forEach(filter => {
+        const panel = document.getElementById(`${filter.id}-slicer-panel`);
+        const label = document.getElementById(`${filter.id}-slicer-label`);
+        
+        if (panel && label) {
+            let dataForFilter = raw.filter(item => {
+                let matches = true;
+                for (const fKey in currentFilters) {
+                    if (fKey === filter.field) continue; 
+                    const filterValue = currentFilters[fKey];
+                    if (Array.isArray(filterValue)) {
+                        if (filterValue.length > 0 && !filterValue.includes(item[fKey])) matches = false;
+                    } else {
+                        if (filterValue && item[fKey] && String(item[fKey]) !== String(filterValue)) matches = false;
+                    }
+                }
+                return matches;
+            });
+
+            const availableValues = [...new Set(dataForFilter.map(d => d[filter.field]))].filter(x => x && x !== 'N/A').sort();
+            
+            let activeValues = currentFilters[filter.field] || [];
+            if (!Array.isArray(activeValues)) activeValues = [activeValues];
+
+            label.innerText = activeValues.length === 0 ? "TODOS" : `${activeValues.length} SELECIONADO(S)`;
+
+            let htmlPanel = `<div class="mb-3 border-b border-white/10 pb-3 flex justify-end items-center">
+                <button id="btn-clear-${filter.id}" class="text-[10px] bg-red-500/20 text-red-400 px-2 py-1 rounded hover:bg-red-500/40 transition-colors">LIMPAR</button>
+            </div>`;
+
+            availableValues.forEach(value => {
+                const isChecked = activeValues.includes(value) ? 'checked' : '';
+                htmlPanel += `
+                <div class="flex items-center gap-2 p-2 rounded-md hover:bg-white/10 transition-colors">
+                    <input type="checkbox" value="${value}" class="cb-${filter.id} accent-[#8b5cf6] w-4 h-4 cursor-pointer" ${isChecked}>
+                    <span class="text-sm text-white/90 cursor-pointer" onclick="this.previousElementSibling.click()">${value.toUpperCase()}</span>
+                </div>`;
+            });
+
+            panel.innerHTML = htmlPanel;
+
+            // Event listeners
+            panel.querySelectorAll(`.cb-${filter.id}`).forEach(cb => {
+                cb.addEventListener('change', () => {
+                    const selected = Array.from(panel.querySelectorAll(`.cb-${filter.id}:checked`)).map(cb => cb.value);
+                    appData.setFilter(filter.field, selected);
+                });
+            });
+
+            // Botão limpar
+            const btnClear = document.getElementById(`btn-clear-${filter.id}`);
+            if (btnClear) {
+                btnClear.addEventListener('click', () => {
+                    panel.querySelectorAll(`.cb-${filter.id}`).forEach(cb => cb.checked = false);
+                    appData.setFilter(filter.field, []);
+                });
+            }
+        }
+    });
 }
