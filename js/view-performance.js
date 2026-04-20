@@ -19,8 +19,7 @@ export const getPerformanceHTML = () => {
             .text-glow { text-shadow: var(--glow-shadow); }
             .neon-accent { background: var(--neon-bg); }
             
-            /* Tipografia consistente */
-            .font-numbers { font-family: 'Michroma', sans-serif; }
+            /* .font-numbers agora é global no index.html (DESIGN SYSTEM: TYPOGRAPHY) */
             
             @keyframes smoothEntrance {
                 from { opacity: 0; transform: translateY(10px); }
@@ -154,11 +153,9 @@ export const getPerformanceHTML = () => {
                 transition: stroke-dashoffset 1s ease;
             }
             
+            /* .gauge-text agora usa ds-gauge-text do DESIGN SYSTEM global */
             .gauge-text {
                 font-size: 24px;
-                font-weight: 900;
-                font-family: 'Michroma', sans-serif;
-                fill: var(--text-main);
             }
             
             /* Health Cards - New Compact Layout */
@@ -432,7 +429,7 @@ export const getPerformanceHTML = () => {
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         <!-- Top 10 -->
                         <div>
-                            <h5 class="text-sm uppercase tracking-wider mb-4 text-adaptive-muted" style="font-family: 'Archivo', sans-serif; font-weight: 200; font-stretch: 120%;">🏆 Top 10 Lojas</h5>
+                            <h5 class="ds-chart-subtitle text-sm text-adaptive-muted mb-4">🏆 Top 10 Lojas</h5>
                             <div id="perf-top10-container" class="space-y-2">
                                 <div class="chart-loading"><div class="spinner"></div></div>
                             </div>
@@ -440,7 +437,7 @@ export const getPerformanceHTML = () => {
                         
                         <!-- Bottom 10 -->
                         <div>
-                            <h5 class="text-sm uppercase tracking-wider mb-4 text-adaptive-muted" style="font-family: 'Archivo', sans-serif; font-weight: 200; font-stretch: 120%;">⚠️ Bottom 10 Lojas</h5>
+                            <h5 class="ds-chart-subtitle text-sm text-adaptive-muted mb-4">⚠️ Bottom 10 Lojas</h5>
                             <div id="perf-bottom10-container" class="space-y-2">
                                 <div class="chart-loading"><div class="spinner"></div></div>
                             </div>
@@ -461,8 +458,8 @@ export const getPerformanceHTML = () => {
                             <h5 id="xray-store-title" class="text-adaptive" style="font-family: 'Archivo', sans-serif; font-weight: 600; font-stretch: 140%; font-size: 1.4rem;">-</h5>
                         </div>
                         <div class="text-right">
-                            <p id="xray-total-sessions" class="text-2xl text-adaptive" style="font-family: 'Michroma', sans-serif;">-</p>
-                            <p class="text-[10px] text-adaptive-muted uppercase" style="font-family: 'Archivo', sans-serif;">total interações</p>
+                            <p id="xray-total-sessions" class="text-2xl text-adaptive font-numbers">-</p>
+                            <p class="ds-chart-subtitle text-adaptive-muted">total interações</p>
                         </div>
                     </div>
                     
@@ -470,7 +467,7 @@ export const getPerformanceHTML = () => {
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <!-- Aparelhos Ativos -->
                         <div class="glass-panel p-6 rounded-2xl">
-                            <h6 class="text-xs uppercase mb-4 text-adaptive-muted" style="font-family: 'Archivo', sans-serif; font-weight: 600; font-stretch: 130%; letter-spacing: 0.3em;">Aparelhos Ativos</h6>
+                            <h6 class="ds-chart-title mb-4">Aparelhos Ativos</h6>
                             <div id="xray-devices-container" class="space-y-2 max-h-[280px] overflow-y-auto pr-1">
                                 <div class="chart-loading"><div class="spinner"></div></div>
                             </div>
@@ -478,7 +475,7 @@ export const getPerformanceHTML = () => {
                         
                         <!-- Fluxo por Hora -->
                         <div class="glass-panel p-6 rounded-2xl">
-                            <h6 class="text-xs uppercase mb-4 text-adaptive-muted" style="font-family: 'Archivo', sans-serif; font-weight: 600; font-stretch: 130%; letter-spacing: 0.3em;">Fluxo de Interações por Hora</h6>
+                            <h6 class="ds-chart-title mb-4">Fluxo de Interações por Hora</h6>
                             <div class="relative" style="height: 250px;">
                                 <canvas id="xray-c-hourly"></canvas>
                             </div>
@@ -486,7 +483,7 @@ export const getPerformanceHTML = () => {
                         
                         <!-- Interações por Dia da Semana -->
                         <div class="glass-panel p-6 rounded-2xl">
-                            <h6 class="text-xs uppercase mb-4 text-adaptive-muted" style="font-family: 'Archivo', sans-serif; font-weight: 600; font-stretch: 130%; letter-spacing: 0.3em;">Interações por Dia da Semana</h6>
+                            <h6 class="ds-chart-title mb-4">Interações por Dia da Semana</h6>
                             <div class="relative" style="height: 250px;">
                                 <canvas id="xray-c-weekday"></canvas>
                             </div>
@@ -494,7 +491,7 @@ export const getPerformanceHTML = () => {
                         
                         <!-- Semana vs Fim de Semana por Hora -->
                         <div class="glass-panel p-6 rounded-2xl">
-                            <h6 class="text-xs uppercase mb-4 text-adaptive-muted" style="font-family: 'Archivo', sans-serif; font-weight: 600; font-stretch: 130%; letter-spacing: 0.3em;">Semana vs Fim de Semana</h6>
+                            <h6 class="ds-chart-title mb-4">Semana vs Fim de Semana</h6>
                             <div class="relative" style="height: 250px;">
                                 <canvas id="xray-c-weektype"></canvas>
                             </div>
@@ -507,7 +504,7 @@ export const getPerformanceHTML = () => {
             <div class="anim-cascade delay-2 glass-panel p-8 md:p-10 rounded-[2.5rem] mb-8">
                 <div class="mb-6">
                     <h4 class="ds-chart-title mb-2">Eficiência por Aparelho</h4>
-                    <p class="text-xs text-adaptive-muted uppercase tracking-wider">Interações por unidade ativa (ROI de exposição)</p>
+                    <p class="ds-chart-subtitle text-adaptive-muted">Interações por unidade ativa (ROI de exposição)</p>
                 </div>
                 <div class="chart-container relative" style="height: 400px;">
                     <canvas id="perf-c-efficiency"></canvas>
@@ -518,7 +515,7 @@ export const getPerformanceHTML = () => {
             <div class="anim-cascade delay-3 glass-panel p-8 md:p-10 rounded-[2.5rem] mb-8">
                 <div class="mb-6">
                     <h4 class="ds-chart-title mb-2">Performance Média de Interação</h4>
-                    <p class="text-xs text-adaptive-muted uppercase tracking-wider">Último dia vs média do período selecionado</p>
+                    <p class="ds-chart-subtitle text-adaptive-muted">Último dia vs média do período selecionado</p>
                 </div>
                 <div id="perf-growth-container">
                     <div class="chart-loading"><div class="spinner"></div></div>
@@ -537,7 +534,7 @@ export const getPerformanceHTML = () => {
                     
                     <!-- Painel de Informações (inicialmente oculto) -->
                     <div id="health-info-panel" class="info-hidden">
-                        <p class="text-xs text-adaptive-muted uppercase tracking-wider mb-4">Índice composto baseado em 3 pilares fundamentais</p>
+                        <p class="ds-chart-subtitle text-adaptive-muted mb-4">Índice composto baseado em 3 pilares fundamentais</p>
                         
                         <!-- Explicação dos Componentes -->
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 glass-panel rounded-xl">
@@ -595,7 +592,7 @@ export const getPerformanceHTML = () => {
                                         stroke-dasharray="219.8"
                                         stroke-dashoffset="219.8"
                                         transform="rotate(-90 50 50)"></circle>
-                                <text id="store-report-score" class="gauge-text" x="50" y="58" text-anchor="middle" style="font-size: 20px;">-</text>
+                                <text id="store-report-score" class="gauge-text ds-gauge-text" x="50" y="58" text-anchor="middle" style="font-size: 20px;">-</text>
                             </svg>
                         </div>
                     </div>
@@ -616,20 +613,20 @@ export const getPerformanceHTML = () => {
                             <div class="space-y-3">
                                 <div class="flex justify-between">
                                     <span class="text-xs text-adaptive-muted">Interações da loja:</span>
-                                    <span id="audit-store-sessions" class="text-xs font-bold text-adaptive" style="font-family: 'Michroma', sans-serif;">-</span>
+                                    <span id="audit-store-sessions" class="text-xs font-bold text-adaptive font-numbers">-</span>
                                 </div>
                                 <div class="flex justify-between">
                                     <span class="text-xs text-adaptive-muted">Máximo do período:</span>
-                                    <span id="audit-max-sessions" class="text-xs font-bold text-adaptive" style="font-family: 'Michroma', sans-serif;">-</span>
+                                    <span id="audit-max-sessions" class="text-xs font-bold text-adaptive font-numbers">-</span>
                                 </div>
                                 <div class="flex justify-between">
                                     <span class="text-xs text-adaptive-muted">Percentual:</span>
-                                    <span id="audit-volume-percent" class="text-xs font-bold text-adaptive" style="font-family: 'Michroma', sans-serif;">-</span>
+                                    <span id="audit-volume-percent" class="text-xs font-bold text-adaptive font-numbers">-</span>
                                 </div>
                                 <hr class="border-white/10">
                                 <div class="flex justify-between">
                                     <span class="text-sm font-bold text-adaptive">Pontuação:</span>
-                                    <span id="audit-volume-score" class="text-sm font-black text-blue-500" style="font-family: 'Michroma', sans-serif;">-/40</span>
+                                    <span id="audit-volume-score" class="text-sm font-black text-blue-500 font-numbers">-/40</span>
                                 </div>
                             </div>
                         </div>
@@ -648,20 +645,20 @@ export const getPerformanceHTML = () => {
                             <div class="space-y-3">
                                 <div class="flex justify-between">
                                     <span class="text-xs text-adaptive-muted">Aparelhos da loja:</span>
-                                    <span id="audit-store-devices" class="text-xs font-bold text-adaptive" style="font-family: 'Michroma', sans-serif;">-</span>
+                                    <span id="audit-store-devices" class="text-xs font-bold text-adaptive font-numbers">-</span>
                                 </div>
                                 <div class="flex justify-between">
                                     <span class="text-xs text-adaptive-muted">Máximo do período:</span>
-                                    <span id="audit-max-devices" class="text-xs font-bold text-adaptive" style="font-family: 'Michroma', sans-serif;">-</span>
+                                    <span id="audit-max-devices" class="text-xs font-bold text-adaptive font-numbers">-</span>
                                 </div>
                                 <div class="flex justify-between">
                                     <span class="text-xs text-adaptive-muted">Percentual:</span>
-                                    <span id="audit-diversity-percent" class="text-xs font-bold text-adaptive" style="font-family: 'Michroma', sans-serif;">-</span>
+                                    <span id="audit-diversity-percent" class="text-xs font-bold text-adaptive font-numbers">-</span>
                                 </div>
                                 <hr class="border-white/10">
                                 <div class="flex justify-between">
                                     <span class="text-sm font-bold text-adaptive">Pontuação:</span>
-                                    <span id="audit-diversity-score" class="text-sm font-black text-purple-500" style="font-family: 'Michroma', sans-serif;">-/30</span>
+                                    <span id="audit-diversity-score" class="text-sm font-black text-purple-500 font-numbers">-/30</span>
                                 </div>
                             </div>
                         </div>
@@ -680,20 +677,20 @@ export const getPerformanceHTML = () => {
                             <div class="space-y-3">
                                 <div class="flex justify-between">
                                     <span class="text-xs text-adaptive-muted">Média diária:</span>
-                                    <span id="audit-daily-avg" class="text-xs font-bold text-adaptive" style="font-family: 'Michroma', sans-serif;">-</span>
+                                    <span id="audit-daily-avg" class="text-xs font-bold text-adaptive font-numbers">-</span>
                                 </div>
                                 <div class="flex justify-between">
                                     <span class="text-xs text-adaptive-muted">Desvio padrão:</span>
-                                    <span id="audit-daily-std" class="text-xs font-bold text-adaptive" style="font-family: 'Michroma', sans-serif;">-</span>
+                                    <span id="audit-daily-std" class="text-xs font-bold text-adaptive font-numbers">-</span>
                                 </div>
                                 <div class="flex justify-between">
                                     <span class="text-xs text-adaptive-muted">Coef. variação:</span>
-                                    <span id="audit-consistency-cv" class="text-xs font-bold text-adaptive" style="font-family: 'Michroma', sans-serif;">-</span>
+                                    <span id="audit-consistency-cv" class="text-xs font-bold text-adaptive font-numbers">-</span>
                                 </div>
                                 <hr class="border-white/10">
                                 <div class="flex justify-between">
                                     <span class="text-sm font-bold text-adaptive">Pontuação:</span>
-                                    <span id="audit-consistency-score" class="text-sm font-black text-green-500" style="font-family: 'Michroma', sans-serif;">-/30</span>
+                                    <span id="audit-consistency-score" class="text-sm font-black text-green-500 font-numbers">-/30</span>
                                 </div>
                             </div>
                         </div>
@@ -705,19 +702,19 @@ export const getPerformanceHTML = () => {
                         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
                             <div>
                                 <p class="text-xs text-adaptive-muted mb-1">Volume</p>
-                                <p id="final-volume-score" class="text-xl font-black text-blue-500" style="font-family: 'Michroma', sans-serif;">-</p>
+                                <p id="final-volume-score" class="text-xl font-black text-blue-500 font-numbers">-</p>
                             </div>
                             <div>
                                 <p class="text-xs text-adaptive-muted mb-1">Diversidade</p>
-                                <p id="final-diversity-score" class="text-xl font-black text-purple-500" style="font-family: 'Michroma', sans-serif;">-</p>
+                                <p id="final-diversity-score" class="text-xl font-black text-purple-500 font-numbers">-</p>
                             </div>
                             <div>
                                 <p class="text-xs text-adaptive-muted mb-1">Consistência</p>
-                                <p id="final-consistency-score" class="text-xl font-black text-green-500" style="font-family: 'Michroma', sans-serif;">-</p>
+                                <p id="final-consistency-score" class="text-xl font-black text-green-500 font-numbers">-</p>
                             </div>
                             <div class="border-l border-white/20 pl-4">
                                 <p class="text-xs text-adaptive-muted mb-1">Score Total</p>
-                                <p id="final-total-score" class="text-2xl font-black text-[#685BC7]" style="font-family: 'Michroma', sans-serif;">-</p>
+                                <p id="final-total-score" class="text-2xl font-black text-[#685BC7] font-numbers">-</p>
                             </div>
                         </div>
                     </div>
@@ -822,11 +819,11 @@ function renderTop10(data) {
             <div class="ranking-row ranking-row-clickable flex items-center gap-5 p-5 rounded-xl" data-store="${item.store_name}" data-total="${item.total}">
                 <div class="rank-badge ${rankClass}">${index + 1}</div>
                 <div class="flex-1 min-w-0">
-                    <p class="text-sm text-adaptive" style="font-family: 'Archivo', sans-serif; font-weight: 200; word-wrap: break-word; overflow-wrap: break-word;">${item.store_name}</p>
+                    <p class="ds-table-cell text-sm" style="font-weight: 200; word-wrap: break-word; overflow-wrap: break-word;">${item.store_name}</p>
                 </div>
                 <div class="text-right">
-                    <p class="text-lg font-black text-adaptive" style="font-family: 'Michroma', sans-serif;">${Math.round(item.total).toLocaleString('pt-BR')}</p>
-                    <p class="text-[10px] text-adaptive-muted uppercase" style="font-family: 'Archivo', sans-serif;">interações</p>
+                    <p class="text-lg font-black text-adaptive font-numbers">${Math.round(item.total).toLocaleString('pt-BR')}</p>
+                    <p class="ds-chart-subtitle text-adaptive-muted">interações</p>
                 </div>
             </div>
         `;
@@ -853,11 +850,11 @@ function renderBottom10(data) {
             <div class="ranking-row ranking-row-clickable flex items-center gap-5 p-5 rounded-xl opacity-70" data-store="${item.store_name}" data-total="${item.total}">
                 <div class="rank-badge rank-default">${index + 1}</div>
                 <div class="flex-1 min-w-0">
-                    <p class="text-sm text-adaptive" style="font-family: 'Archivo', sans-serif; font-weight: 200; word-wrap: break-word; overflow-wrap: break-word;">${item.store_name}</p>
+                    <p class="ds-table-cell text-sm" style="font-weight: 200; word-wrap: break-word; overflow-wrap: break-word;">${item.store_name}</p>
                 </div>
                 <div class="text-right">
-                    <p class="text-lg font-black text-adaptive" style="font-family: 'Michroma', sans-serif;">${Math.round(item.total).toLocaleString('pt-BR')}</p>
-                    <p class="text-[10px] text-adaptive-muted uppercase" style="font-family: 'Archivo', sans-serif;">interações</p>
+                    <p class="text-lg font-black text-adaptive font-numbers">${Math.round(item.total).toLocaleString('pt-BR')}</p>
+                    <p class="ds-chart-subtitle text-adaptive-muted">interações</p>
                 </div>
             </div>
         `;
@@ -1105,21 +1102,21 @@ function renderGrowthTrends(data) {
                 
                 html += `
                     <div class="glass-panel p-6 rounded-2xl growth-card">
-                        <p class="text-xs font-bold text-adaptive-muted uppercase tracking-wider mb-2" style="font-family: 'Archivo', sans-serif; font-weight: 300; font-stretch: 140%;">${item.aparelho}</p>
+                        <p class="ds-chart-subtitle text-adaptive-muted mb-2">${item.aparelho}</p>
                         <div class="flex items-center justify-between mb-2">
                             <span class="trend-arrow ${trendClass}">
                                 <span style="font-size: 24px;">${arrow}</span>
-                                <span style="font-family: 'Michroma', sans-serif;">${isPositive ? '+' : ''}${growth.toFixed(1)}%</span>
+                                <span class="font-numbers">${isPositive ? '+' : ''}${growth.toFixed(1)}%</span>
                             </span>
                         </div>
                         <div class="text-[9px] text-adaptive-muted mb-4" style="font-family: 'Archivo', sans-serif;">
                             <div class="flex justify-between">
                                 <span>Último dia (${formatDate(lastDate)}):</span>
-                                <span style="font-family: 'Michroma', sans-serif;">${Math.round(lastDayValue).toLocaleString('pt-BR')}</span>
+                                <span class="font-numbers">${Math.round(lastDayValue).toLocaleString('pt-BR')}</span>
                             </div>
                             <div class="flex justify-between">
                                 <span>Média (${totalDays} dias):</span>
-                                <span style="font-family: 'Michroma', sans-serif;">${Math.round(avgValue).toLocaleString('pt-BR')}</span>
+                                <span class="font-numbers">${Math.round(avgValue).toLocaleString('pt-BR')}</span>
                             </div>
                         </div>
                         
@@ -1307,7 +1304,7 @@ function renderHealthScores(data) {
                  data-max-aparelhos="${globalMaxAparelhos}"
                  data-avg-daily="${item.avg_daily_sessions || 0}"
                  data-stddev-daily="${item.stddev_daily_sessions || 0}">
-                <p class="text-xs font-bold text-adaptive-muted uppercase tracking-wider mb-3 truncate" style="font-family: 'Archivo', sans-serif;">${item.store_name}</p>
+                <p class="ds-chart-subtitle text-adaptive-muted mb-3 truncate">${item.store_name}</p>
                 <svg class="health-gauge" viewBox="0 0 60 60">
                     <circle class="gauge-bg" cx="30" cy="30" r="25"></circle>
                     <circle class="gauge-fill" cx="30" cy="30" r="25" 
@@ -1315,9 +1312,9 @@ function renderHealthScores(data) {
                             stroke-dasharray="${circumference}"
                             stroke-dashoffset="${offset}"
                             transform="rotate(-90 30 30)"></circle>
-                    <text class="gauge-text" x="30" y="36" text-anchor="middle" style="font-size: 14px;">${Math.round(score)}</text>
+                    <text class="gauge-text ds-gauge-text" x="30" y="36" text-anchor="middle" style="font-size: 14px;">${Math.round(score)}</text>
                 </svg>
-                <p class="text-[9px] text-adaptive-muted mt-2 uppercase" style="font-family: 'Archivo', sans-serif;">Score de Saúde</p>
+                <p class="ds-chart-subtitle text-adaptive-muted mt-2">Score de Saúde</p>
             </div>
         `;
     });
@@ -1603,7 +1600,7 @@ function renderXrayDevices(data) {
                     <div class="xray-device-bar-fill" style="width: ${pct}%"></div>
                     <span class="xray-device-bar-label">${item.aparelho}</span>
                 </div>
-                <span class="text-sm text-adaptive" style="font-family: 'Michroma', sans-serif; min-width: 60px; text-align: right;">${Math.round(item.total).toLocaleString('pt-BR')}</span>
+                <span class="text-sm text-adaptive font-numbers" style="min-width: 60px; text-align: right;">${Math.round(item.total).toLocaleString('pt-BR')}</span>
             </div>
         `;
     });

@@ -34,10 +34,6 @@ export const getPositivacaoHTML = () => {
             
             .coverage-mode-btn {
                 padding: 6px 14px;
-                font-size: 9px;
-                font-weight: 800;
-                text-transform: uppercase;
-                letter-spacing: 0.1em;
                 border-radius: 8px;
                 border: none;
                 cursor: pointer;
@@ -154,12 +150,12 @@ export const getPositivacaoHTML = () => {
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-6 shrink-0">
                     <div>
                         <h4 class="ds-chart-title mb-2">Taxa de Cobertura por Linha de Produto</h4>
-                        <p class="text-[9px] font-semibold uppercase tracking-wider text-adaptive-muted">Análise de distribuição e presença</p>
+                        <p class="ds-chart-subtitle text-adaptive-muted">Análise de distribuição e presença</p>
                     </div>
                     
                     <div class="coverage-mode-selector">
-                        <button id="coverage-mode-rede" class="coverage-mode-btn active">Por Rede</button>
-                        <button id="coverage-mode-shopping" class="coverage-mode-btn">Por Tipo de Loja</button>
+                        <button id="coverage-mode-rede" class="coverage-mode-btn ds-mode-btn active">Por Rede</button>
+                        <button id="coverage-mode-shopping" class="coverage-mode-btn ds-mode-btn">Por Tipo de Loja</button>
                     </div>
                 </div>
                 
@@ -173,10 +169,10 @@ export const getPositivacaoHTML = () => {
                     <h4 class="ds-chart-title">Matriz de Execução e Presença</h4>
                     
                     <div class="flex bg-[var(--input-bg)] p-1 rounded-2xl border border-[var(--glass-border)]">
-                        <button id="mode-store" class="px-5 py-2 text-[8px] font-bold uppercase tracking-[0.1em] rounded-xl bg-[#685BC7] text-white shadow-lg transition-all duration-300">
+                        <button id="mode-store" class="px-5 py-2 ds-mode-btn rounded-xl bg-[#685BC7] text-white shadow-lg transition-all duration-300">
                             Visão por Loja
                         </button>
-                        <button id="mode-device" class="px-5 py-2 text-[8px] font-bold uppercase tracking-[0.1em] rounded-xl text-adaptive-strong hover:text-adaptive transition-all duration-300">
+                        <button id="mode-device" class="px-5 py-2 ds-mode-btn rounded-xl text-adaptive-strong hover:text-adaptive transition-all duration-300">
                             Visão por Aparelho
                         </button>
                     </div>
@@ -393,10 +389,10 @@ function renderProductTable(table, produtos) {
     let html = `
         <thead>
             <tr>
-                <th class="p-4 text-[9px] font-black text-adaptive-muted uppercase tracking-[0.2em] border-b table-border sticky top-0 left-0 z-30 bg-sticky shadow-[2px_2px_10px_rgba(0,0,0,0.05)] w-1/4">Linha de Produto</th>
-                <th class="p-4 text-[9px] font-black text-adaptive-muted uppercase tracking-[0.2em] border-b table-border sticky top-0 z-20 bg-sticky shadow-[0_2px_10px_rgba(0,0,0,0.02)] w-1/4">Aparelho</th>
-                <th class="p-4 text-[9px] font-black text-adaptive-muted uppercase tracking-[0.2em] border-b table-border text-center sticky top-0 z-20 bg-sticky shadow-[0_2px_10px_rgba(0,0,0,0.02)] w-1/4">Ativos (Unidades)</th>
-                <th class="p-4 text-[9px] font-black text-adaptive-muted uppercase tracking-[0.2em] border-b table-border text-center sticky top-0 z-20 bg-sticky shadow-[0_2px_10px_rgba(0,0,0,0.02)] w-1/4">Presença (PDVs)</th>
+                <th class="p-4 ds-table-header border-b table-border sticky top-0 left-0 z-30 bg-sticky shadow-[2px_2px_10px_rgba(0,0,0,0.05)] w-1/4">Linha de Produto</th>
+                <th class="p-4 ds-table-header border-b table-border sticky top-0 z-20 bg-sticky shadow-[0_2px_10px_rgba(0,0,0,0.02)] w-1/4">Aparelho</th>
+                <th class="p-4 ds-table-header border-b table-border text-center sticky top-0 z-20 bg-sticky shadow-[0_2px_10px_rgba(0,0,0,0.02)] w-1/4">Ativos (Unidades)</th>
+                <th class="p-4 ds-table-header border-b table-border text-center sticky top-0 z-20 bg-sticky shadow-[0_2px_10px_rgba(0,0,0,0.02)] w-1/4">Presença (PDVs)</th>
             </tr>
         </thead>
         <tbody>
@@ -422,8 +418,8 @@ function renderProductTable(table, produtos) {
 // ==========================================
 function renderStoreMatrix(table, rows, cols, map) {
     let html = `<thead><tr>
-        <th class="p-3 md:p-4 text-[9px] font-black text-adaptive-muted uppercase tracking-[0.2em] border-b table-border sticky top-0 left-0 z-30 bg-sticky shadow-[2px_2px_10px_rgba(0,0,0,0.05)] min-w-[110px] max-w-[130px] md:min-w-auto md:max-w-none whitespace-normal md:whitespace-nowrap leading-tight">Ponto de Venda</th>`;
-    cols.forEach(c => html += `<th class="p-3 md:p-4 text-[9px] font-black text-adaptive-muted uppercase tracking-[0.1em] border-b table-border text-center min-w-[70px] md:min-w-[120px] sticky top-0 z-20 bg-sticky shadow-[0_2px_10px_rgba(0,0,0,0.02)]">${c}</th>`);
+        <th class="p-3 md:p-4 ds-table-header border-b table-border sticky top-0 left-0 z-30 bg-sticky shadow-[2px_2px_10px_rgba(0,0,0,0.05)] min-w-[110px] max-w-[130px] md:min-w-auto md:max-w-none whitespace-normal md:whitespace-nowrap leading-tight">Ponto de Venda</th>`;
+    cols.forEach(c => html += `<th class="p-3 md:p-4 ds-table-header border-b table-border text-center min-w-[70px] md:min-w-[120px] sticky top-0 z-20 bg-sticky shadow-[0_2px_10px_rgba(0,0,0,0.02)]">${c}</th>`);
     html += `</tr></thead><tbody>`;
 
     rows.forEach(r => {
@@ -445,8 +441,8 @@ function renderStoreMatrix(table, rows, cols, map) {
 
 function renderDeviceMatrix(table, rows, cols, map) {
     let html = `<thead><tr>
-        <th class="p-3 md:p-4 text-[9px] font-black text-adaptive-muted uppercase tracking-[0.2em] border-b table-border sticky top-0 left-0 z-30 bg-sticky shadow-[2px_2px_10px_rgba(0,0,0,0.05)] min-w-[110px] max-w-[130px] md:min-w-auto md:max-w-none whitespace-normal md:whitespace-nowrap leading-tight">Modelo do Aparelho</th>`;
-    cols.forEach(c => html += `<th class="p-3 md:p-4 text-[9px] font-black text-adaptive-muted uppercase tracking-[0.1em] border-b table-border text-center min-w-[70px] md:min-w-[120px] sticky top-0 z-20 bg-sticky shadow-[0_2px_10px_rgba(0,0,0,0.02)]">${c}</th>`);
+        <th class="p-3 md:p-4 ds-table-header border-b table-border sticky top-0 left-0 z-30 bg-sticky shadow-[2px_2px_10px_rgba(0,0,0,0.05)] min-w-[110px] max-w-[130px] md:min-w-auto md:max-w-none whitespace-normal md:whitespace-nowrap leading-tight">Modelo do Aparelho</th>`;
+    cols.forEach(c => html += `<th class="p-3 md:p-4 ds-table-header border-b table-border text-center min-w-[70px] md:min-w-[120px] sticky top-0 z-20 bg-sticky shadow-[0_2px_10px_rgba(0,0,0,0.02)]">${c}</th>`);
     html += `</tr></thead><tbody>`;
 
     rows.forEach(r => {
@@ -494,11 +490,11 @@ function renderCoverageTable(coberturaRede, coberturaShopping, coberturaLoja) {
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr>
-                        <th class="p-4 text-[9px] font-black text-adaptive-muted uppercase tracking-[0.2em] border-b table-border sticky top-0 left-0 z-30 bg-sticky shadow-[2px_2px_10px_rgba(0,0,0,0.05)] min-w-[150px]">Linha de Produto</th>
-                        <th class="p-4 text-[9px] font-black text-adaptive-muted uppercase tracking-[0.2em] border-b table-border sticky top-0 z-20 bg-sticky shadow-[0_2px_10px_rgba(0,0,0,0.02)] min-w-[120px]">Rede</th>
-                        <th class="p-4 text-[9px] font-black text-adaptive-muted uppercase tracking-[0.2em] border-b table-border text-center sticky top-0 z-20 bg-sticky shadow-[0_2px_10px_rgba(0,0,0,0.02)] w-[100px]">Lojas com Linha</th>
-                        <th class="p-4 text-[9px] font-black text-adaptive-muted uppercase tracking-[0.2em] border-b table-border text-center sticky top-0 z-20 bg-sticky shadow-[0_2px_10px_rgba(0,0,0,0.02)] w-[100px]">Total Lojas</th>
-                        <th class="p-4 text-[9px] font-black text-adaptive-muted uppercase tracking-[0.2em] border-b table-border sticky top-0 z-20 bg-sticky shadow-[0_2px_10px_rgba(0,0,0,0.02)] min-w-[200px]">Cobertura</th>
+                        <th class="p-4 ds-table-header border-b table-border sticky top-0 left-0 z-30 bg-sticky shadow-[2px_2px_10px_rgba(0,0,0,0.05)] min-w-[150px]">Linha de Produto</th>
+                        <th class="p-4 ds-table-header border-b table-border sticky top-0 z-20 bg-sticky shadow-[0_2px_10px_rgba(0,0,0,0.02)] min-w-[120px]">Rede</th>
+                        <th class="p-4 ds-table-header border-b table-border text-center sticky top-0 z-20 bg-sticky shadow-[0_2px_10px_rgba(0,0,0,0.02)] w-[100px]">Lojas com Linha</th>
+                        <th class="p-4 ds-table-header border-b table-border text-center sticky top-0 z-20 bg-sticky shadow-[0_2px_10px_rgba(0,0,0,0.02)] w-[100px]">Total Lojas</th>
+                        <th class="p-4 ds-table-header border-b table-border sticky top-0 z-20 bg-sticky shadow-[0_2px_10px_rgba(0,0,0,0.02)] min-w-[200px]">Cobertura</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -555,11 +551,11 @@ function renderCoverageTable(coberturaRede, coberturaShopping, coberturaLoja) {
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr>
-                        <th class="p-4 text-[9px] font-black text-adaptive-muted uppercase tracking-[0.2em] border-b table-border sticky top-0 left-0 z-30 bg-sticky shadow-[2px_2px_10px_rgba(0,0,0,0.05)] min-w-[150px]">Linha de Produto</th>
-                        <th class="p-4 text-[9px] font-black text-adaptive-muted uppercase tracking-[0.2em] border-b table-border sticky top-0 z-20 bg-sticky shadow-[0_2px_10px_rgba(0,0,0,0.02)] min-w-[120px]">Tipo de Loja</th>
-                        <th class="p-4 text-[9px] font-black text-adaptive-muted uppercase tracking-[0.2em] border-b table-border text-center sticky top-0 z-20 bg-sticky shadow-[0_2px_10px_rgba(0,0,0,0.02)] w-[100px]">Lojas com Linha</th>
-                        <th class="p-4 text-[9px] font-black text-adaptive-muted uppercase tracking-[0.2em] border-b table-border text-center sticky top-0 z-20 bg-sticky shadow-[0_2px_10px_rgba(0,0,0,0.02)] w-[100px]">Total Lojas</th>
-                        <th class="p-4 text-[9px] font-black text-adaptive-muted uppercase tracking-[0.2em] border-b table-border sticky top-0 z-20 bg-sticky shadow-[0_2px_10px_rgba(0,0,0,0.02)] min-w-[200px]">Cobertura</th>
+                        <th class="p-4 ds-table-header border-b table-border sticky top-0 left-0 z-30 bg-sticky shadow-[2px_2px_10px_rgba(0,0,0,0.05)] min-w-[150px]">Linha de Produto</th>
+                        <th class="p-4 ds-table-header border-b table-border sticky top-0 z-20 bg-sticky shadow-[0_2px_10px_rgba(0,0,0,0.02)] min-w-[120px]">Tipo de Loja</th>
+                        <th class="p-4 ds-table-header border-b table-border text-center sticky top-0 z-20 bg-sticky shadow-[0_2px_10px_rgba(0,0,0,0.02)] w-[100px]">Lojas com Linha</th>
+                        <th class="p-4 ds-table-header border-b table-border text-center sticky top-0 z-20 bg-sticky shadow-[0_2px_10px_rgba(0,0,0,0.02)] w-[100px]">Total Lojas</th>
+                        <th class="p-4 ds-table-header border-b table-border sticky top-0 z-20 bg-sticky shadow-[0_2px_10px_rgba(0,0,0,0.02)] min-w-[200px]">Cobertura</th>
                     </tr>
                 </thead>
                 <tbody>

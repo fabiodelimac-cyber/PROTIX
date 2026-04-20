@@ -22,21 +22,72 @@
 
         /* =============================================
            DESIGN SYSTEM: TYPOGRAPHY
+           Bloco centralizado de tipografia.
+           Todas as views referenciam estas classes.
         ============================================= */
+
+        /* Títulos principais de seção/página (ex: "Seja bem-vindo(a)!", "Heatmap Operacional", "Módulo em Desenvolvimento") */
         .ds-title { font-family: 'Archivo', sans-serif; font-size: 26px; font-weight: 300; font-stretch: 125%; letter-spacing: -0.02em; color: var(--text-main); }
+
+        /* Títulos de gráficos e seções de cards (ex: "Frequência de Interação por Hora", "Ranking de PDVs", "Matriz de Execução") */
         .ds-chart-title { font-family: 'Archivo', sans-serif; font-size: 13px; font-weight: 600; font-stretch: 125%; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.3em; }
+
+        /* Valores numéricos grandes dos KPIs (ex: "1.234", "56") — fonte Michroma para destaque */
         .ds-kpi-value { font-family: 'Michroma', sans-serif; font-weight: 400; color: var(--text-main); }
+
+        /* Labels acima dos KPIs (ex: "Volume de Sessões", "Pontos de Venda", "Aparelhos Ativos") */
         .ds-kpi-label { font-family: 'Archivo', sans-serif; font-size: 11px; font-weight: 600; font-stretch: 125%; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.3em; }
+
+        /* Labels dos filtros globais e do heatmap (ex: "Período", "Localidade", "Modelo Alvo") */
         .ds-filter-label { font-family: 'Archivo', sans-serif; font-weight: 300; font-stretch: 110%; text-transform: uppercase; font-size: 9px; color: var(--text-main); opacity: 0.7; }
+
+        /* Texto dentro dos botões/selects de filtro (ex: valor selecionado "TODOS") */
         .ds-filter-input { font-weight: 600; font-stretch: 100%; font-size: 12px; }
+
+        /* Itens de menu lateral / sidebar (reservado para uso futuro) */
         .ds-sidebar-item { font-weight: 600; font-stretch: 100%; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+        /* Títulos dentro de tooltips e painéis auxiliares (ex: "Aparelhos Ativos por Linha de Produto" no tooltip da Overview) */
         .ds-sidebar-title { font-weight: 800; font-stretch: 100%; font-size: 9px; color: var(--text-muted-strong); text-transform: uppercase; }
+
+        /* Textos auxiliares e subtítulos discretos (ex: "Sessão iniciada com sucesso", "(12 Lojas)" na Positivação) */
         .ds-helper-text { font-weight: 400; font-stretch: 100%; font-size: 10px; text-transform: uppercase; letter-spacing: 0.2em; }
+
+        /* Inputs da tela de login (ex: campos de e-mail e senha) */
         .ds-login-input { font-weight: 600; font-stretch: 100%; font-size: 11px; }
-        .font-numbers { font-family: 'Archivo', sans-serif !important; font-stretch: 100%; }
-        
+
+        /* Classe utilitária para TODOS os números em tabelas, tooltips, badges e drilldowns — Michroma garante consistência numérica */
+        .font-numbers { font-family: 'Michroma', sans-serif !important; }
+
+        /* Pills de navegação principal e botão de logout (ex: "Visão Geral", "Positivação", "Heatmap", "Performance", "Sair") */
         .ds-nav-pill { font-family: 'Archivo', sans-serif; font-size: 12px; font-weight: 600; font-stretch: 120%; text-transform: uppercase; letter-spacing: 0.06em; }
+
+        /* E-mail do usuário logado exibido na topbar */
         .ds-user-email { font-family: 'Archivo', sans-serif; font-size: 14px; font-stretch: 140%; font-weight: 400; }
+
+        /* Subtítulos descritivos abaixo de títulos de seção (ex: "Análise de crescimento temporal", "Interações por unidade ativa") */
+        .ds-chart-subtitle { font-family: 'Archivo', sans-serif; font-size: 9px; font-weight: 600; font-stretch: 100%; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+        /* Texto de badges e tags (ex: "BETA", "INSIGHT") */
+        .ds-badge-text { font-family: 'Archivo', sans-serif; font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.2em; }
+
+        /* Cabeçalhos de tabelas (ex: colunas "Linha de Produto", "Aparelho", "Ativos", "Presença") */
+        .ds-table-header { font-family: 'Archivo', sans-serif; font-size: 9px; font-weight: 900; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.2em; }
+
+        /* Células de texto em tabelas (ex: nomes de lojas, aparelhos, redes) */
+        .ds-table-cell { font-family: 'Archivo', sans-serif; font-size: 11px; font-weight: 600; color: var(--text-main); }
+
+        /* Valores numéricos em tabelas (ex: quantidades, percentuais) — herda Michroma de .font-numbers */
+        .ds-table-value { font-family: 'Michroma', sans-serif; font-weight: 900; color: #685BC7; }
+
+        /* Texto do insight rotativo na Overview (ex: "PROSOLUTION ANALYTICS: O modelo...") */
+        .ds-insight-text { font-family: 'Archivo', sans-serif; font-size: 14px; font-weight: 500; letter-spacing: -0.01em; color: var(--text-main); }
+
+        /* Botões de alternância de modo (ex: "Dia/Semana/Mês", "Por Rede/Por Tipo de Loja", "Visão por Loja/Aparelho") */
+        .ds-mode-btn { font-family: 'Archivo', sans-serif; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; }
+
+        /* Texto do score/gauge de saúde dos PDVs (fonte Michroma para números de score) */
+        .ds-gauge-text { font-family: 'Michroma', sans-serif; font-weight: 900; fill: var(--text-main); }
 
         /* =============================================
            CANVAS EXTERNA

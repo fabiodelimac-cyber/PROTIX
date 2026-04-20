@@ -90,10 +90,6 @@ export const getOverviewHTML = () => {
             
             .growth-period-btn {
                 padding: 6px 14px;
-                font-size: 9px;
-                font-weight: 800;
-                text-transform: uppercase;
-                letter-spacing: 0.1em;
                 border-radius: 8px;
                 border: none;
                 cursor: pointer;
@@ -190,8 +186,8 @@ export const getOverviewHTML = () => {
             ` : ''}
 
             <div id="insight-box" class="anim-cascade delay-1 glass-panel p-5 md:p-6 rounded-2xl flex items-center gap-5 mb-6 md:mb-8 transition-all">
-                <div class="bg-gradient-to-br from-[#685BC7] to-[#8b5cf6] px-4 py-2 rounded-xl text-white font-black text-[9px] uppercase tracking-[0.2em] shadow-lg shadow-[#685BC7]/30 shrink-0">INSIGHT</div>
-                <p id="insight-text" class="text-sm md:text-base font-medium tracking-tight text-adaptive italic"></p>
+                <div class="bg-gradient-to-br from-[#685BC7] to-[#8b5cf6] px-4 py-2 rounded-xl text-white ds-badge-text shadow-lg shadow-[#685BC7]/30 shrink-0">INSIGHT</div>
+                <p id="insight-text" class="ds-insight-text text-sm md:text-base italic"></p>
             </div>
 
             <div class="anim-cascade delay-2 glass-panel rounded-[2.5rem] mb-8 md:mb-10 flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-adaptive relative z-50">
@@ -227,13 +223,13 @@ export const getOverviewHTML = () => {
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                     <div>
                         <h4 id="title-growth" class="ds-chart-title mb-2">Evolução de Interações por Semana</h4>
-                        <p id="subtitle-growth" class="text-[9px] font-semibold uppercase tracking-wider text-adaptive-muted">Análise de crescimento temporal</p>
+                        <p id="subtitle-growth" class="ds-chart-subtitle text-adaptive-muted">Análise de crescimento temporal</p>
                     </div>
                     
                     <div class="growth-period-selector">
-                        <button id="growth-mode-day" class="growth-period-btn">Dia</button>
-                        <button id="growth-mode-week" class="growth-period-btn active">Semana</button>
-                        <button id="growth-mode-month" class="growth-period-btn">Mês</button>
+                        <button id="growth-mode-day" class="growth-period-btn ds-mode-btn">Dia</button>
+                        <button id="growth-mode-week" class="growth-period-btn ds-mode-btn active">Semana</button>
+                        <button id="growth-mode-month" class="growth-period-btn ds-mode-btn">Mês</button>
                     </div>
                 </div>
                 <div class="chart-container" style="height: 320px;"><canvas id="c-growth"></canvas></div>
