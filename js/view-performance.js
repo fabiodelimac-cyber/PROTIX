@@ -338,28 +338,166 @@ export const getPerformanceHTML = () => {
             #health-detail-modal.show {
                 display: flex !important;
             }
+            
+            /* Ranking Detail (Raio-X) */
+            #ranking-detail-view {
+                animation: slideInFromRight 0.4s ease-out;
+            }
+            
+            #ranking-detail-view.slide-out {
+                animation: slideOutToRight 0.4s ease-in forwards;
+            }
+            
+            #ranking-cards-view.hidden {
+                display: none;
+            }
+            
+            #ranking-cards-view.slide-in {
+                animation: slideInFromLeft 0.4s ease-out;
+            }
+            
+            /* Ranking row clickable */
+            .ranking-row-clickable {
+                cursor: pointer;
+            }
+            
+            .ranking-row-clickable:hover {
+                background: rgba(104, 91, 199, 0.15) !important;
+                transform: translateX(6px) !important;
+            }
+            
+            /* Xray device bar */
+            .xray-device-row {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 8px 0;
+            }
+            
+            .xray-device-bar-bg {
+                flex: 1;
+                height: 24px;
+                background: var(--glass-border);
+                border-radius: 6px;
+                overflow: hidden;
+                position: relative;
+            }
+            
+            .xray-device-bar-fill {
+                height: 100%;
+                border-radius: 6px;
+                background: linear-gradient(90deg, #685BC7, #8b7be8);
+                transition: width 0.6s ease;
+                min-width: 2px;
+            }
+            
+            .xray-device-bar-label {
+                position: absolute;
+                left: 8px;
+                top: 50%;
+                transform: translateY(-50%);
+                font-size: 10px;
+                font-weight: 600;
+                color: #fff;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: calc(100% - 16px);
+                font-family: 'Archivo', sans-serif;
+            }
+            
+            #xray-devices-container::-webkit-scrollbar {
+                width: 4px;
+            }
+            
+            #xray-devices-container::-webkit-scrollbar-track {
+                background: var(--glass-border);
+                border-radius: 2px;
+            }
+            
+            #xray-devices-container::-webkit-scrollbar-thumb {
+                background: var(--text-muted);
+                border-radius: 2px;
+            }
         </style>
         
         <div id="view-performance-wrapper" class="pb-10 overflow-hidden">
             
             <!-- Ranking de PDVs -->
             <div class="anim-cascade delay-1 glass-panel p-8 md:p-10 rounded-[2.5rem] mb-8">
-                <h4 class="ds-chart-title mb-6">Ranking de PDVs</h4>
+                <h4 id="ranking-section-title" class="ds-chart-title mb-6" style="transition: opacity 0.3s ease, transform 0.3s ease;">Ranking de PDVs</h4>
                 
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <!-- Top 10 -->
-                    <div>
-                        <h5 class="text-sm uppercase tracking-wider mb-4 text-adaptive-muted" style="font-family: 'Archivo', sans-serif; font-weight: 200; font-stretch: 120%;">🏆 Top 10 Lojas</h5>
-                        <div id="perf-top10-container" class="space-y-2">
-                            <div class="chart-loading"><div class="spinner"></div></div>
+                <!-- View padrão: Top10 + Bottom10 -->
+                <div id="ranking-cards-view">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <!-- Top 10 -->
+                        <div>
+                            <h5 class="text-sm uppercase tracking-wider mb-4 text-adaptive-muted" style="font-family: 'Archivo', sans-serif; font-weight: 200; font-stretch: 120%;">🏆 Top 10 Lojas</h5>
+                            <div id="perf-top10-container" class="space-y-2">
+                                <div class="chart-loading"><div class="spinner"></div></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Bottom 10 -->
+                        <div>
+                            <h5 class="text-sm uppercase tracking-wider mb-4 text-adaptive-muted" style="font-family: 'Archivo', sans-serif; font-weight: 200; font-stretch: 120%;">⚠️ Bottom 10 Lojas</h5>
+                            <div id="perf-bottom10-container" class="space-y-2">
+                                <div class="chart-loading"><div class="spinner"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- View expandida: Raio-X do PDV -->
+                <div id="ranking-detail-view" class="hidden">
+                    <div class="flex items-center gap-4 mb-8">
+                        <button id="ranking-back-btn" class="flex items-center gap-2 px-4 py-2 glass-panel rounded-xl hover:bg-white/10 transition-colors cursor-pointer">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                            </svg>
+                            <span class="text-sm font-bold text-adaptive" style="font-family: 'Archivo', sans-serif;">Voltar</span>
+                        </button>
+                        <div class="flex-1">
+                            <h5 id="xray-store-title" class="text-adaptive" style="font-family: 'Archivo', sans-serif; font-weight: 600; font-stretch: 140%; font-size: 1.4rem;">-</h5>
+                        </div>
+                        <div class="text-right">
+                            <p id="xray-total-sessions" class="text-2xl text-adaptive" style="font-family: 'Michroma', sans-serif;">-</p>
+                            <p class="text-[10px] text-adaptive-muted uppercase" style="font-family: 'Archivo', sans-serif;">total interações</p>
                         </div>
                     </div>
                     
-                    <!-- Bottom 10 -->
-                    <div>
-                        <h5 class="text-sm uppercase tracking-wider mb-4 text-adaptive-muted" style="font-family: 'Archivo', sans-serif; font-weight: 200; font-stretch: 120%;">⚠️ Bottom 10 Lojas</h5>
-                        <div id="perf-bottom10-container" class="space-y-2">
-                            <div class="chart-loading"><div class="spinner"></div></div>
+                    <!-- Grid de gráficos do Raio-X -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Aparelhos Ativos -->
+                        <div class="glass-panel p-6 rounded-2xl">
+                            <h6 class="text-xs uppercase mb-4 text-adaptive-muted" style="font-family: 'Archivo', sans-serif; font-weight: 600; font-stretch: 130%; letter-spacing: 0.3em;">Aparelhos Ativos</h6>
+                            <div id="xray-devices-container" class="space-y-2 max-h-[280px] overflow-y-auto pr-1">
+                                <div class="chart-loading"><div class="spinner"></div></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Fluxo por Hora -->
+                        <div class="glass-panel p-6 rounded-2xl">
+                            <h6 class="text-xs uppercase mb-4 text-adaptive-muted" style="font-family: 'Archivo', sans-serif; font-weight: 600; font-stretch: 130%; letter-spacing: 0.3em;">Fluxo de Interações por Hora</h6>
+                            <div class="relative" style="height: 250px;">
+                                <canvas id="xray-c-hourly"></canvas>
+                            </div>
+                        </div>
+                        
+                        <!-- Interações por Dia da Semana -->
+                        <div class="glass-panel p-6 rounded-2xl">
+                            <h6 class="text-xs uppercase mb-4 text-adaptive-muted" style="font-family: 'Archivo', sans-serif; font-weight: 600; font-stretch: 130%; letter-spacing: 0.3em;">Interações por Dia da Semana</h6>
+                            <div class="relative" style="height: 250px;">
+                                <canvas id="xray-c-weekday"></canvas>
+                            </div>
+                        </div>
+                        
+                        <!-- Semana vs Fim de Semana por Hora -->
+                        <div class="glass-panel p-6 rounded-2xl">
+                            <h6 class="text-xs uppercase mb-4 text-adaptive-muted" style="font-family: 'Archivo', sans-serif; font-weight: 600; font-stretch: 130%; letter-spacing: 0.3em;">Semana vs Fim de Semana</h6>
+                            <div class="relative" style="height: 250px;">
+                                <canvas id="xray-c-weektype"></canvas>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -611,6 +749,9 @@ export const destroyPerformanceCharts = () => {
     });
     chartInstances = {};
     
+    // Destroi gráficos do raio-x
+    destroyXrayCharts();
+    
     if (unsubscribeData) {
         unsubscribeData();
         unsubscribeData = null;
@@ -619,6 +760,22 @@ export const destroyPerformanceCharts = () => {
 
 async function executeRenderLogic() {
     const renderToken = ++currentRenderToken;
+    
+    // Se o raio-x está aberto, fecha e volta para os cards
+    const rankingDetailView = document.getElementById('ranking-detail-view');
+    const rankingCardsView = document.getElementById('ranking-cards-view');
+    if (rankingDetailView && !rankingDetailView.classList.contains('hidden')) {
+        destroyXrayCharts();
+        rankingDetailView.classList.add('hidden');
+        if (rankingCardsView) rankingCardsView.classList.remove('hidden');
+        // Restaura o título da seção
+        const sectionTitle = document.getElementById('ranking-section-title');
+        if (sectionTitle) {
+            sectionTitle.style.opacity = '1';
+            sectionTitle.style.transform = 'translateX(0)';
+            sectionTitle.textContent = 'Ranking de PDVs';
+        }
+    }
     
     try {
         const dbData = await appData.fetchPerformanceRPC();
@@ -662,7 +819,7 @@ function renderTop10(data) {
     data.forEach((item, index) => {
         const rankClass = index === 0 ? 'rank-gold' : index === 1 ? 'rank-silver' : index === 2 ? 'rank-bronze' : 'rank-default';
         html += `
-            <div class="ranking-row flex items-center gap-5 p-5 rounded-xl">
+            <div class="ranking-row ranking-row-clickable flex items-center gap-5 p-5 rounded-xl" data-store="${item.store_name}" data-total="${item.total}">
                 <div class="rank-badge ${rankClass}">${index + 1}</div>
                 <div class="flex-1 min-w-0">
                     <p class="text-sm text-adaptive" style="font-family: 'Archivo', sans-serif; font-weight: 200; word-wrap: break-word; overflow-wrap: break-word;">${item.store_name}</p>
@@ -676,6 +833,11 @@ function renderTop10(data) {
     });
     
     container.innerHTML = html;
+    
+    // Adiciona click listeners
+    container.querySelectorAll('.ranking-row-clickable').forEach(row => {
+        row.addEventListener('click', () => openStoreXray(row.dataset.store));
+    });
 }
 
 function renderBottom10(data) {
@@ -688,7 +850,7 @@ function renderBottom10(data) {
     let html = '';
     data.forEach((item, index) => {
         html += `
-            <div class="ranking-row flex items-center gap-5 p-5 rounded-xl opacity-70">
+            <div class="ranking-row ranking-row-clickable flex items-center gap-5 p-5 rounded-xl opacity-70" data-store="${item.store_name}" data-total="${item.total}">
                 <div class="rank-badge rank-default">${index + 1}</div>
                 <div class="flex-1 min-w-0">
                     <p class="text-sm text-adaptive" style="font-family: 'Archivo', sans-serif; font-weight: 200; word-wrap: break-word; overflow-wrap: break-word;">${item.store_name}</p>
@@ -702,6 +864,11 @@ function renderBottom10(data) {
     });
     
     container.innerHTML = html;
+    
+    // Adiciona click listeners
+    container.querySelectorAll('.ranking-row-clickable').forEach(row => {
+        row.addEventListener('click', () => openStoreXray(row.dataset.store));
+    });
 }
 
 function renderEfficiencyChart(data) {
@@ -1295,6 +1462,377 @@ function showStoreReport(card) {
             }, 400); // Tempo da animação de saída
         });
     }
+}
+
+// ========== RAIO-X DO PDV ==========
+
+let xrayChartInstances = {};
+
+const xrayCrosshairPlugin = {
+    id: 'xrayCrosshair',
+    afterDraw: chart => {
+        if (chart.config.type !== 'line') return;
+        if (chart.tooltip && chart.tooltip._active && chart.tooltip._active.length) {
+            const isDark = document.body.classList.contains('dark');
+            const activePoint = chart.tooltip._active[0];
+            const ctx = chart.ctx;
+            const x = activePoint.element.x;
+            const topY = chart.scales.y.top;
+            const bottomY = chart.scales.y.bottom;
+            ctx.save(); ctx.beginPath(); ctx.moveTo(x, topY); ctx.lineTo(x, bottomY);
+            ctx.lineWidth = 1; ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.15)';
+            ctx.setLineDash([4, 4]); ctx.stroke(); ctx.restore();
+        }
+    }
+};
+
+function destroyXrayCharts() {
+    Object.keys(xrayChartInstances).forEach(id => {
+        if (xrayChartInstances[id]) xrayChartInstances[id].destroy();
+    });
+    xrayChartInstances = {};
+}
+
+function animateRankingTitle(newText) {
+    const titleEl = document.getElementById('ranking-section-title');
+    if (!titleEl) return;
+    
+    // Fade out + slide para a esquerda
+    titleEl.style.opacity = '0';
+    titleEl.style.transform = 'translateX(-20px)';
+    
+    setTimeout(() => {
+        titleEl.textContent = newText;
+        // Posiciona do lado direito antes de entrar
+        titleEl.style.transform = 'translateX(20px)';
+        
+        // Força reflow para a transição funcionar
+        void titleEl.offsetWidth;
+        
+        // Fade in + slide para o centro
+        titleEl.style.opacity = '1';
+        titleEl.style.transform = 'translateX(0)';
+    }, 300);
+}
+
+async function openStoreXray(storeName) {
+    const cardsView = document.getElementById('ranking-cards-view');
+    const detailView = document.getElementById('ranking-detail-view');
+    
+    if (!cardsView || !detailView) return;
+    
+    // Anima o título da seção: "Ranking de PDVs" → "X-Ray"
+    animateRankingTitle('X-Ray');
+    
+    // Mostra o detail view
+    cardsView.classList.add('hidden');
+    detailView.classList.remove('hidden');
+    detailView.classList.remove('slide-out');
+    
+    // Atualiza título
+    const titleEl = document.getElementById('xray-store-title');
+    const totalEl = document.getElementById('xray-total-sessions');
+    if (titleEl) titleEl.textContent = storeName;
+    if (totalEl) totalEl.textContent = '...';
+    
+    // Mostra loading nos containers
+    document.getElementById('xray-devices-container').innerHTML = '<div class="chart-loading"><div class="spinner"></div></div>';
+    
+    // Destroi gráficos anteriores
+    destroyXrayCharts();
+    
+    // Configura botão voltar
+    const backBtn = document.getElementById('ranking-back-btn');
+    if (backBtn) {
+        const newBackBtn = backBtn.cloneNode(true);
+        backBtn.parentNode.replaceChild(newBackBtn, backBtn);
+        
+        newBackBtn.addEventListener('click', () => {
+            // Anima o título de volta: "X-Ray" → "Ranking de PDVs"
+            animateRankingTitle('Ranking de PDVs');
+            
+            detailView.classList.add('slide-out');
+            setTimeout(() => {
+                detailView.classList.add('hidden');
+                detailView.classList.remove('slide-out');
+                cardsView.classList.remove('hidden');
+                cardsView.classList.add('slide-in');
+                setTimeout(() => cardsView.classList.remove('slide-in'), 400);
+            }, 400);
+        });
+    }
+    
+    // Busca dados do raio-x
+    const data = await appData.fetchStoreXrayRPC(storeName);
+    
+    if (!data) {
+        document.getElementById('xray-devices-container').innerHTML = '<p class="text-adaptive-muted text-sm italic">Erro ao carregar dados</p>';
+        return;
+    }
+    
+    // Total de interações
+    if (totalEl) {
+        const total = data.total_sessions || 0;
+        totalEl.textContent = Math.round(total).toLocaleString('pt-BR');
+    }
+    
+    // Renderiza cada seção
+    renderXrayDevices(data.aparelhos || []);
+    renderXrayHourly(data.hourly || []);
+    renderXrayWeekday(data.weekday || []);
+    renderXrayWeektype(data.weektype || []);
+}
+
+function renderXrayDevices(data) {
+    const container = document.getElementById('xray-devices-container');
+    if (!container) return;
+    
+    if (data.length === 0) {
+        container.innerHTML = '<p class="text-adaptive-muted text-sm italic" style="font-family: \'Archivo\', sans-serif;">Nenhum aparelho encontrado</p>';
+        return;
+    }
+    
+    const maxTotal = Math.max(...data.map(d => d.total));
+    
+    let html = '';
+    data.forEach(item => {
+        const pct = maxTotal > 0 ? (item.total / maxTotal * 100) : 0;
+        html += `
+            <div class="xray-device-row">
+                <div class="xray-device-bar-bg">
+                    <div class="xray-device-bar-fill" style="width: ${pct}%"></div>
+                    <span class="xray-device-bar-label">${item.aparelho}</span>
+                </div>
+                <span class="text-sm text-adaptive" style="font-family: 'Michroma', sans-serif; min-width: 60px; text-align: right;">${Math.round(item.total).toLocaleString('pt-BR')}</span>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+function renderXrayHourly(data) {
+    const ctx = document.getElementById('xray-c-hourly');
+    if (!ctx || data.length === 0) return;
+    
+    const isDark = document.body.classList.contains('dark');
+    const labels = data.map(d => `${d.hour}h`);
+    const values = data.map(d => d.total);
+    
+    xrayChartInstances['xray-c-hourly'] = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [{
+                data: values,
+                borderColor: '#685BC7',
+                backgroundColor: 'rgba(104, 91, 199, 0.1)',
+                fill: true,
+                tension: 0.4,
+                borderWidth: 2,
+                pointRadius: 4,
+                pointHoverRadius: 7,
+                pointBackgroundColor: '#685BC7',
+                pointBorderColor: isDark ? '#121317' : '#ffffff',
+                pointBorderWidth: 2
+            }]
+        },
+        plugins: [xrayCrosshairPlugin],
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: { display: false },
+                datalabels: { display: false },
+                tooltip: {
+                    backgroundColor: isDark ? 'rgba(18,19,23,0.9)' : 'rgba(255,255,255,0.9)',
+                    titleFont: { family: 'Archivo', size: 10, weight: 800 },
+                    bodyFont: { family: 'Michroma', size: 11 },
+                    padding: 10,
+                    cornerRadius: 8,
+                    callbacks: {
+                        label: (ctx) => `${Math.round(ctx.raw).toLocaleString('pt-BR')} interações`
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.5)', font: { family: 'Archivo', size: 10, weight: 600 } },
+                    border: { display: false }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: { color: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)' },
+                    ticks: { color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.4)', font: { family: 'Michroma', size: 9 } },
+                    border: { display: false }
+                }
+            }
+        }
+    });
+}
+
+function renderXrayWeekday(data) {
+    const ctx = document.getElementById('xray-c-weekday');
+    if (!ctx || data.length === 0) return;
+    
+    const isDark = document.body.classList.contains('dark');
+    const dayOrder = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado', 'Domingo'];
+    const dayAbrev = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+    
+    const dataMap = {};
+    data.forEach(d => { dataMap[d.day_name] = d.total; });
+    
+    const labels = dayAbrev;
+    const values = dayOrder.map(d => dataMap[d] || 0);
+    
+    // Cores: fim de semana em destaque
+    const colors = dayOrder.map((_, i) => i >= 5 ? 'rgba(139, 123, 232, 0.7)' : 'rgba(104, 91, 199, 0.5)');
+    
+    xrayChartInstances['xray-c-weekday'] = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [{
+                data: values,
+                backgroundColor: colors,
+                borderWidth: 0,
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                datalabels: { display: false },
+                tooltip: {
+                    backgroundColor: isDark ? 'rgba(18,19,23,0.9)' : 'rgba(255,255,255,0.9)',
+                    titleFont: { family: 'Archivo', size: 10, weight: 800 },
+                    bodyFont: { family: 'Michroma', size: 11 },
+                    padding: 10,
+                    cornerRadius: 8,
+                    callbacks: {
+                        title: (ctx) => dayOrder[ctx[0].dataIndex],
+                        label: (ctx) => `${Math.round(ctx.raw).toLocaleString('pt-BR')} interações`
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.5)', font: { family: 'Archivo', size: 10, weight: 600 } }
+                },
+                y: {
+                    grid: { color: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)' },
+                    ticks: { color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.4)', font: { family: 'Michroma', size: 9 } }
+                }
+            }
+        }
+    });
+}
+
+function renderXrayWeektype(data) {
+    const ctx = document.getElementById('xray-c-weektype');
+    if (!ctx || data.length === 0) return;
+    
+    const isDark = document.body.classList.contains('dark');
+    
+    // Agrupa por hora e tipo
+    const hoursSet = new Set();
+    const weekdayMap = {};
+    const weekendMap = {};
+    
+    data.forEach(d => {
+        hoursSet.add(d.hour);
+        if (d.tipo === 'Dias Úteis') weekdayMap[d.hour] = d.total;
+        else weekendMap[d.hour] = d.total;
+    });
+    
+    const hours = Array.from(hoursSet).sort((a, b) => a - b);
+    const labels = hours.map(h => `${h}h`);
+    
+    xrayChartInstances['xray-c-weektype'] = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [
+                {
+                    label: 'Dias Úteis',
+                    data: hours.map(h => weekdayMap[h] || 0),
+                    borderColor: '#685BC7',
+                    backgroundColor: 'rgba(104, 91, 199, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: '#685BC7',
+                    pointBorderColor: isDark ? '#121317' : '#ffffff',
+                    pointBorderWidth: 2
+                },
+                {
+                    label: 'Fim de Semana',
+                    data: hours.map(h => weekendMap[h] || 0),
+                    borderColor: '#22c55e',
+                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: '#22c55e',
+                    pointBorderColor: isDark ? '#121317' : '#ffffff',
+                    pointBorderWidth: 2
+                }
+            ]
+        },
+        plugins: [xrayCrosshairPlugin],
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    align: 'end',
+                    labels: {
+                        color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.6)',
+                        font: { family: 'Archivo', size: 10, weight: 700 },
+                        boxWidth: 6,
+                        usePointStyle: true,
+                        padding: 12
+                    }
+                },
+                datalabels: { display: false },
+                tooltip: {
+                    backgroundColor: isDark ? 'rgba(18,19,23,0.9)' : 'rgba(255,255,255,0.9)',
+                    titleFont: { family: 'Archivo', size: 10, weight: 800 },
+                    bodyFont: { family: 'Archivo', size: 11, weight: 500 },
+                    padding: 12,
+                    cornerRadius: 8,
+                    callbacks: {
+                        label: (ctx) => `${ctx.dataset.label}: ${Math.round(ctx.raw).toLocaleString('pt-BR')} interações`
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.5)', font: { family: 'Archivo', size: 10, weight: 600 } },
+                    border: { display: false }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: { color: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)' },
+                    ticks: { color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.4)', font: { family: 'Michroma', size: 9 } },
+                    border: { display: false }
+                }
+            }
+        }
+    });
 }
 
 function updateAuditField(id, value) {

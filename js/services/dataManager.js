@@ -320,6 +320,44 @@ class DataManager {
         return null;
     }
 
+    /**
+     * Busca o raio-x detalhado de uma loja específica.
+     * Retorna: aparelhos, fluxo por hora, dia da semana, semana vs fds, linha de produto.
+     */
+    async fetchStoreXrayRPC(storeName) {
+        const params = {
+            p_shopping: this.normalizeFilterParam(this.currentFilters['shopping']),
+            p_rede: null,
+            p_store_name: this.normalizeFilterParam(storeName),
+            p_linha: this.normalizeFilterParam(this.currentFilters['linha_de_produto']),
+            p_regional: this.normalizeFilterParam(this.currentFilters['regional']),
+            p_p8020: this.normalizeFilterParam(this.currentFilters['p8020']),
+            p_visibilidade: this.normalizeFilterParam(this.currentFilters['visibilidade']),
+            p_dates: this.currentFilters['pure_date'] || null
+        };
+
+        try {
+            const freshClient = createFreshClient();
+
+            const timeoutPromise = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error("TIMEOUT_REDE")), 15000)
+            );
+
+            const dbPromise = freshClient.rpc('get_store_xray', params);
+
+            const { data, error } = await Promise.race([dbPromise, timeoutPromise]);
+
+            if (error) throw error;
+
+            console.log('✅ Store X-Ray: dados recebidos.');
+            return data;
+
+        } catch (err) {
+            console.error("🚨 Store X-Ray: erro:", err);
+            return null;
+        }
+    }
+
     setRawData(data) {
         if (!data || !Array.isArray(data)) {
             console.error("DataManager: Dados inválidos recebidos.");
