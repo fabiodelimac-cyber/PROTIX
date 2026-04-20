@@ -1169,6 +1169,24 @@ function renderHealthScores(data) {
         });
         
         console.log(`Configurados ${healthCards.length} cards de saúde`);
+        
+        // Se o detail view está aberto, atualiza com os dados novos do filtro
+        const detailView = document.getElementById('health-detail-view');
+        const titleEl = document.getElementById('store-report-title');
+        if (detailView && !detailView.classList.contains('hidden') && titleEl) {
+            const openStoreName = titleEl.textContent;
+            const updatedCard = container.querySelector(`.health-card[data-store="${openStoreName}"]`);
+            if (updatedCard) {
+                console.log(`🔄 Atualizando detail view para "${openStoreName}" com dados do filtro`);
+                showStoreReport(updatedCard);
+            } else {
+                // Loja não existe mais nos dados filtrados, volta para a lista de cards
+                console.log(`⚠️ Loja "${openStoreName}" não encontrada nos dados filtrados, voltando para cards`);
+                detailView.classList.add('hidden');
+                const cardsView = document.getElementById('health-cards-view');
+                if (cardsView) cardsView.classList.remove('hidden');
+            }
+        }
     }, 100);
 }
 

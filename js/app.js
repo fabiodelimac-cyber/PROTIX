@@ -374,6 +374,7 @@ function setupGlobalFilters() {
                 panelDate.classList.remove('panel-open');
                 newBtnDate.classList.remove('slicer-active');
             }
+            updateButtonDimState();
         });
 
         // Fecha o painel se clicar fora dele
@@ -381,6 +382,7 @@ function setupGlobalFilters() {
             if (!newBtnDate.contains(e.target) && !panelDate.contains(e.target)) {
                 panelDate.classList.remove('panel-open');
                 newBtnDate.classList.remove('slicer-active');
+                updateButtonDimState();
             }
         });
     }
@@ -402,6 +404,7 @@ function setupGlobalFilters() {
                 panelShop.classList.remove('panel-open');
                 newBtnShop.classList.remove('slicer-active');
             }
+            updateButtonDimState();
         });
 
         // Fecha o painel se clicar fora dele
@@ -409,6 +412,7 @@ function setupGlobalFilters() {
             if (!newBtnShop.contains(e.target) && !panelShop.contains(e.target)) {
                 panelShop.classList.remove('panel-open');
                 newBtnShop.classList.remove('slicer-active');
+                updateButtonDimState();
             }
         });
     }
@@ -430,12 +434,14 @@ function setupGlobalFilters() {
                 panelPdv.classList.remove('panel-open');
                 newBtnPdv.classList.remove('slicer-active');
             }
+            updateButtonDimState();
         });
 
         document.addEventListener('click', (e) => {
             if (!newBtnPdv.contains(e.target) && !panelPdv.contains(e.target)) {
                 panelPdv.classList.remove('panel-open');
                 newBtnPdv.classList.remove('slicer-active');
+                updateButtonDimState();
             }
         });
     }
@@ -465,12 +471,14 @@ function setupGlobalFilters() {
                     panel.classList.remove('panel-open');
                     newBtn.classList.remove('slicer-active');
                 }
+                updateButtonDimState();
             });
 
             document.addEventListener('click', (e) => {
                 if (!newBtn.contains(e.target) && !panel.contains(e.target)) {
                     panel.classList.remove('panel-open');
                     newBtn.classList.remove('slicer-active');
+                    updateButtonDimState();
                 }
             });
         }
@@ -496,6 +504,43 @@ function setupGlobalFilters() {
                 if (btn) btn.classList.remove('slicer-active');
             }
         });
+    }
+
+    // Função para dimmer/undimmer os outros botões
+    function updateButtonDimState() {
+        const allBtns = ['btn-date-slicer', 'btn-shop-slicer', 'btn-pdv-slicer', 'btn-linha-slicer', 'btn-regional-slicer', 'btn-p8020-slicer', 'btn-vis-slicer'];
+        const activeBtn = allBtns.find(btnId => {
+            const btn = document.getElementById(btnId);
+            return btn && btn.classList.contains('slicer-active');
+        });
+
+        allBtns.forEach(btnId => {
+            const btn = document.getElementById(btnId);
+            if (!btn) return;
+            
+            if (activeBtn && btnId !== activeBtn) {
+                btn.classList.add('slicer-dimmed');
+            } else {
+                btn.classList.remove('slicer-dimmed');
+            }
+        });
+
+        // Esmaecer o filtro flutuante do heatmap quando um filtro global está aberto
+        const floatingFilter = document.getElementById('hp-floating-filter');
+        if (floatingFilter) {
+            const inner = document.getElementById('hp-floating-filter-inner');
+            if (inner) {
+                if (activeBtn) {
+                    inner.style.transition = 'opacity 0.3s ease';
+                    inner.style.opacity = '0.2';
+                    inner.style.pointerEvents = 'none';
+                } else {
+                    inner.style.transition = 'opacity 0.3s ease';
+                    inner.style.opacity = '';
+                    inner.style.pointerEvents = '';
+                }
+            }
+        }
     }
 
     appData.subscribe(() => {

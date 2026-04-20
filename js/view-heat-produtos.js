@@ -126,15 +126,15 @@ export const getHeatProdutosHTML = () => {
             /* Filtro Flutuante */
             #hp-floating-filter {
                 position: fixed;
-                top: 0;
                 left: 0;
                 right: 0;
                 z-index: 50;
-                padding: 16px 24px;
+                padding: 0 24px;
                 transform: translateY(-100%);
-                transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease;
+                transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
                 opacity: 0;
                 pointer-events: none;
+                will-change: top;
             }
             
             #hp-floating-filter.visible {
@@ -143,24 +143,7 @@ export const getHeatProdutosHTML = () => {
                 pointer-events: auto;
             }
             
-            /* Ajusta a posição baseado no estado dos filtros */
-            #hp-floating-filter.filters-closed {
-                top: 120px; /* Abaixo da navegação */
-            }
-            
-            #hp-floating-filter.filters-open {
-                top: 220px; /* Abaixo da navegação + filtros */
-            }
-            
-            @media (max-width: 768px) {
-                #hp-floating-filter.filters-closed {
-                    top: 180px;
-                }
-                
-                #hp-floating-filter.filters-open {
-                    top: 320px;
-                }
-            }
+            /* Posição dinâmica calculada via JS */
             
             #hp-floating-filter-inner {
                 max-width: 500px;
@@ -441,6 +424,34 @@ export const renderHeatProdutos = () => {
     }
 
     // Função para atualizar a posição do filtro flutuante baseado no estado dos filtros globais
+    let positionRafId = null;
+    
+    const syncFloatingPosition = () => {
+        if (!floatingFilter) return;
+        const floatingUi = document.getElementById('floating-ui');
+        if (floatingUi) {
+            const uiRect = floatingUi.getBoundingClientRect();
+            floatingFilter.style.top = (uiRect.bottom + 12) + 'px';
+        }
+    };
+
+    // Loop contínuo durante transições para manter posição sincronizada
+    const startPositionSync = () => {
+        if (positionRafId) return;
+        const startTime = performance.now();
+        const duration = 500; // Cobre a duração da transição da barra
+        
+        const tick = (now) => {
+            syncFloatingPosition();
+            if (now - startTime < duration) {
+                positionRafId = requestAnimationFrame(tick);
+            } else {
+                positionRafId = null;
+            }
+        };
+        positionRafId = requestAnimationFrame(tick);
+    };
+
     const updateFloatingFilterPosition = () => {
         if (!floatingFilter || !filterBar) return;
         
@@ -453,6 +464,9 @@ export const renderHeatProdutos = () => {
             floatingFilter.classList.remove('filters-open');
             floatingFilter.classList.add('filters-closed');
         }
+
+        syncFloatingPosition();
+        startPositionSync();
     };
 
     // Observa mudanças no estado dos filtros globais
@@ -462,6 +476,7 @@ export const renderHeatProdutos = () => {
         filterBar.dataset.observerAttached = "true";
         
         // Atualiza a posição inicial
+        syncFloatingPosition();
         updateFloatingFilterPosition();
     }
 
@@ -473,7 +488,6 @@ export const renderHeatProdutos = () => {
         contentWrapper.addEventListener('scroll', () => {
             const scrollTop = contentWrapper.scrollTop;
             
-            // Mostra o filtro flutuante quando rolar para baixo além do threshold
             if (scrollTop > threshold) {
                 floatingFilter.classList.add('visible');
             } else {
@@ -586,15 +600,13 @@ async function executeRenderLogic() {
         const peakPrimaryTotal = kpis.peak_primary_total;
         
         if (peakPrimaryDay && peakPrimaryHour !== null && peakPrimaryHour !== undefined) {
-            document.getElementById('hp-k-peak').innerText = `${peakPrimaryDay}, ${peakPrimaryHour}h`;
-            const subEl = document.getElementById('hp-k-peak-sub');
-            if (subEl && peakPrimaryTotal) {
-                subEl.innerText = `${Math.round(peakPrimaryTotal).toLocaleString('pt-BR')} interações`;
+            updateKPIWithFade('hp-k-peak', `${peakPrimaryDay}, ${peakPrimaryHour}h`);
+            if (peakPrimaryTotal) {
+                updateKPIWithFade('hp-k-peak-sub', `${Math.round(peakPrimaryTotal).toLocaleString('pt-BR')} interações`);
             }
         } else {
-            document.getElementById('hp-k-peak').innerText = '-';
-            const subEl = document.getElementById('hp-k-peak-sub');
-            if (subEl) subEl.innerText = '-';
+            updateKPIWithFade('hp-k-peak', '-');
+            updateKPIWithFade('hp-k-peak-sub', '-');
         }
         
         // Pico Secundário
@@ -603,15 +615,13 @@ async function executeRenderLogic() {
         const peakSecondaryTotal = kpis.peak_secondary_total;
         
         if (peakSecondaryDay && peakSecondaryHour !== null && peakSecondaryHour !== undefined) {
-            document.getElementById('hp-k-peak-sec').innerText = `${peakSecondaryDay}, ${peakSecondaryHour}h`;
-            const subEl = document.getElementById('hp-k-peak-sec-sub');
-            if (subEl && peakSecondaryTotal) {
-                subEl.innerText = `${Math.round(peakSecondaryTotal).toLocaleString('pt-BR')} interações`;
+            updateKPIWithFade('hp-k-peak-sec', `${peakSecondaryDay}, ${peakSecondaryHour}h`);
+            if (peakSecondaryTotal) {
+                updateKPIWithFade('hp-k-peak-sec-sub', `${Math.round(peakSecondaryTotal).toLocaleString('pt-BR')} interações`);
             }
         } else {
-            document.getElementById('hp-k-peak-sec').innerText = '-';
-            const subEl = document.getElementById('hp-k-peak-sec-sub');
-            if (subEl) subEl.innerText = '-';
+            updateKPIWithFade('hp-k-peak-sec', '-');
+            updateKPIWithFade('hp-k-peak-sec-sub', '-');
         }
         
         // Inicia a alternância entre picos
