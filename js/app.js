@@ -43,6 +43,11 @@ const themeToggles = document.querySelectorAll('.btn-theme-toggle');
 // 1. Checa a preferência salva ao carregar a página
 if (localStorage.getItem('theme') === 'light') {
     document.body.classList.remove('dark');
+    // Atualiza o logo para a versão light
+    const logoImg = document.querySelector('#float-logo img');
+    if (logoImg) {
+        logoImg.src = 'header-light.png';
+    }
     // ícones gerenciados pelo syncThemeIcons no index.html
 }
 
@@ -55,6 +60,12 @@ themeToggles.forEach(btn => {
         
         // Salva a preferência no navegador do usuário
         localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        
+        // Atualiza o logo
+        const logoImg = document.querySelector('#float-logo img');
+        if (logoImg) {
+            logoImg.src = isDark ? 'header.png' : 'header-light.png';
+        }
         
         // Atualiza os ícones (gerenciado pelo syncThemeIcons no index.html via MutationObserver)
 

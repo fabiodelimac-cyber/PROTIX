@@ -39,7 +39,7 @@
         .ds-kpi-label { font-family: 'Archivo', sans-serif; font-size: 11px; font-weight: 600; font-stretch: 125%; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.3em; }
 
         /* Labels dos filtros globais e do heatmap (ex: "Período", "Localidade", "Modelo Alvo") */
-        .ds-filter-label { font-family: 'Archivo', sans-serif; font-weight: 300; font-stretch: 110%; text-transform: uppercase; font-size: 9px; color: var(--text-main); opacity: 0.7; }
+        .ds-filter-label { font-family: 'Archivo', sans-serif; font-weight: 300; font-stretch: 110%; text-transform: uppercase; font-size: 9px; color: var(--text-main); opacity: 0.8; }
 
         /* Texto dentro dos botões/selects de filtro (ex: valor selecionado "TODOS") */
         .ds-filter-input { font-weight: 600; font-stretch: 100%; font-size: 12px; }
@@ -113,15 +113,33 @@
             --bg-sticky: rgba(15,16,19,0.92); --hover-table: rgba(104,91,199,0.05); --table-wrapper-bg: rgba(255,255,255,0.02);
         }
         body:not(.dark) #app-box {
-            background-color: rgba(238,243,250,0.88);
-            background-image: radial-gradient(ellipse 90% 50% at 85% 5%, rgba(104,91,199,0.08) 0%, transparent 55%), radial-gradient(ellipse 60% 40% at 10% 95%, rgba(148,163,184,0.15) 0%, transparent 50%);
-            backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);
-            box-shadow: 0 0 0 1px rgba(255,255,255,0.7), 0 40px 100px rgba(15,23,42,0.15);
-            --glass-bg: rgba(255,255,255,0.6); --glass-border: rgba(255,255,255,0.9); --glass-shadow: 0 8px 32px rgba(15,23,42,0.06), 0 0 0 1px rgba(255,255,255,0.5) inset;
-            --text-main: #0f172a; --text-muted: #64748b; --text-muted-strong: #334155;
-            --glow-shadow: 0 0 20px rgba(104,91,199,0.12); --glow-accent: 0 0 15px rgba(104,91,199,0.2); --glow-green: 0 0 15px rgba(34,197,94,0.2);
-            --neon-bg: linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(104,91,199,0.03) 100%); --input-bg: rgba(255,255,255,0.9);
-            --bg-sticky: rgba(240,245,252,0.92); --hover-table: rgba(104,91,199,0.04); --table-wrapper-bg: rgba(255,255,255,0.3);
+            background-color: rgba(245,248,252,0.92);
+            background-image: 
+                radial-gradient(ellipse 120% 80% at 15% 20%, rgba(104,91,199,0.06) 0%, transparent 50%),
+                radial-gradient(ellipse 100% 60% at 85% 85%, rgba(148,163,184,0.08) 0%, transparent 55%),
+                radial-gradient(ellipse 80% 40% at 50% 0%, rgba(255,255,255,0.4) 0%, transparent 60%);
+            backdrop-filter: blur(50px) saturate(120%); 
+            -webkit-backdrop-filter: blur(50px) saturate(120%);
+            box-shadow: 
+                0 0 0 1px rgba(255,255,255,0.8),
+                0 8px 32px rgba(104,91,199,0.08),
+                0 32px 64px rgba(15,23,42,0.08),
+                inset 0 1px 0 rgba(255,255,255,0.6),
+                inset 0 -1px 2px rgba(15,23,42,0.04);
+            --glass-bg: rgba(255,255,255,0.65); 
+            --glass-border: rgba(255,255,255,0.95); 
+            --glass-shadow: 0 8px 32px rgba(15,23,42,0.08), 0 0 0 1px rgba(255,255,255,0.6) inset, 0 4px 16px rgba(104,91,199,0.06);
+            --text-main: #292929; 
+            --text-muted: #6b7280; 
+            --text-muted-strong: #374151;
+            --glow-shadow: 0 0 20px rgba(104,91,199,0.12); 
+            --glow-accent: 0 0 15px rgba(104,91,199,0.2); 
+            --glow-green: 0 0 15px rgba(34,197,94,0.2);
+            --neon-bg: linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(104,91,199,0.04) 100%); 
+            --input-bg: rgba(255,255,255,0.92);
+            --bg-sticky: rgba(245,248,252,0.95); 
+            --hover-table: rgba(104,91,199,0.05); 
+            --table-wrapper-bg: rgba(255,255,255,0.4);
         }
 
         /* =============================================
@@ -147,8 +165,13 @@
         }
         
         body:not(.dark) #floating-ui.scrolled {
-            background: rgba(238, 243, 250, 0.85) !important;
-            box-shadow: 0 4px 24px rgba(15, 23, 42, 0.08);
+            background: rgba(245,248,252,0.92) !important;
+            backdrop-filter: blur(50px) saturate(120%);
+            -webkit-backdrop-filter: blur(50px) saturate(120%);
+            box-shadow: 
+                0 4px 24px rgba(15,23,42,0.08),
+                0 0 0 1px rgba(255,255,255,0.8),
+                inset 0 1px 0 rgba(255,255,255,0.6);
         }
         
         /* Gradiente de fade suave na borda inferior */
@@ -186,10 +209,24 @@
             display: flex; align-items: center; gap: 10px; 
             flex: 1; min-width: 0; 
         }
-        #float-logo img { height: 46px; width: auto; object-fit: contain; filter: drop-shadow(0 2px 8px rgba(0,0,0,0.35)); }
+        #float-logo img { 
+            height: 46px; 
+            width: auto; 
+            object-fit: contain; 
+            filter: drop-shadow(0 2px 8px rgba(0,0,0,0.35));
+            transition: filter 0.3s ease;
+        }
+        body:not(.dark) #float-logo img {
+            filter: drop-shadow(0 2px 8px rgba(0,0,0,0.15));
+        }
         #float-logo-badge { font-family: 'Archivo', sans-serif; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.2em; padding: 5px 12px; border-radius: 999px; }
         body.dark #float-logo-badge { background: rgba(104,91,199,0.15); border: 1px solid rgba(104,91,199,0.3); color: rgba(168,159,238,0.9); }
-        body:not(.dark) #float-logo-badge { background: rgba(104,91,199,0.08); border: 1px solid rgba(104,91,199,0.2); color: #685BC7; }
+        body:not(.dark) #float-logo-badge { 
+            background: rgba(104,91,199,0.12); 
+            border: 1px solid rgba(104,91,199,0.3); 
+            color: #685BC7;
+            box-shadow: 0 2px 8px rgba(104,91,199,0.1);
+        }
 
         #nav-and-filter-wrapper { 
             display: flex; align-items: center; justify-content: center; gap: 10px; 
@@ -198,18 +235,33 @@
 
         #float-nav { position: relative; display: flex; align-items: center; padding: 5px; border-radius: 999px; gap: 0; }
         body.dark #float-nav { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09); backdrop-filter: blur(24px); box-shadow: 0 4px 24px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.07); }
-        body:not(.dark) #float-nav { background: rgba(255,255,255,0.65); border: 1px solid rgba(255,255,255,0.95); backdrop-filter: blur(24px); box-shadow: 0 4px 24px rgba(15,23,42,0.09), inset 0 1px 0 rgba(255,255,255,1); }
+        body:not(.dark) #float-nav { 
+            background: rgba(255,255,255,0.72); 
+            border: 1px solid rgba(255,255,255,0.98); 
+            backdrop-filter: blur(30px) saturate(120%); 
+            box-shadow: 
+                0 4px 24px rgba(15,23,42,0.08), 
+                inset 0 1px 0 rgba(255,255,255,1),
+                0 0 0 1px rgba(104,91,199,0.08);
+        }
 
         #nav-indicator { position: absolute; top: 5px; left: 5px; height: calc(100% - 10px); border-radius: 999px; transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), width 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); pointer-events: none; z-index: 0; }
         body.dark #nav-indicator { background: rgba(104,91,199,0.3); box-shadow: 0 2px 12px rgba(104,91,199,0.25); border: 1px solid rgba(104,91,199,0.45); }
-        body:not(.dark) #nav-indicator { background: rgba(255,255,255,0.95); box-shadow: 0 2px 12px rgba(104,91,199,0.15); border: 1px solid rgba(104,91,199,0.2); }
+        body:not(.dark) #nav-indicator { 
+            background: rgba(255,255,255,0.98); 
+            box-shadow: 
+                0 2px 12px rgba(104,91,199,0.15),
+                0 0 0 1px rgba(104,91,199,0.25),
+                inset 0 1px 0 rgba(255,255,255,1);
+            border: 1px solid rgba(104,91,199,0.25);
+        }
 
         .nav-pill { position: relative; z-index: 1; display: flex; align-items: center; gap: 7px; padding: 8px 18px; border-radius: 999px; border: none; cursor: pointer; transition: color 0.2s ease; white-space: nowrap; background: none; }
         body.dark .nav-pill { color: rgba(255,255,255,0.38); }
         body.dark .nav-pill:hover { color: rgba(255,255,255,0.7); }
         body.dark .nav-pill.active { color: #fff; }
-        body:not(.dark) .nav-pill { color: #94a3b8; }
-        body:not(.dark) .nav-pill:hover { color: #475569; }
+        body:not(.dark) .nav-pill { color: #6b7280; }
+        body:not(.dark) .nav-pill:hover { color: #292929; }
         body:not(.dark) .nav-pill.active { color: #685BC7; }
 
         /* --- BOTÃO DE FILTROS REFORMULADO --- */
@@ -221,10 +273,18 @@
         }
 
         body.dark #btn-toggle-filters { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.09); color: rgba(255,255,255,0.6); backdrop-filter: blur(24px); }
-        body:not(.dark) #btn-toggle-filters { background: rgba(255,255,255,0.65); border-color: rgba(255,255,255,0.95); color: #64748b; backdrop-filter: blur(24px); box-shadow: 0 4px 12px rgba(15,23,42,0.05); }
-
-        body.dark #btn-toggle-filters:hover { border-color: rgba(104,91,199,0.5); box-shadow: 0 0 15px rgba(104,91,199,0.4); color: #fff; }
-        body:not(.dark) #btn-toggle-filters:hover { border-color: rgba(104,91,199,0.4); box-shadow: 0 0 15px rgba(104,91,199,0.2); color: var(--ps-blue); }
+        body:not(.dark) #btn-toggle-filters { 
+            background: rgba(255,255,255,0.72); 
+            border-color: rgba(255,255,255,0.98); 
+            color: #6b7280; 
+            backdrop-filter: blur(30px) saturate(120%); 
+            box-shadow: 0 4px 12px rgba(15,23,42,0.06), 0 0 0 1px rgba(104,91,199,0.08);
+        }
+        body:not(.dark) #btn-toggle-filters:hover { 
+            border-color: rgba(104,91,199,0.5); 
+            box-shadow: 0 0 15px rgba(104,91,199,0.2), 0 4px 12px rgba(15,23,42,0.08); 
+            color: #685BC7;
+        }
 
         #btn-toggle-filters.active {
             background: var(--ps-blue) !important; color: white !important;
@@ -241,7 +301,15 @@
             max-width: 100%; flex-shrink: 1; 
         }
         body.dark #float-controls { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09); backdrop-filter: blur(24px); box-shadow: 0 4px 24px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.07); }
-        body:not(.dark) #float-controls { background: rgba(255,255,255,0.65); border: 1px solid rgba(255,255,255,0.95); backdrop-filter: blur(24px); box-shadow: 0 4px 24px rgba(15,23,42,0.09), inset 0 1px 0 rgba(255,255,255,1); }
+        body:not(.dark) #float-controls { 
+            background: rgba(255,255,255,0.72); 
+            border: 1px solid rgba(255,255,255,0.98); 
+            backdrop-filter: blur(30px) saturate(120%); 
+            box-shadow: 
+                0 4px 24px rgba(15,23,42,0.08), 
+                inset 0 1px 0 rgba(255,255,255,1),
+                0 0 0 1px rgba(104,91,199,0.08);
+        }
 
         #topbar-user-email { 
             white-space: nowrap; padding: 0 8px; 
@@ -249,23 +317,30 @@
             flex-shrink: 1; min-width: 50px;
         }
         body.dark #topbar-user-email { color: rgba(255,255,255,0.4); }
-        body:not(.dark) #topbar-user-email { color: #64748b; }
+        body:not(.dark) #topbar-user-email { color: #6b7280; }
 
         .ctrl-divider { width: 1px; height: 18px; flex-shrink: 0; border-radius: 1px; margin: 0 8px; }
         body.dark .ctrl-divider { background: rgba(255,255,255,0.09); }
-        body:not(.dark) .ctrl-divider { background: rgba(15,23,42,0.1); }
+        body:not(.dark) .ctrl-divider { background: rgba(15,23,42,0.12); }
 
         .ctrl-btn { display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 50%; border: none; cursor: pointer; transition: all 0.18s ease; background: none; font-size: 14px; flex-shrink: 0; }
         body.dark .ctrl-btn { color: rgba(255,255,255,0.45); }
         body.dark .ctrl-btn:hover { color: #fff; background: rgba(255,255,255,0.09); }
-        body:not(.dark) .ctrl-btn { color: #94a3b8; }
-        body:not(.dark) .ctrl-btn:hover { color: #0f172a; background: rgba(15,23,42,0.06); }
+        body:not(.dark) .ctrl-btn { color: #6b7280; }
+        body:not(.dark) .ctrl-btn:hover { color: #292929; background: rgba(15,23,42,0.08); }
 
         #btn-logout { display: flex; align-items: center; gap: 5px; padding: 6px 12px 6px 9px; border-radius: 999px; border: 1px solid transparent; cursor: pointer; transition: all 0.18s ease; background: none; flex-shrink: 0; }
         body.dark #btn-logout { color: rgba(239,68,68,0.5); border-color: rgba(239,68,68,0.15); }
         body.dark #btn-logout:hover { color: #ef4444; background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.35); }
-        body:not(.dark) #btn-logout { color: rgba(239,68,68,0.45); border-color: rgba(239,68,68,0.12); }
-        body:not(.dark) #btn-logout:hover { color: #ef4444; background: rgba(239,68,68,0.07); border-color: rgba(239,68,68,0.28); }
+        body:not(.dark) #btn-logout { 
+            color: rgba(239,68,68,0.55); 
+            border-color: rgba(239,68,68,0.15);
+        }
+        body:not(.dark) #btn-logout:hover { 
+            color: #ef4444; 
+            background: rgba(239,68,68,0.08); 
+            border-color: rgba(239,68,68,0.35);
+        }
 
         /* =============================================
            FILTER BAR ANIMATION UNIFICADA
@@ -337,8 +412,17 @@
         ============================================= */
         body.dark .card { background-color: #1c1e22; border-color: #2d3139; }
         body.dark .text-muted { color: #8e94a0; }
-        body:not(.dark) .card { background-color: rgba(255,255,255,0.7); border-color: rgba(255,255,255,1); }
-        body:not(.dark) .text-muted { color: #64748b; }
+        body:not(.dark) .card { 
+            background-color: rgba(255,255,255,0.75); 
+            border: 1px solid rgba(255,255,255,0.98);
+            box-shadow: 
+                0 4px 16px rgba(15,23,42,0.08),
+                0 0 0 1px rgba(104,91,199,0.1),
+                inset 0 1px 0 rgba(255,255,255,1);
+            backdrop-filter: blur(20px) saturate(110%);
+            -webkit-backdrop-filter: blur(20px) saturate(110%);
+        }
+        body:not(.dark) .text-muted { color: #6b7280; }
 
         /* =============================================
            FILTROS / SELECTS GLASSMORFISMO 
@@ -352,11 +436,12 @@
             outline: none;
         }
         body:not(.dark) select, body:not(.dark) .slicer-btn { 
-            background-color: rgba(255, 255, 255, 0.8) !important;
-            backdrop-filter: blur(12px) !important;
-            -webkit-backdrop-filter: blur(12px) !important;
-            color: #0f172a !important;
-            border: 1px solid rgba(15, 23, 42, 0.12) !important;
+            background-color: rgba(255, 255, 255, 0.85) !important;
+            backdrop-filter: blur(20px) saturate(120%) !important;
+            -webkit-backdrop-filter: blur(20px) saturate(120%) !important;
+            color: #292929 !important;
+            border: 1px solid rgba(255, 255, 255, 0.98) !important;
+            box-shadow: 0 4px 12px rgba(15,23,42,0.06), inset 0 1px 0 rgba(255,255,255,1) !important;
             outline: none;
         }
         select:focus, .slicer-btn:focus { border-color: #685BC7 !important; }
@@ -438,11 +523,14 @@
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.04) inset !important;
         }
         body:not(.dark) .slicer-panel {
-            background: rgba(255, 255, 255, 0.72) !important;
-            backdrop-filter: blur(24px) saturate(180%) !important;
-            -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
-            border: 1px solid rgba(255, 255, 255, 0.9) !important;
-            box-shadow: 0 20px 60px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(255,255,255,0.5) inset !important;
+            background: rgba(255, 255, 255, 0.82) !important;
+            backdrop-filter: blur(30px) saturate(120%) !important;
+            -webkit-backdrop-filter: blur(30px) saturate(120%) !important;
+            border: 1px solid rgba(255, 255, 255, 0.98) !important;
+            box-shadow: 
+                0 20px 60px rgba(15, 23, 42, 0.12), 
+                0 0 0 1px rgba(104,91,199,0.12) inset,
+                inset 0 1px 0 rgba(255,255,255,0.8) !important;
         }
 
         /* =============================================
@@ -485,7 +573,10 @@
 
         body:not(.dark) .slicer-btn.slicer-active {
             border-color: #685BC7 !important;
-            box-shadow: 0 0 12px rgba(104, 91, 199, 0.2);
+            box-shadow: 
+                0 0 12px rgba(104, 91, 199, 0.25),
+                0 4px 12px rgba(15,23,42,0.08),
+                inset 0 1px 0 rgba(255,255,255,1) !important;
             background-color: rgba(104, 91, 199, 0.12) !important;
         }
 
@@ -512,39 +603,39 @@
            SLICER PANEL LIGHT MODE TEXT COLORS
         ============================================= */
         body:not(.dark) .slicer-panel {
-            color: #0f172a !important;
+            color: #292929 !important;
         }
 
         body:not(.dark) .slicer-panel span,
         body:not(.dark) .slicer-panel div,
         body:not(.dark) .slicer-panel label {
-            color: #0f172a !important;
+            color: #292929 !important;
         }
 
         /* Muted text in light mode */
         body:not(.dark) .slicer-panel .text-white\/40,
         body:not(.dark) .slicer-panel .text-white\/50,
         body:not(.dark) .slicer-panel .text-white\/60 {
-            color: #64748b !important;
+            color: #6b7280 !important;
         }
 
         body:not(.dark) .slicer-panel .text-white\/80,
         body:not(.dark) .slicer-panel .text-white\/90 {
-            color: #1e293b !important;
+            color: #292929 !important;
         }
 
         /* Borders in light mode */
         body:not(.dark) .slicer-panel .border-white\/10 {
-            border-color: rgba(15, 23, 42, 0.1) !important;
+            border-color: rgba(15, 23, 42, 0.12) !important;
         }
 
         /* Hover backgrounds in light mode */
         body:not(.dark) .slicer-panel .hover\:bg-white\/5:hover {
-            background-color: rgba(15, 23, 42, 0.04) !important;
+            background-color: rgba(15, 23, 42, 0.06) !important;
         }
 
         body:not(.dark) .slicer-panel .hover\:bg-white\/10:hover {
-            background-color: rgba(15, 23, 42, 0.06) !important;
+            background-color: rgba(15, 23, 42, 0.08) !important;
         }
 
         .bg-mesh { background: linear-gradient(-45deg, #131417, #1c1e22, #2a2552, #131417); background-size: 400% 400%; animation: meshGradient 10s ease infinite; }
@@ -587,57 +678,106 @@
             from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
+        /* =============================================
+           GLASSMORFISMO - LOGIN BOX (dark glass, mesma linha do float-nav)
+        ============================================= */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            box-shadow: 
+                0 40px 100px rgba(0, 0, 0, 0.6),
+                0 4px 24px rgba(0, 0, 0, 0.35),
+                inset 0 1px 0 rgba(255, 255, 255, 0.07);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+            z-index: 1;
+        }
+
+        .glass-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 1px;
+            height: 100%;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent, rgba(255, 255, 255, 0.04));
+            z-index: 1;
+        }
+
+        /* Painéis internos transparentes (exceto lado esquerdo) */
+        .glass-card > div:not(.glass-left) {
+            background: transparent !important;
+            border-color: rgba(255, 255, 255, 0.07) !important;
+        }
+        .glass-left {
+            background: rgba(0, 0, 0, 0.30) !important;
+            border-color: rgba(255, 255, 255, 0.07) !important;
+        }
     </style>
 </head>
 <body class="antialiased dark">
 
     <div id="login-screen" class="font-['Archivo',_sans-serif] bg-mesh fixed inset-0 flex flex-col items-center justify-center p-6 z-[100] transition-opacity duration-500">
-        <div class="bg-white/95 backdrop-blur-3xl w-full max-w-4xl flex flex-col md:flex-row overflow-hidden rounded-[2.5rem] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.8)] border border-white/20 min-h-[500px] z-10">
+        <div class="glass-card w-full max-w-4xl flex flex-col md:flex-row overflow-hidden min-h-[500px] z-10">
             
-            <div class="w-full md:w-1/2 p-12 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-gray-200/60 bg-white/40">
-                <img src="login.png" alt="ProSolution Logo" class="max-w-[240px] h-auto mb-8 drop-shadow-sm">
-                <h2 class="font-['Archivo',_sans-serif] text-sm text-center tracking-[0.4em] text-gray-900 uppercase font-bold mb-4" style="font-stretch: 120%;">Field Engagement<br>Tracker</h2>
+            <div class="glass-left w-full md:w-1/2 p-12 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-white/20">
+                <img src="login-white.png" alt="ProSolution Logo" class="max-w-[240px] h-auto mb-8 drop-shadow-sm">
+                <h2 class="font-['Archivo',_sans-serif] text-sm text-center tracking-[0.4em] text-white uppercase font-bold mb-4" style="font-stretch: 120%;">Field Engagement<br>Tracker</h2>
                 <div class="w-12 h-1 bg-gradient-to-r from-[#685BC7] to-[#8b5cf6] rounded-full mb-6 shadow-sm"></div>
-                <div class="bg-gray-100/80 px-5 py-2 rounded-2xl border border-gray-200 shadow-sm">
-                    <span class="font-['Archivo',_sans-serif] text-[9px] font-medium uppercase tracking-[0.3em] text-gray-500">Versão de Testes</span>
+                <div class="bg-white/15 px-5 py-2 rounded-2xl border border-white/20 shadow-sm">
+                    <span class="font-['Archivo',_sans-serif] text-[9px] font-medium uppercase tracking-[0.3em] text-white/70">Versão de Testes</span>
                 </div>
             </div>
 
             <div class="w-full md:w-1/2 p-12 md:p-14 flex flex-col relative min-h-[460px]">
-                <h3 class="font-['Archivo',_sans-serif] font-normal text-[10px] tracking-[0.2em] uppercase text-gray-400 mb-8 text-center md:text-left shrink-0" style="font-stretch: 140%;">Faça seu login</h3>
+                <h3 class="font-['Archivo',_sans-serif] font-light text-[18px] tracking-[-0.02em] uppercase text-white/90 mb-8 text-center md:text-left shrink-0" style="font-stretch: 140%;">Faça seu login</h3>
                 
                 <div class="relative flex-1 w-full">
                     
                     <div id="login-social-view" class="space-y-4 transition-all duration-300 opacity-100 transform translate-x-0 w-full absolute top-0 left-0 pointer-events-auto">
                         
-                        <button id="btn-google-login" class="w-full flex items-center justify-center gap-3 bg-white border border-gray-200 text-gray-700 py-4 rounded-2xl hover:bg-gray-50 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
+                        <button id="btn-google-login" class="w-full flex items-center justify-center gap-3 bg-white/[0.05] border border-white/[0.09] text-white/80 py-4 rounded-2xl hover:bg-white/[0.1] hover:text-white hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 backdrop-blur-sm">
                             <svg class="w-5 h-5" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.73 17.74 9.5 24 9.5z"></path><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path></svg>
-                            <span class="font-['Archivo',_sans-serif] font-medium text-[13px]">Entrar com Google</span>
+                            <span class="font-['Archivo',_sans-serif] font-medium text-[13px] tracking-[0.04em]" style="font-stretch: 120%;">Entrar com Google</span>
                         </button>
 
-                        <button id="btn-microsoft-login" class="w-full flex items-center justify-center gap-3 bg-white border border-gray-200 text-gray-700 py-4 rounded-2xl hover:bg-gray-50 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
+                        <button id="btn-microsoft-login" class="w-full flex items-center justify-center gap-3 bg-white/[0.05] border border-white/[0.09] text-white/80 py-4 rounded-2xl hover:bg-white/[0.1] hover:text-white hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 backdrop-blur-sm">
                             <svg class="w-5 h-5" viewBox="0 0 21 21"><path fill="#f25022" d="M1 1h9v9H1z"/><path fill="#7fba00" d="M11 1h9v9h-9z"/><path fill="#00a4ef" d="M1 11h9v9H1z"/><path fill="#ffb900" d="M11 11h9v9h-9z"/></svg>
-                            <span class="font-['Archivo',_sans-serif] font-medium text-[13px]">Entrar com Microsoft</span>
+                            <span class="font-['Archivo',_sans-serif] font-medium text-[13px] tracking-[0.04em]" style="font-stretch: 120%;">Entrar com Microsoft</span>
                         </button>
 
-                        <div class="flex items-center justify-center my-6"><div class="border-t border-gray-200 flex-grow"></div><span class="font-['Archivo',_sans-serif] px-4 text-[9px] text-gray-400 font-black tracking-[0.2em] uppercase">Ou</span><div class="border-t border-gray-200 flex-grow"></div></div>
+                        <div class="flex items-center justify-center my-6"><div class="border-t border-white/[0.09] flex-grow"></div><span class="font-['Archivo',_sans-serif] px-4 text-[9px] text-white/30 font-black tracking-[0.2em] uppercase">Ou</span><div class="border-t border-white/[0.09] flex-grow"></div></div>
                         
-                        <button id="btn-show-email" class="font-['Archivo',_sans-serif] w-full text-center text-[11px] font-bold text-gray-500 hover:text-[#685BC7] uppercase tracking-[0.1em] transition-colors py-2">
+                        <button id="btn-show-email" class="font-['Archivo',_sans-serif] w-full text-center text-[11px] font-bold text-white/70 hover:text-white hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)] uppercase tracking-[0.1em] transition-all duration-300 py-2">
                             Logar com E-mail e Senha
                         </button>
 
                         <div class="pt-8 flex justify-center items-center gap-2 opacity-60 hover:opacity-100 transition-opacity cursor-default">
-                            <span class="font-['Archivo',_sans-serif] font-extralight text-[9px] text-gray-900 uppercase tracking-widest">Powered By</span>
-                            <img src="supabase-logo-wordmark--light.png" class="h-4" alt="Supabase">
+                            <span class="font-['Archivo',_sans-serif] font-extralight text-[9px] text-white/70 uppercase tracking-widest">Powered By</span>
+                            <img src="supabase-logo-wordmark--dark.png" class="h-4" alt="Supabase">
                         </div>
                     </div>
 
                     <div id="login-email-view" class="space-y-4 transition-all duration-300 opacity-0 pointer-events-none transform translate-x-8 w-full absolute top-0 left-0">
-                        <input type="email" id="user" placeholder="E-mail" style="font-stretch: 130%;" class="font-['Archivo',_sans-serif] w-full px-5 py-4 rounded-2xl bg-white border border-gray-200 text-[#131417] placeholder-gray-400 focus:border-[#685BC7] focus:ring-4 focus:ring-[#685BC7]/10 outline-none transition-all shadow-sm">
-                        <input type="password" id="pass" placeholder="Senha" style="font-stretch: 130%;" class="font-['Archivo',_sans-serif] w-full px-5 py-4 rounded-2xl bg-white border border-gray-200 text-[#131417] placeholder-gray-400 focus:border-[#685BC7] focus:ring-4 focus:ring-[#685BC7]/10 outline-none transition-all shadow-sm">
-                        <button id="btn-email-login" style="font-stretch: 130%;" class="font-['Archivo',_sans-serif] font-bold uppercase w-full bg-[#131417] text-white py-4 rounded-2xl hover:bg-[#685BC7] hover:shadow-lg hover:shadow-[#685BC7]/30 hover:-translate-y-0.5 transition-all duration-300 mt-2">Autenticar</button>
+                        <input type="email" id="user" placeholder="E-mail" style="font-stretch: 130%;" class="font-['Archivo',_sans-serif] w-full px-5 py-4 rounded-2xl bg-white/[0.05] border border-white/[0.09] text-white placeholder-white/30 focus:border-[#685BC7] focus:ring-4 focus:ring-[#685BC7]/20 outline-none transition-all">
+                        <input type="password" id="pass" placeholder="Senha" style="font-stretch: 130%;" class="font-['Archivo',_sans-serif] w-full px-5 py-4 rounded-2xl bg-white/[0.05] border border-white/[0.09] text-white placeholder-white/30 focus:border-[#685BC7] focus:ring-4 focus:ring-[#685BC7]/20 outline-none transition-all">
+                        <button id="btn-email-login" style="font-stretch: 130%;" class="font-['Archivo',_sans-serif] font-bold uppercase w-full bg-[#685BC7]/30 border border-[#685BC7]/45 text-white py-4 rounded-2xl hover:bg-[#685BC7] hover:border-[#685BC7] hover:shadow-lg hover:shadow-[#685BC7]/30 hover:-translate-y-0.5 transition-all duration-300 mt-2">Autenticar</button>
                         <div class="pt-4">
-                            <button id="btn-back-social" class="font-['Archivo',_sans-serif] w-full text-center text-[10px] font-bold text-gray-500 hover:text-gray-900 uppercase tracking-[0.1em] transition-colors py-2 flex items-center justify-center gap-2">
+                            <button id="btn-back-social" class="font-['Archivo',_sans-serif] w-full text-center text-[10px] font-bold text-white/70 hover:text-white hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)] uppercase tracking-[0.1em] transition-all duration-300 py-2 flex items-center justify-center gap-2">
                                 <span>←</span> Voltar para opções
                             </button>
                         </div>
