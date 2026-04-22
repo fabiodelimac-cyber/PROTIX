@@ -14,7 +14,7 @@ export function getAboutHTML() {
                     </div>
                     <div>
                         <h2 class="font-['Archivo',_sans-serif] text-xl font-bold text-gray-900 dark:text-white uppercase tracking-wider">Sobre o Sistema</h2>
-                        <p class="font-['Archivo',_sans-serif] text-xs text-gray-500 dark:text-gray-400 uppercase tracking-widest mt-1">Field Engagement Tracker</p>
+                        <p class="ds-login-product text-[20px]" style="margin-top: 4px;">Protix</p>
                     </div>
                 </div>
             </div>
@@ -24,7 +24,7 @@ export function getAboutHTML() {
                 <img src="pros_white.png" alt="ProSolution Logo" class="h-8 mx-auto mb-8 object-contain opacity-90 dark:opacity-100 invert dark:invert-0">
 
                 <p class="font-['Archivo',_sans-serif] text-sm leading-relaxed text-gray-700 dark:text-gray-300" style="font-stretch: 100%;">
-                    FIELD ENGAGEMENT TRACKER é um aplicativo corporativo desenvolvido pela ProSolution Marketing para uso exclusivo da Motorola Mobility do Brasil. A solução foi projetada para apoiar decisões táticas, monitoramento de atividades e visualização de indicadores estratégicos, garantindo eficiência operacional, rastreabilidade e acesso confiável às informações necessárias para a tomada de decisão.
+                    PROTIX é um aplicativo corporativo desenvolvido pela ProSolution Marketing para uso exclusivo da Motorola Mobility do Brasil. A solução foi projetada para apoiar decisões táticas, monitoramento de atividades e visualização de indicadores estratégicos, garantindo eficiência operacional, rastreabilidade e acesso confiável às informações necessárias para a tomada de decisão.
                 </p>
                 <p class="font-['Archivo',_sans-serif] text-sm leading-relaxed text-gray-700 dark:text-gray-300" style="font-stretch: 100%;">
                     Todo o código-fonte proprietário, arquitetura, lógica de negócio, integrações e elementos visuais exclusivos deste aplicativo constituem propriedade intelectual da ProSolution Marketing, sendo protegidos pelas legislações aplicáveis de direitos autorais e propriedade intelectual. O uso, reprodução, modificação ou distribuição deste software, total ou parcial, sem autorização formal da ProSolution Marketing, é estritamente proibido.
@@ -38,7 +38,7 @@ export function getAboutHTML() {
                         Desenvolvido com carinho pelo time de Business Intelligence
                     </p>
                     <p class="font-['Archivo',_sans-serif] mt-3 text-center text-[10px] font-thin tracking-[0.2em] text-gray-500 dark:text-white uppercase">
-                        Build 0.4.7.260411351
+                        Build 0.8.2.2604201338
                     </p>
                 </div>
             </div>
@@ -65,7 +65,11 @@ export function initAbout() {
     });
 
     const closeAbout = () => {
+        // Bloqueia cliques imediatamente para não interceptar nada
+        overlay.style.pointerEvents = 'none';
+        
         overlay.classList.add('opacity-0');
+        modal.classList.remove('scale-100');
         modal.classList.add('scale-95');
         
         // Restaura o foco e retira o blur do Dashboard
@@ -78,7 +82,7 @@ export function initAbout() {
 
         // Aguarda a animação para remover do DOM
         setTimeout(() => {
-            overlay.remove();
+            if (overlay.parentNode) overlay.remove();
         }, 300);
     };
 
@@ -88,4 +92,13 @@ export function initAbout() {
     overlay.addEventListener('click', (e) => {
         if (e.target === overlay) closeAbout();
     });
+    
+    // Fecha com Escape
+    const escHandler = (e) => {
+        if (e.key === 'Escape') {
+            closeAbout();
+            document.removeEventListener('keydown', escHandler);
+        }
+    };
+    document.addEventListener('keydown', escHandler);
 }

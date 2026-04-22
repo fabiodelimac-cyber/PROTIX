@@ -5,6 +5,9 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 // Importando o "Cérebro"
 import { appData } from './services/dataManager.js';
 
+// Importando Performance Monitor
+import { initPerformanceMonitoring, stopPerformanceMonitoring } from './performance-integration.js';
+
 // Importando os Módulos das Páginas
 import { getOverviewHTML, renderOverviewCharts, destroyOverviewCharts } from "./view-overview.js";
 import { getPositivacaoHTML, renderPositivacao } from "./view-positivacao.js";
@@ -90,6 +93,9 @@ let currentRoute = 'view-overview';
 // --- AUTENTICAÇÃO (MOTOR SUPABASE COM ESTEIRA DE APROVAÇÃO) ---
 supabase.auth.onAuthStateChange(async (event, session) => {
     if (session) {
+        // Ignora eventos de refresh de token — o usuário já está logado
+        if (event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') return;
+        
         // INTERCEPTAÇÃO: O usuário logou no Google, mas temos que checar se você aprovou
         try {
             const { data, error } = await supabase
@@ -114,6 +120,9 @@ supabase.auth.onAuthStateChange(async (event, session) => {
                 const emailDisplay = document.getElementById('topbar-user-email');
                 if (emailDisplay) emailDisplay.innerText = session.user.email;
 
+                // Inicia o monitoramento de performance
+                await initPerformanceMonitoring(session.user);
+
                 // Sempre mostra o disclaimer ao logar
                 document.getElementById('disclaimer-modal').classList.remove('hidden');
                 startDisclaimerCountdown();
@@ -132,6 +141,7 @@ supabase.auth.onAuthStateChange(async (event, session) => {
         }
     } else {
         // FLUXO DE SAÍDA (LOGOUT NORMAL)
+        stopPerformanceMonitoring();
         const loginScreen = document.getElementById('login-screen');
         loginScreen.style.display = 'flex';
         loginScreen.style.opacity = '1';
@@ -189,11 +199,34 @@ if (btnMicrosoftLogin) {
     });
 }
 
-document.getElementById('btn-logout').addEventListener('click', async () => {
+// Logout via Event Delegation no app-box (sobrevive a qualquer manipulação DOM)
+document.getElementById('app-box').addEventListener('click', async (e) => {
+    const logoutBtn = e.target.closest('#btn-logout');
+    if (!logoutBtn) return;
+    
+    e.stopPropagation();
+    e.preventDefault();
+    
+    // Fecha qualquer painel de filtro aberto antes de deslogar
+    document.querySelectorAll('.slicer-panel.panel-open').forEach(p => p.classList.remove('panel-open'));
+    document.querySelectorAll('.slicer-active').forEach(b => b.classList.remove('slicer-active'));
+    
+    // Remove about-overlay se estiver aberto (pode estar bloqueando)
+    const aboutOverlay = document.getElementById('about-overlay');
+    if (aboutOverlay) aboutOverlay.remove();
+    
     try {
         await supabase.auth.signOut();
     } catch (error) {
         console.error('Erro ao fazer logout:', error);
+        // Fallback: força a tela de login mesmo se o signOut falhar
+        const loginScreen = document.getElementById('login-screen');
+        if (loginScreen) {
+            loginScreen.style.display = 'flex';
+            loginScreen.style.opacity = '1';
+            loginScreen.style.pointerEvents = 'auto';
+        }
+        document.getElementById('dash-shell').style.display = 'none';
     }
     
     // Limpa o campo de senha se existir (apenas na tela de login)
@@ -301,6 +334,10 @@ navItems.forEach(btn => {
 function closeSidebarMobile() { /* noop - sem sidebar */ }
 
 document.getElementById('btn-go-about').addEventListener('click', () => {
+    // Remove overlay anterior se existir (proteção contra clique duplo)
+    const existingOverlay = document.getElementById('about-overlay');
+    if (existingOverlay) existingOverlay.remove();
+    
     const shell = document.getElementById('dash-shell');
     shell.style.transition = 'opacity 0.6s ease, filter 0.6s ease';
     shell.style.opacity = '0';

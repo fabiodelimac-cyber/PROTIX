@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProSolution | Analytics Console</title>
+    <title>ProSolution PROTIX</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62.5..125,100..900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Michroma&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -55,6 +56,9 @@
 
         /* Inputs da tela de login (ex: campos de e-mail e senha) */
         .ds-login-input { font-weight: 600; font-stretch: 100%; font-size: 11px; }
+
+        /* Nome do produto na tela de login — fonte Syncopate exclusiva */
+        .ds-login-product { font-family: 'Syncopate', sans-serif; font-weight: 700; letter-spacing: 0.5em; color: #ffffff; }
 
         /* Classe utilitária para TODOS os números em tabelas, tooltips, badges e drilldowns — Michroma garante consistência numérica */
         .font-numbers { font-family: 'Michroma', sans-serif !important; }
@@ -298,7 +302,7 @@
 
         #float-controls { 
             display: inline-flex; align-items: center; gap: 4px; padding: 5px 8px; border-radius: 999px; 
-            max-width: 100%; flex-shrink: 1; 
+            max-width: 100%; flex-shrink: 1; position: relative; z-index: 110;
         }
         body.dark #float-controls { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09); backdrop-filter: blur(24px); box-shadow: 0 4px 24px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.07); }
         body:not(.dark) #float-controls { 
@@ -736,8 +740,7 @@
             
             <div class="glass-left w-full md:w-1/2 p-12 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-white/20">
                 <img src="login-white.png" alt="ProSolution Logo" class="max-w-[240px] h-auto mb-8 drop-shadow-sm">
-                <h2 class="font-['Archivo',_sans-serif] text-sm text-center tracking-[0.4em] text-white uppercase font-bold mb-4" style="font-stretch: 120%;">Field Engagement<br>Tracker</h2>
-                <div class="w-12 h-1 bg-gradient-to-r from-[#685BC7] to-[#8b5cf6] rounded-full mb-6 shadow-sm"></div>
+                <h2 class="ds-login-product text-[36px] text-center mb-6">Protix</h2>
                 <div class="bg-white/15 px-5 py-2 rounded-2xl border border-white/20 shadow-sm">
                     <span class="font-['Archivo',_sans-serif] text-[9px] font-medium uppercase tracking-[0.3em] text-white/70">Versão de Testes</span>
                 </div>
@@ -1035,6 +1038,7 @@
         }
     </script>
 
+    <script src="./js/performance-monitor.js"></script>
     <script type="module" src="./js/app.js"></script>
 </body>
 </html>
