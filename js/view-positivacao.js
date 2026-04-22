@@ -6,7 +6,7 @@ export const getPositivacaoHTML = () => {
         <style>
             #view-positivacao-wrapper { font-family: 'Archivo', sans-serif; }
             
-            .glass-panel { background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); }
+            .glass-panel { background: var(--glass-bg); border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); }
             .text-adaptive { color: var(--text-main); }
             .text-adaptive-muted { color: var(--text-muted); }
             .text-adaptive-strong { color: var(--text-muted-strong); }
@@ -17,7 +17,7 @@ export const getPositivacaoHTML = () => {
             .divide-adaptive > div { border-color: var(--glass-border); }
             
             .table-border { border-color: var(--glass-border); }
-            .bg-sticky { background-color: var(--bg-sticky); backdrop-filter: blur(10px); }
+            .bg-sticky { background-color: var(--bg-sticky); }
             .hover-row:hover td { background-color: var(--hover-table); }
 
             #matrix-table { transition: opacity 0.3s ease; }

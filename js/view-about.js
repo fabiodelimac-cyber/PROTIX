@@ -23,14 +23,20 @@ export function getAboutHTML() {
                 
                 <img src="pros_white.png" alt="ProSolution Logo" class="h-8 mx-auto mb-8 object-contain opacity-90 dark:opacity-100 invert dark:invert-0">
 
+                <div class="p-4 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/50">
+                    <p class="font-['Archivo',_sans-serif] text-sm leading-relaxed text-blue-900 dark:text-blue-100" style="font-stretch: 100%;">
+                        <span class="font-bold">Telemetria:</span> O PROTIX monitora tempo de sessão e uso de GPU para otimizar performance e estabilidade do sistema. Esses dados são associados ao seu e-mail de acesso.
+                    </p>
+                </div>
+
                 <p class="font-['Archivo',_sans-serif] text-sm leading-relaxed text-gray-700 dark:text-gray-300" style="font-stretch: 100%;">
-                    PROTIX é um aplicativo corporativo desenvolvido pela ProSolution Marketing para uso exclusivo da Motorola Mobility do Brasil. A solução foi projetada para apoiar decisões táticas, monitoramento de atividades e visualização de indicadores estratégicos, garantindo eficiência operacional, rastreabilidade e acesso confiável às informações necessárias para a tomada de decisão.
+                    PROTIX é um aplicativo corporativo desenvolvido pela ProSolution Marketing para a Motorola Mobility do Brasil. Projetado para apoiar decisões táticas, monitoramento de atividades e visualização de indicadores estratégicos.
                 </p>
                 <p class="font-['Archivo',_sans-serif] text-sm leading-relaxed text-gray-700 dark:text-gray-300" style="font-stretch: 100%;">
-                    Todo o código-fonte proprietário, arquitetura, lógica de negócio, integrações e elementos visuais exclusivos deste aplicativo constituem propriedade intelectual da ProSolution Marketing, sendo protegidos pelas legislações aplicáveis de direitos autorais e propriedade intelectual. O uso, reprodução, modificação ou distribuição deste software, total ou parcial, sem autorização formal da ProSolution Marketing, é estritamente proibido.
+                    Desenvolvido com tecnologias modernas e componentes open source, em conformidade com suas respectivas licenças.
                 </p>
                 <p class="font-['Archivo',_sans-serif] text-sm leading-relaxed text-gray-700 dark:text-gray-300" style="font-stretch: 100%;">
-                    Este aplicativo foi desenvolvido utilizando tecnologias modernas e amplamente adotadas no mercado, incluindo JavaScript (ES6) para estruturação da lógica de aplicação, Tailwind CSS para estilização e construção de interfaces responsivas, Chart.js 4 para geração de gráficos e visualizações de dados, e Supabase como plataforma para serviços de backend e persistência de dados. Essas tecnologias incluem componentes distribuídos sob licenças open source, utilizados em conformidade com suas respectivas condições de uso, conforme definido em suas documentações oficiais e termos de licenciamento aplicáveis.
+                    Propriedade intelectual protegida. Uso, reprodução ou distribuição sem autorização é proibido.
                 </p>
                 
                 <div class="pt-4">
@@ -38,7 +44,7 @@ export function getAboutHTML() {
                         Desenvolvido com carinho pelo time de Business Intelligence
                     </p>
                     <p class="font-['Archivo',_sans-serif] mt-3 text-center text-[10px] font-thin tracking-[0.2em] text-gray-500 dark:text-white uppercase">
-                        Build 0.8.2.2604201338
+                        Versão 0.9.0 Build 20260422.1655 RC1
                     </p>
                 </div>
             </div>
@@ -58,6 +64,8 @@ export function initAbout() {
     const modal = overlay.querySelector('div');
     const btnClose = document.getElementById('btn-close-about');
 
+    let isClosing = false; // Flag para evitar múltiplos fechamentos
+
     // Animação de Entrada
     requestAnimationFrame(() => {
         overlay.classList.remove('opacity-0');
@@ -65,8 +73,22 @@ export function initAbout() {
     });
 
     const closeAbout = () => {
+        if (isClosing) {
+            console.log('🔍 ABOUT: Já está fechando, ignorando');
+            return;
+        }
+        
+        isClosing = true;
+        console.log('🔍 ABOUT: Iniciando fechamento');
+        
         // Bloqueia cliques imediatamente para não interceptar nada
         overlay.style.pointerEvents = 'none';
+        
+        // Desabilita o botão de fechar visualmente
+        if (btnClose) {
+            btnClose.disabled = true;
+            btnClose.style.opacity = '0.5';
+        }
         
         overlay.classList.add('opacity-0');
         modal.classList.remove('scale-100');
@@ -82,15 +104,23 @@ export function initAbout() {
 
         // Aguarda a animação para remover do DOM
         setTimeout(() => {
-            if (overlay.parentNode) overlay.remove();
+            if (overlay && overlay.parentNode) {
+                overlay.remove();
+                console.log('🔍 ABOUT: Overlay removido do DOM');
+            }
         }, 300);
     };
 
-    btnClose.addEventListener('click', closeAbout);
+    btnClose.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeAbout();
+    });
     
     // Fecha ao clicar fora do modal
     overlay.addEventListener('click', (e) => {
-        if (e.target === overlay) closeAbout();
+        if (e.target === overlay) {
+            closeAbout();
+        }
     });
     
     // Fecha com Escape

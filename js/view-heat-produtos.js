@@ -46,7 +46,7 @@ export const getHeatProdutosHTML = () => {
             .heatmap-blurred { filter: blur(12px) saturate(60%); opacity: 0.3; pointer-events: none; }
             #hp-drilldown-overlay { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
 
-            .glass-panel { background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); }
+            .glass-panel { background: var(--glass-bg); border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); }
             .text-adaptive { color: var(--text-main); }
             .text-adaptive-muted { color: var(--text-muted); }
             .text-adaptive-strong { color: var(--text-muted-strong); }
@@ -150,19 +150,17 @@ export const getHeatProdutosHTML = () => {
                 margin: 0 auto;
                 padding: 16px 24px;
                 border-radius: 20px;
-                backdrop-filter: blur(24px) saturate(180%);
-                -webkit-backdrop-filter: blur(24px) saturate(180%);
                 box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             }
             
             body.dark #hp-floating-filter-inner {
-                background: rgba(15, 16, 19, 0.72);
+                background: rgba(15, 16, 19, 0.92);
                 border: 1px solid rgba(255, 255, 255, 0.08);
                 box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.04) inset;
             }
             
             body:not(.dark) #hp-floating-filter-inner {
-                background: rgba(255, 255, 255, 0.72);
+                background: rgba(255, 255, 255, 0.92);
                 border: 1px solid rgba(255, 255, 255, 0.9);
                 box-shadow: 0 20px 60px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(255,255,255,0.5) inset;
             }
@@ -174,7 +172,6 @@ export const getHeatProdutosHTML = () => {
                 outline: none;
                 transition: all 0.3s ease;
                 cursor: pointer;
-                backdrop-filter: blur(12px);
                 appearance: none;
                 background-repeat: no-repeat;
                 background-position: right 12px center;
@@ -276,7 +273,7 @@ export const getHeatProdutosHTML = () => {
                     <div id="html-heatmap-container" class="min-w-[800px]"></div>
                 </div>
 
-                <div id="hp-drilldown-overlay" class="absolute inset-0 z-20 flex flex-col p-8 md:p-12 opacity-0 pointer-events-none translate-y-8" style="background: rgba(18, 19, 23, 0.92); backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);">
+                <div id="hp-drilldown-overlay" class="absolute inset-0 z-20 flex flex-col p-8 md:p-12 opacity-0 pointer-events-none translate-y-8" style="background: rgba(18, 19, 23, 0.96);">
                     <div class="flex justify-between items-start mb-6 border-b border-white/10 pb-6">
                         <div>
                             <h3 class="text-2xl font-black text-white leading-tight">Análise Detalhada</h3>
@@ -825,8 +822,7 @@ function renderStaticHeatmap(container, dataMap, catDataMap, drillDataMap, redeD
             tooltip.style.cssText = `
                 position: fixed; pointer-events: none; z-index: 99999; display: none; opacity: 0;
                 min-width: 200px; padding: 16px; border-radius: 16px;
-                background: var(--glass-bg, rgba(18, 19, 23, 0.9));
-                backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+                background: var(--glass-bg, rgba(18, 19, 23, 0.95));
                 border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.1));
                 box-shadow: var(--glass-shadow, 0 10px 40px rgba(0, 0, 0, 0.5));
                 color: var(--text-main, #fff); font-family: 'Archivo', sans-serif;

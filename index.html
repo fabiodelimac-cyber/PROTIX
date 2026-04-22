@@ -109,7 +109,7 @@
         body.dark #app-box {
             background-color: #0f1013;
             background-image: radial-gradient(ellipse 90% 50% at 85% 5%, rgba(104,91,199,0.12) 0%, transparent 55%), radial-gradient(ellipse 60% 40% at 10% 95%, rgba(104,91,199,0.07) 0%, transparent 50%);
-            box-shadow: 0 0 0 1px rgba(255,255,255,0.05), 0 40px 100px rgba(0,0,0,0.8);
+            box-shadow: 0 0 0 1px rgba(255,255,255,0.05), 0 20px 60px rgba(0,0,0,0.7);
             --glass-bg: rgba(255,255,255,0.03); --glass-border: rgba(255,255,255,0.07); --glass-shadow: 0 8px 32px rgba(0,0,0,0.4);
             --text-main: #ffffff; --text-muted: rgba(255,255,255,0.35); --text-muted-strong: rgba(255,255,255,0.55);
             --glow-shadow: 0 0 24px rgba(255,255,255,0.15); --glow-accent: 0 0 20px rgba(104,91,199,0.5); --glow-green: 0 0 15px rgba(34,197,94,0.3);
@@ -117,22 +117,17 @@
             --bg-sticky: rgba(15,16,19,0.92); --hover-table: rgba(104,91,199,0.05); --table-wrapper-bg: rgba(255,255,255,0.02);
         }
         body:not(.dark) #app-box {
-            background-color: rgba(245,248,252,0.92);
+            background-color: rgba(245,248,252,0.96);
             background-image: 
                 radial-gradient(ellipse 120% 80% at 15% 20%, rgba(104,91,199,0.06) 0%, transparent 50%),
-                radial-gradient(ellipse 100% 60% at 85% 85%, rgba(148,163,184,0.08) 0%, transparent 55%),
-                radial-gradient(ellipse 80% 40% at 50% 0%, rgba(255,255,255,0.4) 0%, transparent 60%);
-            backdrop-filter: blur(50px) saturate(120%); 
-            -webkit-backdrop-filter: blur(50px) saturate(120%);
+                radial-gradient(ellipse 100% 60% at 85% 85%, rgba(148,163,184,0.08) 0%, transparent 55%);
             box-shadow: 
                 0 0 0 1px rgba(255,255,255,0.8),
                 0 8px 32px rgba(104,91,199,0.08),
-                0 32px 64px rgba(15,23,42,0.08),
-                inset 0 1px 0 rgba(255,255,255,0.6),
-                inset 0 -1px 2px rgba(15,23,42,0.04);
-            --glass-bg: rgba(255,255,255,0.65); 
+                inset 0 1px 0 rgba(255,255,255,0.6);
+            --glass-bg: rgba(255,255,255,0.75); 
             --glass-border: rgba(255,255,255,0.95); 
-            --glass-shadow: 0 8px 32px rgba(15,23,42,0.08), 0 0 0 1px rgba(255,255,255,0.6) inset, 0 4px 16px rgba(104,91,199,0.06);
+            --glass-shadow: 0 8px 32px rgba(15,23,42,0.08);
             --text-main: #292929; 
             --text-muted: #6b7280; 
             --text-muted-strong: #374151;
@@ -162,20 +157,15 @@
         
         /* Glassmorfismo no topo quando há scroll */
         #floating-ui.scrolled {
-            background: rgba(15, 16, 19, 0.85) !important;
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
+            background: rgba(15, 16, 19, 0.92) !important;
             box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
         }
         
         body:not(.dark) #floating-ui.scrolled {
-            background: rgba(245,248,252,0.92) !important;
-            backdrop-filter: blur(50px) saturate(120%);
-            -webkit-backdrop-filter: blur(50px) saturate(120%);
+            background: rgba(245,248,252,0.96) !important;
             box-shadow: 
                 0 4px 24px rgba(15,23,42,0.08),
-                0 0 0 1px rgba(255,255,255,0.8),
-                inset 0 1px 0 rgba(255,255,255,0.6);
+                0 0 0 1px rgba(255,255,255,0.8);
         }
         
         /* Gradiente de fade suave na borda inferior */
@@ -238,11 +228,10 @@
         }
 
         #float-nav { position: relative; display: flex; align-items: center; padding: 5px; border-radius: 999px; gap: 0; }
-        body.dark #float-nav { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09); backdrop-filter: blur(24px); box-shadow: 0 4px 24px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.07); }
+        body.dark #float-nav { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09); box-shadow: 0 4px 24px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.07); }
         body:not(.dark) #float-nav { 
-            background: rgba(255,255,255,0.72); 
+            background: rgba(255,255,255,0.82); 
             border: 1px solid rgba(255,255,255,0.98); 
-            backdrop-filter: blur(30px) saturate(120%); 
             box-shadow: 
                 0 4px 24px rgba(15,23,42,0.08), 
                 inset 0 1px 0 rgba(255,255,255,1),
@@ -255,8 +244,7 @@
             background: rgba(255,255,255,0.98); 
             box-shadow: 
                 0 2px 12px rgba(104,91,199,0.15),
-                0 0 0 1px rgba(104,91,199,0.25),
-                inset 0 1px 0 rgba(255,255,255,1);
+                0 0 0 1px rgba(104,91,199,0.25);
             border: 1px solid rgba(104,91,199,0.25);
         }
 
@@ -276,12 +264,11 @@
             transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s, box-shadow 0.3s, border-color 0.3s, color 0.3s;
         }
 
-        body.dark #btn-toggle-filters { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.09); color: rgba(255,255,255,0.6); backdrop-filter: blur(24px); }
+        body.dark #btn-toggle-filters { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.09); color: rgba(255,255,255,0.6); }
         body:not(.dark) #btn-toggle-filters { 
-            background: rgba(255,255,255,0.72); 
+            background: rgba(255,255,255,0.82); 
             border-color: rgba(255,255,255,0.98); 
             color: #6b7280; 
-            backdrop-filter: blur(30px) saturate(120%); 
             box-shadow: 0 4px 12px rgba(15,23,42,0.06), 0 0 0 1px rgba(104,91,199,0.08);
         }
         body:not(.dark) #btn-toggle-filters:hover { 
@@ -304,11 +291,10 @@
             display: inline-flex; align-items: center; gap: 4px; padding: 5px 8px; border-radius: 999px; 
             max-width: 100%; flex-shrink: 1; position: relative; z-index: 110;
         }
-        body.dark #float-controls { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09); backdrop-filter: blur(24px); box-shadow: 0 4px 24px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.07); }
+        body.dark #float-controls { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09); box-shadow: 0 4px 24px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.07); }
         body:not(.dark) #float-controls { 
-            background: rgba(255,255,255,0.72); 
+            background: rgba(255,255,255,0.82); 
             border: 1px solid rgba(255,255,255,0.98); 
-            backdrop-filter: blur(30px) saturate(120%); 
             box-shadow: 
                 0 4px 24px rgba(15,23,42,0.08), 
                 inset 0 1px 0 rgba(255,255,255,1),
@@ -417,14 +403,11 @@
         body.dark .card { background-color: #1c1e22; border-color: #2d3139; }
         body.dark .text-muted { color: #8e94a0; }
         body:not(.dark) .card { 
-            background-color: rgba(255,255,255,0.75); 
+            background-color: rgba(255,255,255,0.85); 
             border: 1px solid rgba(255,255,255,0.98);
             box-shadow: 
                 0 4px 16px rgba(15,23,42,0.08),
-                0 0 0 1px rgba(104,91,199,0.1),
-                inset 0 1px 0 rgba(255,255,255,1);
-            backdrop-filter: blur(20px) saturate(110%);
-            -webkit-backdrop-filter: blur(20px) saturate(110%);
+                0 0 0 1px rgba(104,91,199,0.1);
         }
         body:not(.dark) .text-muted { color: #6b7280; }
 
@@ -432,17 +415,13 @@
            FILTROS / SELECTS GLASSMORFISMO 
         ============================================= */
         body.dark select, body.dark .slicer-btn { 
-            background-color: rgba(0, 0, 0, 0.45) !important;
-            backdrop-filter: blur(12px) !important;
-            -webkit-backdrop-filter: blur(12px) !important;
+            background-color: rgba(0, 0, 0, 0.55) !important;
             color: #ffffff !important;
             border: 1px solid rgba(255, 255, 255, 0.15) !important;
             outline: none;
         }
         body:not(.dark) select, body:not(.dark) .slicer-btn { 
-            background-color: rgba(255, 255, 255, 0.85) !important;
-            backdrop-filter: blur(20px) saturate(120%) !important;
-            -webkit-backdrop-filter: blur(20px) saturate(120%) !important;
+            background-color: rgba(255, 255, 255, 0.92) !important;
             color: #292929 !important;
             border: 1px solid rgba(255, 255, 255, 0.98) !important;
             box-shadow: 0 4px 12px rgba(15,23,42,0.06), inset 0 1px 0 rgba(255,255,255,1) !important;
@@ -520,21 +499,16 @@
            SLICER PANEL GLASSMORFISMO
         ============================================= */
         body.dark .slicer-panel {
-            background: rgba(15, 16, 19, 0.72) !important;
-            backdrop-filter: blur(24px) saturate(180%) !important;
-            -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+            background: rgba(15, 16, 19, 0.92) !important;
             border: 1px solid rgba(255, 255, 255, 0.08) !important;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.04) inset !important;
         }
         body:not(.dark) .slicer-panel {
-            background: rgba(255, 255, 255, 0.82) !important;
-            backdrop-filter: blur(30px) saturate(120%) !important;
-            -webkit-backdrop-filter: blur(30px) saturate(120%) !important;
+            background: rgba(255, 255, 255, 0.95) !important;
             border: 1px solid rgba(255, 255, 255, 0.98) !important;
             box-shadow: 
                 0 20px 60px rgba(15, 23, 42, 0.12), 
-                0 0 0 1px rgba(104,91,199,0.12) inset,
-                inset 0 1px 0 rgba(255,255,255,0.8) !important;
+                0 0 0 1px rgba(104,91,199,0.12) inset !important;
         }
 
         /* =============================================
@@ -579,8 +553,7 @@
             border-color: #685BC7 !important;
             box-shadow: 
                 0 0 12px rgba(104, 91, 199, 0.25),
-                0 4px 12px rgba(15,23,42,0.08),
-                inset 0 1px 0 rgba(255,255,255,1) !important;
+                0 4px 12px rgba(15,23,42,0.08) !important;
             background-color: rgba(104, 91, 199, 0.12) !important;
         }
 
@@ -644,6 +617,7 @@
 
         .bg-mesh { background: linear-gradient(-45deg, #131417, #1c1e22, #2a2552, #131417); background-size: 400% 400%; animation: meshGradient 10s ease infinite; }
         @keyframes meshGradient { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        .bg-mesh-static { background: linear-gradient(-45deg, #131417, #1c1e22, #2a2552, #131417); background-size: 400% 400%; background-position: 50% 50%; }
         #disclaimer-modal { border-radius: 20px; }
         
         /* =============================================
@@ -688,12 +662,10 @@
         ============================================= */
         .glass-card {
             background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
             border-radius: 20px;
             border: 1px solid rgba(255, 255, 255, 0.09);
             box-shadow: 
-                0 40px 100px rgba(0, 0, 0, 0.6),
+                0 20px 60px rgba(0, 0, 0, 0.6),
                 0 4px 24px rgba(0, 0, 0, 0.35),
                 inset 0 1px 0 rgba(255, 255, 255, 0.07);
             position: relative;
@@ -731,9 +703,68 @@
             background: rgba(0, 0, 0, 0.30) !important;
             border-color: rgba(255, 255, 255, 0.07) !important;
         }
+
+        /* =============================================
+           GPU PERFORMANCE: prefers-reduced-motion
+           Respeita preferência do SO por menos animações
+        ============================================= */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+            .bg-mesh { animation: none !important; }
+        }
+
+        /* =============================================
+           GPU PERFORMANCE: Modo lite para hardware fraco
+           Ativado via JS quando detecta GPU integrada
+        ============================================= */
+        body.gpu-lite .glass-panel,
+        body.gpu-lite .glass-card,
+        body.gpu-lite .slicer-panel,
+        body.gpu-lite #float-nav,
+        body.gpu-lite #float-controls,
+        body.gpu-lite #btn-toggle-filters,
+        body.gpu-lite .card,
+        body.gpu-lite #floating-ui.scrolled {
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+        }
+        body.gpu-lite.dark #app-box { background-color: #0f1013; }
+        body.gpu-lite:not(.dark) #app-box { background-color: #f0f3f8; }
+        body.gpu-lite .bg-mesh { animation: none !important; }
     </style>
 </head>
 <body class="antialiased dark">
+
+    <script>
+    // GPU Lite Mode: detecta hardware fraco e ativa otimizações
+    (function() {
+        try {
+            const canvas = document.createElement('canvas');
+            const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+            if (gl) {
+                const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+                if (debugInfo) {
+                    const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL).toLowerCase();
+                    // Detecta GPUs integradas Intel/AMD comuns em notebooks corporativos
+                    const isWeakGPU = /intel.*uhd|intel.*hd|intel.*iris(?!.*xe)|radeon.*vega\s?[3-8]|mali|adreno\s?[1-5]/i.test(renderer);
+                    if (isWeakGPU) {
+                        document.body.classList.add('gpu-lite');
+                        console.log('🔋 GPU Lite Mode ativado — GPU detectada:', renderer);
+                    }
+                }
+            }
+            // Também ativa se o dispositivo tem pouca memória (< 4GB)
+            if (navigator.deviceMemory && navigator.deviceMemory < 4) {
+                document.body.classList.add('gpu-lite');
+                console.log('🔋 GPU Lite Mode ativado — memória baixa:', navigator.deviceMemory + 'GB');
+            }
+        } catch(e) { /* silencioso */ }
+    })();
+    </script>
 
     <div id="login-screen" class="font-['Archivo',_sans-serif] bg-mesh fixed inset-0 flex flex-col items-center justify-center p-6 z-[100] transition-opacity duration-500">
         <div class="glass-card w-full max-w-4xl flex flex-col md:flex-row overflow-hidden min-h-[500px] z-10">
@@ -742,7 +773,7 @@
                 <img src="login-white.png" alt="ProSolution Logo" class="max-w-[240px] h-auto mb-8 drop-shadow-sm">
                 <h2 class="ds-login-product text-[36px] text-center mb-6">Protix</h2>
                 <div class="bg-white/15 px-5 py-2 rounded-2xl border border-white/20 shadow-sm">
-                    <span class="font-['Archivo',_sans-serif] text-[9px] font-medium uppercase tracking-[0.3em] text-white/70">Versão de Testes</span>
+                    <span class="font-['Michroma',_sans-serif] text-[12px] font-bold uppercase tracking-[0.3em] text-white/70">BETA 0.90</span>
                 </div>
             </div>
 
@@ -816,7 +847,7 @@
 
                     <div id="float-logo">
                         <img src="header.png" alt="Logo">
-                        <span id="float-logo-badge">Beta</span>
+                        <span id="float-logo-badge">BETA 0.90</span>
                     </div>
 
                     <div id="nav-and-filter-wrapper">

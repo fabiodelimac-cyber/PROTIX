@@ -12,7 +12,7 @@ export const getPerformanceHTML = () => {
         <style>
             #view-performance-wrapper { font-family: 'Archivo', sans-serif; }
             
-            .glass-panel { background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); }
+            .glass-panel { background: var(--glass-bg); border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); }
             .text-adaptive { color: var(--text-main); font-family: 'Archivo', sans-serif; }
             .text-adaptive-muted { color: var(--text-muted); font-family: 'Archivo', sans-serif; }
             .text-adaptive-strong { color: var(--text-muted-strong); font-family: 'Archivo', sans-serif; }
@@ -275,14 +275,12 @@ export const getPerformanceHTML = () => {
                 background: rgba(255,255,255,0.05);
                 border-color: rgba(255,255,255,0.09);
                 color: rgba(255,255,255,0.6);
-                backdrop-filter: blur(24px);
             }
             
             body:not(.dark) #health-info-toggle {
-                background: rgba(255,255,255,0.65);
+                background: rgba(255,255,255,0.85);
                 border-color: rgba(255,255,255,0.95);
                 color: #64748b;
-                backdrop-filter: blur(24px);
                 box-shadow: 0 4px 12px rgba(15,23,42,0.05);
             }
             
@@ -1077,7 +1075,7 @@ function renderGrowthTrends(data) {
             // Cabeçalho da linha de produto
             html += `
                 <div class="mb-8">
-                    <h5 class="text-sm font-black uppercase tracking-wider text-adaptive mb-4 pb-2 border-b border-white/10" style="font-family: 'Archivo', sans-serif;">
+                    <h5 class="text-sm uppercase tracking-wider text-adaptive mb-4 pb-2 border-b border-white/10" style="font-family: 'Archivo', sans-serif; font-weight: 140; letter-spacing: inherit;">
                         ${linha} (${produtos.length} produtos)
                     </h5>
                     
@@ -1102,14 +1100,14 @@ function renderGrowthTrends(data) {
                 
                 html += `
                     <div class="glass-panel p-6 rounded-2xl growth-card">
-                        <p class="ds-chart-subtitle text-adaptive-muted mb-2">${item.aparelho}</p>
+                        <p class="ds-chart-title mb-2">${item.aparelho}</p>
                         <div class="flex items-center justify-between mb-2">
                             <span class="trend-arrow ${trendClass}">
                                 <span style="font-size: 24px;">${arrow}</span>
                                 <span class="font-numbers">${isPositive ? '+' : ''}${growth.toFixed(1)}%</span>
                             </span>
                         </div>
-                        <div class="text-[9px] text-adaptive-muted mb-4" style="font-family: 'Archivo', sans-serif;">
+                        <div class="text-xs mb-4" style="font-family: 'Archivo', sans-serif; font-weight: 120; color: white;">
                             <div class="flex justify-between">
                                 <span>Último dia (${formatDate(lastDate)}):</span>
                                 <span class="font-numbers">${Math.round(lastDayValue).toLocaleString('pt-BR')}</span>

@@ -15,7 +15,7 @@ export const getOverviewHTML = () => {
         <style>
             #view-overview-wrapper { font-family: 'Archivo', sans-serif; }
             
-            .glass-panel { background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); }
+            .glass-panel { background: var(--glass-bg); border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); }
             .text-adaptive { color: var(--text-main); }
             .text-adaptive-muted { color: var(--text-muted); }
             .text-adaptive-strong { color: var(--text-muted-strong); }

@@ -88,13 +88,21 @@ import { supabase } from './services/supabaseClient.js';
 // --- VARIÁVEIS GLOBAIS DE ESTADO (Apenas UI e Rotas) ---
 let isDataLoaded = false;
 let currentRoute = 'view-overview';
+let isLoggingOut = false; // Flag para evitar múltiplos logouts simultâneos
 
 // --- AUTENTICAÇÃO (MOTOR SUPABASE) ---
 // --- AUTENTICAÇÃO (MOTOR SUPABASE COM ESTEIRA DE APROVAÇÃO) ---
 supabase.auth.onAuthStateChange(async (event, session) => {
+    console.log('🔐 AUTH STATE CHANGE:', event, session ? 'Session exists' : 'No session');
+    
     if (session) {
         // Ignora eventos de refresh de token — o usuário já está logado
-        if (event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') return;
+        if (event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
+            console.log('🔐 Ignorando evento de refresh/update');
+            return;
+        }
+        
+        console.log('🔐 Processando login/signup...');
         
         // INTERCEPTAÇÃO: O usuário logou no Google, mas temos que checar se você aprovou
         try {
@@ -105,11 +113,17 @@ supabase.auth.onAuthStateChange(async (event, session) => {
                 .single();
 
             if (data && data.status === 'approved') {
+                console.log('🔐 Usuário aprovado, mostrando dashboard');
                 // FLUXO LIBERADO: Usuário está aprovado
                 const loginScreen = document.getElementById('login-screen');
                 loginScreen.style.opacity = '0';
                 loginScreen.style.pointerEvents = 'none';
-                setTimeout(() => { loginScreen.style.display = 'none'; }, 500);
+                setTimeout(() => { 
+                    loginScreen.style.display = 'none';
+                    // Stop meshGradient animation to free GPU after login
+                    loginScreen.classList.remove('bg-mesh');
+                    loginScreen.classList.add('bg-mesh-static');
+                }, 500);
 
                 const dashShell = document.getElementById('dash-shell');
                 dashShell.style.display = 'flex';
@@ -130,17 +144,20 @@ supabase.auth.onAuthStateChange(async (event, session) => {
                 if (!isDataLoaded) initData();
                 
             } else {
+                console.log('🔐 Usuário não aprovado');
                 // FLUXO BLOQUEADO: Usuário é pending ou a tabela falhou
                 alert("Sua conta foi cadastrada com sucesso, mas aguarda aprovação do Administrador para acessar a dashboard.");
                 await supabase.auth.signOut(); // Desloga o cidadão na mesma hora
             }
         } catch (err) {
-            console.error("Erro ao validar acesso:", err);
+            console.error("🔐 Erro ao validar acesso:", err);
             alert("Erro ao validar permissões. Contate o administrador.");
             await supabase.auth.signOut();
         }
     } else {
+        console.log('🔐 Sem sessão, mostrando tela de login');
         // FLUXO DE SAÍDA (LOGOUT NORMAL)
+        isLoggingOut = false; // Reseta a flag de logout
         stopPerformanceMonitoring();
         const loginScreen = document.getElementById('login-screen');
         loginScreen.style.display = 'flex';
@@ -204,8 +221,23 @@ document.getElementById('app-box').addEventListener('click', async (e) => {
     const logoutBtn = e.target.closest('#btn-logout');
     if (!logoutBtn) return;
     
+    console.log('🚪 LOGOUT: Clique detectado no botão Sair');
+    
+    // Proteção contra múltiplos cliques
+    if (isLoggingOut) {
+        console.log('🚪 LOGOUT: Já está fazendo logout, ignorando clique');
+        return;
+    }
+    
+    isLoggingOut = true;
+    
     e.stopPropagation();
     e.preventDefault();
+    
+    // Feedback visual imediato
+    logoutBtn.style.opacity = '0.5';
+    logoutBtn.style.pointerEvents = 'none';
+    logoutBtn.innerHTML = '<span style="font-size:10px;">SAINDO...</span>';
     
     // Fecha qualquer painel de filtro aberto antes de deslogar
     document.querySelectorAll('.slicer-panel.panel-open').forEach(p => p.classList.remove('panel-open'));
@@ -213,20 +245,59 @@ document.getElementById('app-box').addEventListener('click', async (e) => {
     
     // Remove about-overlay se estiver aberto (pode estar bloqueando)
     const aboutOverlay = document.getElementById('about-overlay');
-    if (aboutOverlay) aboutOverlay.remove();
+    if (aboutOverlay) {
+        console.log('🚪 LOGOUT: Removendo about-overlay');
+        aboutOverlay.remove();
+    }
+    
+    // Remove disclaimer-modal se estiver visível (pode estar bloqueando)
+    const disclaimerModal = document.getElementById('disclaimer-modal');
+    if (disclaimerModal && !disclaimerModal.classList.contains('hidden')) {
+        console.log('🚪 LOGOUT: Ocultando disclaimer-modal');
+        disclaimerModal.classList.add('hidden');
+    }
+    
+    console.log('🚪 LOGOUT: Chamando supabase.auth.signOut()...');
     
     try {
-        await supabase.auth.signOut();
+        // Timeout de 5 segundos para o signOut
+        const signOutPromise = supabase.auth.signOut();
+        const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('TIMEOUT')), 5000)
+        );
+        
+        await Promise.race([signOutPromise, timeoutPromise]);
+        console.log('🚪 LOGOUT: signOut() concluído com sucesso');
     } catch (error) {
-        console.error('Erro ao fazer logout:', error);
+        console.error('🚪 LOGOUT: Erro ou timeout ao fazer logout:', error);
+        
         // Fallback: força a tela de login mesmo se o signOut falhar
+        isLoggingOut = false; // Libera a flag
+        
         const loginScreen = document.getElementById('login-screen');
         if (loginScreen) {
             loginScreen.style.display = 'flex';
             loginScreen.style.opacity = '1';
             loginScreen.style.pointerEvents = 'auto';
         }
-        document.getElementById('dash-shell').style.display = 'none';
+        
+        const dashShell = document.getElementById('dash-shell');
+        if (dashShell) {
+            dashShell.style.display = 'none';
+        }
+        
+        // Limpa localStorage e sessionStorage
+        try {
+            localStorage.removeItem('supabase.auth.token');
+            sessionStorage.clear();
+        } catch (e) {
+            console.error('Erro ao limpar storage:', e);
+        }
+        
+        // Recarrega a página para garantir estado limpo
+        setTimeout(() => {
+            window.location.href = window.location.origin + window.location.pathname;
+        }, 500);
     }
     
     // Limpa o campo de senha se existir (apenas na tela de login)
@@ -333,10 +404,23 @@ navItems.forEach(btn => {
 // Sidebar removida - substituída por topbar (nav pills)
 function closeSidebarMobile() { /* noop - sem sidebar */ }
 
+let isAboutOpen = false; // Flag para evitar múltiplas aberturas do About
+
 document.getElementById('btn-go-about').addEventListener('click', () => {
+    if (isAboutOpen) {
+        console.log('🔍 ABOUT: Já está aberto, ignorando clique');
+        return;
+    }
+    
+    isAboutOpen = true;
+    console.log('🔍 ABOUT: Abrindo...');
+    
     // Remove overlay anterior se existir (proteção contra clique duplo)
     const existingOverlay = document.getElementById('about-overlay');
-    if (existingOverlay) existingOverlay.remove();
+    if (existingOverlay) {
+        console.log('🔍 ABOUT: Removendo overlay anterior');
+        existingOverlay.remove();
+    }
     
     const shell = document.getElementById('dash-shell');
     shell.style.transition = 'opacity 0.6s ease, filter 0.6s ease';
@@ -345,6 +429,15 @@ document.getElementById('btn-go-about').addEventListener('click', () => {
     setTimeout(() => {
         document.getElementById('app-box').insertAdjacentHTML('beforeend', getAboutHTML());
         initAbout();
+        
+        // Reseta a flag quando o overlay for removido
+        const checkRemoval = setInterval(() => {
+            if (!document.getElementById('about-overlay')) {
+                isAboutOpen = false;
+                console.log('🔍 ABOUT: Flag resetada');
+                clearInterval(checkRemoval);
+            }
+        }, 100);
     }, 600);
 });
 
@@ -353,6 +446,35 @@ document.getElementById('btn-go-about').addEventListener('click', () => {
 window.addEventListener('bypass-login', () => {
     if (!isDataLoaded) initData();
 });
+
+// DEBUG: Log global de cliques para diagnosticar problema do botão Sair
+document.addEventListener('click', (e) => {
+    const target = e.target;
+    const isLogoutBtn = target.closest('#btn-logout');
+    if (isLogoutBtn) {
+        console.log('🔍 DEBUG: Clique no botão Sair detectado no document');
+        console.log('🔍 Target:', target);
+        console.log('🔍 CurrentTarget:', e.currentTarget);
+        console.log('🔍 EventPhase:', e.eventPhase);
+        
+        // Verifica se há elementos por cima
+        const rect = isLogoutBtn.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        const elementAtPoint = document.elementFromPoint(centerX, centerY);
+        
+        console.log('🔍 Elemento no centro do botão:', elementAtPoint);
+        console.log('🔍 É o próprio botão?', elementAtPoint === isLogoutBtn || isLogoutBtn.contains(elementAtPoint));
+        
+        if (elementAtPoint !== isLogoutBtn && !isLogoutBtn.contains(elementAtPoint)) {
+            console.warn('⚠️ PROBLEMA: Há um elemento por cima do botão Sair!');
+            console.warn('⚠️ Elemento bloqueador:', elementAtPoint);
+            console.warn('⚠️ ID:', elementAtPoint?.id);
+            console.warn('⚠️ Classes:', elementAtPoint?.className);
+            console.warn('⚠️ Z-index:', window.getComputedStyle(elementAtPoint).zIndex);
+        }
+    }
+}, true); // Capture phase para pegar antes de qualquer stopPropagation
 // --- CARGA DE DADOS INICIAL (SUPABASE) ---
 async function initData() {
     isDataLoaded = true;

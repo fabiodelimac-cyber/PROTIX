@@ -66,31 +66,50 @@ class PerformanceMonitor {
             }, 2000);
         }
 
-        // GPU estimation via WebGL (se disponível)
-        try {
-            const canvas = document.createElement('canvas');
-            const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-            if (gl) {
-                setInterval(() => {
-                    const frameTime = performance.now() - this.metrics.lastFrameTime;
-                    const gpuValue = Math.min(100, Math.round((frameTime / 16.67) * 100));
-                    
-                    this.metrics.gpuSamples.push(gpuValue);
-                    if (this.metrics.gpuSamples.length > this.metrics.maxSamples) {
-                        this.metrics.gpuSamples.shift();
-                    }
-                    
-                    // Calcula média
-                    this.metrics.gpu = Math.round(
-                        this.metrics.gpuSamples.reduce((a, b) => a + b, 0) / this.metrics.gpuSamples.length
-                    );
-                    
-                    this.metrics.lastFrameTime = performance.now();
-                }, 2000);
+        // GPU estimation via requestAnimationFrame (medição correta)
+        let lastFrameTime = performance.now();
+        let frameTimes = [];
+        
+        const measureFrame = () => {
+            const now = performance.now();
+            const delta = now - lastFrameTime;
+            lastFrameTime = now;
+            
+            // Armazena tempo entre frames
+            frameTimes.push(delta);
+            if (frameTimes.length > 60) {
+                frameTimes.shift();
             }
-        } catch (e) {
-            // WebGL não disponível
-        }
+            
+            // Calcula média dos últimos 60 frames
+            if (frameTimes.length > 0) {
+                const avgFrameTime = frameTimes.reduce((a, b) => a + b, 0) / frameTimes.length;
+                
+                // GPU load: quanto mais próximo de 16.67ms (60fps), melhor
+                // Se avgFrameTime > 16.67ms, a GPU está sobrecarregada
+                // Se avgFrameTime < 16.67ms, a GPU está ociosa
+                const targetFrameTime = 16.67; // 60fps
+                
+                if (avgFrameTime <= targetFrameTime) {
+                    // GPU está bem, calcula % de uso baseado na proximidade do ideal
+                    this.metrics.gpu = Math.round((avgFrameTime / targetFrameTime) * 50);
+                } else {
+                    // GPU está sobrecarregada
+                    const overload = (avgFrameTime - targetFrameTime) / targetFrameTime;
+                    this.metrics.gpu = Math.min(100, Math.round(50 + (overload * 50)));
+                }
+                
+                // Adiciona à lista de samples para média
+                this.metrics.gpuSamples.push(this.metrics.gpu);
+                if (this.metrics.gpuSamples.length > this.metrics.maxSamples) {
+                    this.metrics.gpuSamples.shift();
+                }
+            }
+            
+            requestAnimationFrame(measureFrame);
+        };
+        
+        requestAnimationFrame(measureFrame);
     }
 
     setupAutoSave() {
