@@ -146,6 +146,25 @@ export const getOverviewHTML = () => {
                 }
             }
 
+            /* Insight Fade Animation */
+            .insight-fade-out {
+                animation: insightFadeOut 0.3s ease-out forwards;
+            }
+            
+            .insight-fade-in {
+                animation: insightFadeIn 0.3s ease-out forwards;
+            }
+            
+            @keyframes insightFadeOut {
+                from { opacity: 1; }
+                to { opacity: 0; }
+            }
+            
+            @keyframes insightFadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+
             /* EYE CANDY: Animações de Entrada */
             @keyframes slideUpFade {
                 from { opacity: 0; transform: translateY(10px); }
@@ -185,7 +204,7 @@ export const getOverviewHTML = () => {
             </div>
             ` : ''}
 
-            <div id="insight-box" class="anim-cascade delay-1 glass-panel p-5 md:p-6 rounded-2xl flex items-center gap-5 mb-6 md:mb-8 transition-all">
+            <div id="insight-box" class="anim-cascade delay-1 glass-panel p-5 md:p-6 rounded-[2.5rem] flex items-center gap-5 mb-6 md:mb-8 transition-all">
                 <div class="bg-gradient-to-br from-[#685BC7] to-[#8b5cf6] px-4 py-2 rounded-xl text-white ds-badge-text shadow-lg shadow-[#685BC7]/30 shrink-0">INSIGHT</div>
                 <p id="insight-text" class="ds-insight-text text-sm md:text-base italic"></p>
             </div>
@@ -213,7 +232,7 @@ export const getOverviewHTML = () => {
                 </div>
                 <div class="flex-1 p-8 md:p-10 flex flex-col justify-start relative neon-accent z-10 overflow-hidden rounded-r-[2.5rem]">
                     <div class="absolute right-0 top-0 opacity-[0.02] text-9xl font-black -mt-6 -mr-4 pointer-events-none">📊</div>
-                    <p class="ds-kpi-label mb-4 relative z-10 text-[#685BC7]">Média por Ponto de Venda</p>
+                    <p class="ds-kpi-label mb-4 relative z-10 text-[#685BC7]">Média por PDV</p>
                     <h3 id="k-avg" class="ds-kpi-value text-4xl md:text-5xl text-glow-accent relative z-10">0</h3>
                     <div class="absolute bottom-0 left-0 w-full h-1.5 bg-gradient-to-r from-transparent via-[#685BC7] to-transparent opacity-50"></div>
                 </div>
@@ -406,7 +425,7 @@ function generateInsights(dbData) {
     const aparelhosArray = dbData.aparelhos || [];
     const topDev = [...aparelhosArray].sort((a,b) => b.total - a.total)[0];
     if (topDev && topDev.total > 0) {
-        insights.push(`PROSOLUTION ANALYTICS: O modelo ${topDev.aparelho} registrou a maior tração com ${Math.round(topDev.total).toLocaleString('pt-BR')} interações validadas.`);
+        insights.push(`O modelo ${topDev.aparelho} registrou a maior tração com ${Math.round(topDev.total).toLocaleString('pt-BR')} interações validadas.`);
     }
     
     // Insight 2: Rede com mais interações
@@ -414,7 +433,7 @@ function generateInsights(dbData) {
     if (redeArray.length > 0) {
         const topRede = [...redeArray].sort((a,b) => b.total - a.total)[0];
         if (topRede && topRede.rede && topRede.total > 0) {
-            insights.push(`PROSOLUTION ANALYTICS: A rede ${topRede.rede} concentra ${Math.round(topRede.total).toLocaleString('pt-BR')} interações, liderando o engajamento no período.`);
+            insights.push(`A rede ${topRede.rede} concentra ${Math.round(topRede.total).toLocaleString('pt-BR')} interações, liderando o engajamento no período.`);
         }
     }
     
@@ -422,7 +441,7 @@ function generateInsights(dbData) {
     // NOTA: Requer atualização da RPC get_overview_metrics para incluir top_store nos kpis
     // Ver: BACKUPS/== SUPABASE BACKUP/README_OVERVIEW_UPDATE.md
     if (dbData.kpis && dbData.kpis.top_store) {
-        insights.push(`PROSOLUTION ANALYTICS: O PDV ${dbData.kpis.top_store} lidera o ranking de engajamento no período analisado.`);
+        insights.push(`O PDV ${dbData.kpis.top_store} lidera o ranking de engajamento no período analisado.`);
     } else {
         console.warn('⚠️ Campo top_store não encontrado nos KPIs. Atualize a RPC get_overview_metrics.');
     }
@@ -432,7 +451,7 @@ function generateInsights(dbData) {
     if (linhaArray.length > 0) {
         const topLinha = [...linhaArray].sort((a,b) => b.total - a.total)[0];
         if (topLinha && topLinha.linha_de_produto && topLinha.total > 0) {
-            insights.push(`PROSOLUTION ANALYTICS: A linha ${topLinha.linha_de_produto} demonstra maior adesão com ${Math.round(topLinha.total).toLocaleString('pt-BR')} interações validadas.`);
+            insights.push(`A linha ${topLinha.linha_de_produto} demonstra maior adesão com ${Math.round(topLinha.total).toLocaleString('pt-BR')} interações validadas.`);
         }
     }
     
@@ -445,25 +464,21 @@ function generateInsights(dbData) {
     return insights;
 }
 
-// Efeito de digitação (typewriter)
-function typewriterEffect(element, text, callback) {
-    // Limpa qualquer typewriter anterior
-    if (insightTypewriterInterval) {
-        clearInterval(insightTypewriterInterval);
-    }
+// Atualiza o texto do insight com fade
+function updateInsightText(element, text, callback) {
+    // Fade out
+    element.classList.add('insight-fade-out');
     
-    element.innerHTML = "";
-    let i = 0;
-    insightTypewriterInterval = setInterval(() => {
-        if (i < text.length) {
-            element.innerHTML += text.charAt(i);
-            i++;
-        } else {
-            clearInterval(insightTypewriterInterval);
-            insightTypewriterInterval = null;
+    setTimeout(() => {
+        element.innerText = text;
+        element.classList.remove('insight-fade-out');
+        element.classList.add('insight-fade-in');
+        
+        setTimeout(() => {
+            element.classList.remove('insight-fade-in');
             if (callback) callback();
-        }
-    }, 20);
+        }, 300);
+    }, 300);
 }
 
 // Inicia a rotação de insights
@@ -489,38 +504,38 @@ function startInsightRotation(dbData) {
     
     // Se só tem 1 insight, não rotaciona
     if (insights.length <= 1) {
-        typewriterEffect(el, insights[0]);
+        updateInsightText(el, insights[0]);
         return;
     }
     
     currentInsightIndex = 0;
     
     // Mostra o primeiro insight
-    typewriterEffect(el, insights[currentInsightIndex]);
+    updateInsightText(el, insights[currentInsightIndex]);
     
     // Rotaciona a cada 5 segundos
     insightRotationInterval = setInterval(() => {
-        // Slide out
-        el.classList.add('insight-slide-out');
+        // Fade out
+        el.classList.add('insight-fade-out');
         
         setTimeout(() => {
             // Atualiza o índice para o PRÓXIMO insight
             currentInsightIndex = (currentInsightIndex + 1) % insights.length;
             
             // Remove animação de saída
-            el.classList.remove('insight-slide-out');
+            el.classList.remove('insight-fade-out');
             
             // Adiciona animação de entrada
-            el.classList.add('insight-slide-in');
+            el.classList.add('insight-fade-in');
             
-            // Mostra novo insight com efeito de digitação
-            typewriterEffect(el, insights[currentInsightIndex], () => {
-                // Remove animação de entrada após completar
-                setTimeout(() => {
-                    el.classList.remove('insight-slide-in');
-                }, 500);
-            });
-        }, 500);
+            // Mostra novo insight com fade
+            el.innerText = insights[currentInsightIndex];
+            
+            // Remove animação de entrada após completar
+            setTimeout(() => {
+                el.classList.remove('insight-fade-in');
+            }, 300);
+        }, 300);
     }, 5000);
 }
 
@@ -930,7 +945,7 @@ function drawChart(id, type, data, isArea = false, isH = false) {
                 tooltip: tooltipConfig,
                 datalabels: {
                     display: type !== 'doughnut', 
-                    font: { family: 'Archivo', size: 10, weight: 800 },
+                    font: { family: 'Michroma', size: 10 },
                     formatter: (value) => Math.round(value).toLocaleString('pt-BR'),
                     anchor: 'end',
                     align: isH ? 'right' : 'top',
@@ -1087,7 +1102,7 @@ function drawGrowthChart(id, data, mode) {
                 },
                 datalabels: {
                     display: mode !== 'day', // Esconde labels no modo dia para não poluir
-                    font: { family: 'Archivo', size: 10, weight: 800 },
+                    font: { family: 'Michroma', size: 10 },
                     formatter: (value, ctx) => {
                         const idx = ctx.dataIndex;
                         if (idx === 0) return Math.round(value).toLocaleString('pt-BR');

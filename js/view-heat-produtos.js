@@ -5,6 +5,7 @@ Chart.register(ChartDataLabels);
 
 let chartInstances = {};
 let currentProduct = null;
+let previousRadarProduct = null;
 let unsubscribeData = null;
 let currentRenderToken = 0;
 let peakSlideInterval = null; // Intervalo para alternar entre picos
@@ -302,6 +303,7 @@ export const getHeatProdutosHTML = () => {
                 <div class="anim-cascade delay-4 glass-panel p-8 md:p-10 rounded-[2rem]">
                     <h4 class="ds-chart-title mb-8">DNA de Retenção (Perfil Horário)</h4>
                     <div class="chart-container" style="height: 450px;"><canvas id="hp-c-radar"></canvas></div>
+                    <div id="hp-radar-comparison" class="mt-4" style="display:none;"></div>
                 </div>
                 <div class="anim-cascade delay-4 flex flex-col gap-6 md:gap-8">
                     <div class="glass-panel p-8 rounded-[2rem] flex-1">
@@ -364,6 +366,7 @@ export const getHeatProdutosHTML = () => {
 export const destroyHeatProdutosCharts = () => {
     Object.keys(chartInstances).forEach(id => { if(chartInstances[id]) chartInstances[id].destroy(); });
     chartInstances = {};
+    previousRadarProduct = null;
     
     const tooltip = document.getElementById('hp-global-tooltip');
     if (tooltip) tooltip.remove();
@@ -703,8 +706,12 @@ async function executeRenderLogic() {
         radarProd.forEach(r => { const idx = r.hour - 10; if(idx >= 0 && idx < 13) hourlyProd[idx] = r.total || 0; });
         radarCat.forEach(r => { const idx = r.hour - 10; if(idx >= 0 && idx < 13) hourlyCat[idx] = r.total || 0; });
 
+        // Média por aparelho da operação inteira (radar_cat exclui o produto, somamos de volta e dividimos)
+        const totalDevices = Math.max(aparelhos.length, 1);
+        const hourlyCatAvg = hourlyCat.map((v, i) => (v + hourlyProd[i]) / totalDevices);
+
         const labelsHoras = horasComerciais.map(h => `${h}h`);
-        drawRadarChart('hp-c-radar', labelsHoras, hourlyProd, hourlyCat);
+        drawRadarChart('hp-c-radar', labelsHoras, hourlyProd, hourlyCat, hourlyCatAvg, currentProduct);
 
         // Canal
         const canalAgg = {};
@@ -1021,14 +1028,110 @@ function closeDrilldown() {
 }
 
 
-function drawRadarChart(id, labels, prodData, catData) {
+function drawRadarChart(id, labels, prodData, catData, catAvgData, selectedProduct) {
     const ctx = document.getElementById(id).getContext('2d');
     const isDark = document.body.classList.contains('dark');
     
-    const maxProd = Math.max(...prodData) || 1;
-    const maxCat = Math.max(...catData) || 1;
-    const normProd = prodData.map(v => (v / maxProd) * 100);
-    const normCat = catData.map(v => (v / maxCat) * 100);
+    let normProd, normCat;
+    let scaleMax = 100;
+    let isZoomed = false;
+
+    if (selectedProduct) {
+        const maxProd = Math.max(...prodData) || 1;
+        const maxAvg = Math.max(...catAvgData) || 1;
+        const globalMax = Math.max(maxProd, maxAvg);
+        const ratio = Math.min(maxProd, maxAvg) / globalMax;
+
+        if (ratio < 0.3) {
+            isZoomed = true;
+            const capAt = 75;
+            normProd = prodData.map(v => maxProd > 0 ? (v / maxProd) * capAt : 0);
+            normCat = catAvgData.map(v => maxAvg > 0 ? (v / maxAvg) * capAt : 0);
+            scaleMax = 100;
+        } else {
+            normProd = prodData.map(v => (v / globalMax) * 100);
+            normCat = catAvgData.map(v => (v / globalMax) * 100);
+        }
+    } else {
+        const maxProd = Math.max(...prodData) || 1;
+        const maxCat = Math.max(...catData) || 1;
+        normProd = prodData.map(v => (v / maxProd) * 100);
+        normCat = catData.map(v => (v / maxCat) * 100);
+    }
+
+    // Diferença percentual por horário: produto vs média por aparelho da operação
+    let diffPerHour = null;
+    if (selectedProduct) {
+        diffPerHour = prodData.map((val, i) => {
+            const avgVal = catAvgData[i];
+            if (avgVal === 0) return val > 0 ? 100 : 0;
+            return ((val - avgVal) / avgVal) * 100;
+        });
+    }
+
+    // Plugin para desenhar pills de porcentagem em cada ponto do dataset roxo
+    const pointPercentPlugin = {
+        id: 'radarPointPercent',
+        afterDatasetsDraw: (chart) => {
+            if (!diffPerHour) return;
+            const c = chart.ctx;
+            const meta = chart.getDatasetMeta(0); // dataset 0 = produto (roxo)
+
+            c.save();
+            meta.data.forEach((point, i) => {
+                const diff = diffPerHour[i];
+                // Pula se a diferença é zero e ambos os valores são zero (sem dados)
+                if (diff === 0 && prodData[i] === 0 && catData[i] === 0) return;
+
+                const x = point.x;
+                const y = point.y;
+
+                const sign = diff > 0 ? '+' : '';
+                const displayVal = `${sign}${Math.round(diff)}%`;
+
+                let color;
+                if (diff > 5) color = '#22c55e';
+                else if (diff < -5) color = '#ef4444';
+                else color = isDark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.35)';
+
+                // Mede o texto para dimensionar a pill
+                c.font = '700 8px Michroma';
+                const tw = c.measureText(displayVal).width;
+                const pillW = tw + 8;
+                const pillH = 14;
+                const pillX = x - pillW / 2;
+                const pillY = y - pillH - 6; // posiciona acima do ponto
+                const r = 4;
+
+                // Fundo pill com rounded rect
+                c.beginPath();
+                c.moveTo(pillX + r, pillY);
+                c.lineTo(pillX + pillW - r, pillY);
+                c.arcTo(pillX + pillW, pillY, pillX + pillW, pillY + r, r);
+                c.lineTo(pillX + pillW, pillY + pillH - r);
+                c.arcTo(pillX + pillW, pillY + pillH, pillX + pillW - r, pillY + pillH, r);
+                c.lineTo(pillX + r, pillY + pillH);
+                c.arcTo(pillX, pillY + pillH, pillX, pillY + pillH - r, r);
+                c.lineTo(pillX, pillY + r);
+                c.arcTo(pillX, pillY, pillX + r, pillY, r);
+                c.closePath();
+
+                c.fillStyle = isDark ? 'rgba(18, 19, 23, 0.88)' : 'rgba(255, 255, 255, 0.88)';
+                c.fill();
+                c.strokeStyle = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+                c.lineWidth = 0.5;
+                c.stroke();
+
+                // Texto
+                c.font = '700 8px Michroma';
+                c.fillStyle = color;
+                c.textAlign = 'center';
+                c.textBaseline = 'middle';
+                c.fillText(displayVal, x, pillY + pillH / 2);
+            });
+            c.restore();
+        }
+    };
 
     chartInstances[id] = new Chart(ctx, {
         type: 'radar',
@@ -1041,10 +1144,13 @@ function drawRadarChart(id, labels, prodData, catData) {
                     borderColor: '#685BC7',
                     backgroundColor: 'rgba(104, 91, 199, 0.25)',
                     borderWidth: 4,
-                    pointRadius: 0
+                    pointRadius: selectedProduct ? 3 : 0,
+                    pointHoverRadius: selectedProduct ? 6 : 0,
+                    pointBackgroundColor: '#685BC7',
+                    pointBorderColor: '#685BC7'
                 },
                 {
-                    label: 'Média Categoria',
+                    label: 'Média Operação',
                     data: normCat,
                     borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)',
                     backgroundColor: 'transparent',
@@ -1054,9 +1160,14 @@ function drawRadarChart(id, labels, prodData, catData) {
                 }
             ]
         },
+        plugins: [pointPercentPlugin],
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            animation: {
+                duration: isZoomed ? 800 : 400,
+                easing: isZoomed ? 'easeOutBack' : 'easeOutQuart'
+            },
             scales: {
                 r: {
                     angleLines: { color: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' },
@@ -1064,16 +1175,141 @@ function drawRadarChart(id, labels, prodData, catData) {
                     pointLabels: { color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)', font: { family: 'Archivo', size: 11, weight: 700 } },
                     ticks: { display: false },
                     suggestedMin: 0,
-                    suggestedMax: 100
+                    suggestedMax: scaleMax
                 }
             },
             plugins: {
                 datalabels: { display: false },
                 legend: { position: 'bottom', labels: { color: isDark ? '#fff' : '#000', font: { family: 'Archivo', size: 10, weight: 700 }, usePointStyle: true } },
-                tooltip: { enabled: false }
+                tooltip: {
+                    enabled: !!selectedProduct,
+                    filter: (tooltipItem) => tooltipItem.datasetIndex === 0,
+                    backgroundColor: isDark ? 'rgba(18, 19, 23, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                    titleColor: isDark ? '#ffffff' : '#131417',
+                    bodyColor: isDark ? 'rgba(255, 255, 255, 0.8)' : 'rgba(19, 20, 23, 0.8)',
+                    titleFont: { family: 'Archivo', size: 11, weight: 800 },
+                    bodyFont: { family: 'Michroma', size: 10 },
+                    borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+                    borderWidth: 1,
+                    padding: 12,
+                    cornerRadius: 12,
+                    displayColors: false,
+                    callbacks: {
+                        title: (items) => items[0].label,
+                        label: (item) => {
+                            const i = item.dataIndex;
+                            return [
+                                `${selectedProduct}: ${Math.round(prodData[i]).toLocaleString('pt-BR')}`,
+                                `Média Operação: ${catAvgData[i].toFixed(1).replace('.', ',')}`
+                            ];
+                        }
+                    }
+                }
             }
         }
     });
+
+    // Indicador visual de escala adaptativa
+    const container = document.getElementById(id).parentElement;
+    const existingBadge = container.querySelector('.zoom-badge');
+    if (existingBadge) existingBadge.remove();
+
+    if (isZoomed && selectedProduct) {
+        const badge = document.createElement('div');
+        badge.className = 'zoom-badge';
+        badge.style.cssText = `
+            position: absolute; top: 8px; right: 8px;
+            font-family: 'Archivo', sans-serif; font-size: 9px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.05em;
+            padding: 4px 10px; border-radius: 8px;
+            background: ${isDark ? 'rgba(104, 91, 199, 0.15)' : 'rgba(104, 91, 199, 0.1)'};
+            color: #685BC7;
+            border: 1px solid rgba(104, 91, 199, 0.2);
+            opacity: 0; transition: opacity 0.5s ease;
+        `;
+        badge.textContent = '⚖ Escala Adaptativa';
+        container.style.position = 'relative';
+        container.appendChild(badge);
+        requestAnimationFrame(() => { badge.style.opacity = '1'; });
+    }
+
+    // Cartão de comparação total: produto vs operação
+    const compCard = document.getElementById('hp-radar-comparison');
+    if (compCard) {
+        const wasVisible = previousRadarProduct !== null;
+        const willBeVisible = !!selectedProduct;
+
+        const buildCardHTML = () => {
+            const totalProd = prodData.reduce((a, b) => a + b, 0);
+            const totalCatAll = catAvgData.reduce((a, b) => a + b, 0);
+            const count = prodData.filter(v => v > 0).length || 1;
+            const countCat = catAvgData.filter(v => v > 0).length || 1;
+            const avgProd = Math.round(totalProd / count);
+            const avgCatOp = Math.round(totalCatAll / countCat);
+            const diffTotal = avgCatOp > 0 ? ((avgProd - avgCatOp) / avgCatOp) * 100 : 0;
+
+            const sign = diffTotal > 0 ? '+' : '';
+            const diffStr = `${sign}${Math.round(diffTotal)}%`;
+            const diffColor = diffTotal > 5 ? '#22c55e' : (diffTotal < -5 ? '#ef4444' : (isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)'));
+
+            return `
+                <div class="radar-comp-inner" style="
+                    display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;
+                    padding: 10px 16px; border-radius: 14px;
+                    background: ${isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)'};
+                    border: 1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'};
+                ">
+                    <span style="font-family:'Archivo',sans-serif; font-size:10px; font-weight:700; color:${isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.45)'}; text-transform:uppercase; letter-spacing:0.05em;">
+                        ${selectedProduct} vs Operação
+                    </span>
+                    <span style="font-family:'Michroma',sans-serif; font-size:16px; font-weight:900; color:${diffColor};">
+                        ${diffStr} <span style="font-size:9px; opacity:0.7;">TT</span>
+                    </span>
+                    <span style="font-family:'Archivo',sans-serif; font-size:9px; font-weight:600; color:${isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'};">
+                        (Produto ${avgProd.toLocaleString('pt-BR')} méd / OP ${avgCatOp.toLocaleString('pt-BR')} méd)
+                    </span>
+                </div>
+            `;
+        };
+
+        if (!wasVisible && willBeVisible) {
+            // FADE-IN: primeiro produto selecionado
+            compCard.style.display = 'block';
+            compCard.innerHTML = buildCardHTML();
+            compCard.style.opacity = '0';
+            compCard.style.transform = 'translateY(8px)';
+            compCard.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+            requestAnimationFrame(() => {
+                compCard.style.opacity = '1';
+                compCard.style.transform = 'translateY(0)';
+            });
+        } else if (wasVisible && willBeVisible) {
+            // SLIDE+FADE: troca de produto
+            compCard.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+            compCard.style.opacity = '0';
+            compCard.style.transform = 'translateY(-8px)';
+            setTimeout(() => {
+                compCard.innerHTML = buildCardHTML();
+                compCard.style.transform = 'translateY(8px)';
+                requestAnimationFrame(() => {
+                    compCard.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
+                    compCard.style.opacity = '1';
+                    compCard.style.transform = 'translateY(0)';
+                });
+            }, 260);
+        } else if (wasVisible && !willBeVisible) {
+            // FADE-OUT: voltou para "todos"
+            compCard.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+            compCard.style.opacity = '0';
+            compCard.style.transform = 'translateY(8px)';
+            setTimeout(() => {
+                compCard.style.display = 'none';
+                compCard.innerHTML = '';
+            }, 420);
+        }
+
+        previousRadarProduct = selectedProduct;
+    }
 }
 
 function drawComparisonChart(id, labels, datasets) {

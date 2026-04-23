@@ -25,7 +25,7 @@ export function getAboutHTML() {
 
                 <div class="p-4 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/50">
                     <p class="font-['Archivo',_sans-serif] text-sm leading-relaxed text-blue-900 dark:text-blue-100" style="font-stretch: 100%;">
-                        <span class="font-bold">Telemetria:</span> O PROTIX monitora tempo de sessão e uso de GPU para otimizar performance e estabilidade do sistema. Esses dados são associados ao seu e-mail de acesso.
+                        <span class="font-bold">Telemetria:</span> O PROTIX monitora tempo de sessão e uso de CPU/GPU para otimizar performance e estabilidade do sistema. Esses dados são associados ao seu e-mail de acesso.
                     </p>
                 </div>
 
