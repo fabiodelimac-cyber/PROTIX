@@ -1,0 +1,30 @@
+{
+  "name": "APP",
+  "short_name": "APP",
+  "description": "ProSolution APP — Dashboard de Analytics",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#08090b",
+  "theme_color": "#685BC7",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "1040x1068",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-rs.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-bg.png",
+      "sizes": "1040x1068",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

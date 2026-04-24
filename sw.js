@@ -1,0 +1,93 @@
+// sw.js — APP Service Worker
+// CACHE_VERSION é atualizado automaticamente pelo deploy.sh — não edite manualmente
+const CACHE_NAME = 'app-20260423.1736';
+
+// Assets essenciais para funcionar offline (shell do app)
+const SHELL_ASSETS = [
+  '/',
+  '/index.html',
+  '/icon.png',
+  '/header.png',
+  '/header-light.png',
+  '/pros_white.png',
+  '/js/app.js',
+  '/js/view-overview.js',
+  '/js/view-positivacao.js',
+  '/js/view-heat-produtos.js',
+  '/js/view-performance.js',
+  '/js/view-about.js',
+  '/js/performance-integration.js',
+  '/js/performance-monitor.js',
+  '/js/services/dataManager.js'
+];
+
+// ── INSTALL: pré-cacheia o shell ──────────────────────────────────────────────
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(SHELL_ASSETS);
+    })
+  );
+  self.skipWaiting();
+});
+
+// ── ACTIVATE: limpa caches antigos ───────────────────────────────────────────
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) =>
+      Promise.all(
+        keys
+          .filter((key) => key !== CACHE_NAME)
+          .map((key) => caches.delete(key))
+      )
+    )
+  );
+  self.clients.claim();
+});
+
+// ── FETCH: Network-first para API Supabase, Cache-first para assets ───────────
+self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+
+  // Deixa passar sem cache: Supabase, CDNs externos, Google Fonts
+  const bypass = [
+    'supabase.co',
+    'cdn.jsdelivr.net',
+    'cdnjs.cloudflare.com',
+    'fonts.googleapis.com',
+    'fonts.gstatic.com',
+    'cdn.tailwindcss.com',
+    'accounts.google.com'
+  ];
+
+  if (bypass.some((domain) => url.hostname.includes(domain))) {
+    return; // Deixa o browser resolver normalmente
+  }
+
+  // Para tudo mais: Cache-first com fallback para rede
+  event.respondWith(
+    caches.match(event.request).then((cached) => {
+      if (cached) return cached;
+
+      return fetch(event.request)
+        .then((response) => {
+          // Só cacheia respostas válidas de mesma origem
+          if (
+            response.ok &&
+            response.type === 'basic' &&
+            event.request.method === 'GET'
+          ) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return response;
+        })
+        .catch(() => {
+          // Fallback offline: retorna index.html para navegação
+          if (event.request.mode === 'navigate') {
+            return caches.match('/index.html');
+          }
+        });
+    })
+  );
+});
