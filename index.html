@@ -1007,6 +1007,39 @@
         syncThemeIcons();
         new MutationObserver(syncThemeIcons).observe(document.body, { attributes: true, attributeFilter: ['class'] });
 
+        // ---- PREVINE NOTIFICAÇÕES REPETIDAS DO OAUTH ----
+        // Quando o usuário deixa a tela de login aberta e troca de app,
+        // o navegador fica mostrando repetidamente a notificação de "aguardando aprovação"
+        // do OAuth (Google/Microsoft). Isso acontece porque o popup OAuth fica esperando.
+        
+        // Solução: Detectar quando a página fica inativa por muito tempo e cancelar OAuth pendente
+        let oauthTimeout = null;
+        let isPageVisible = !document.hidden;
+        
+        document.addEventListener('visibilitychange', () => {
+            isPageVisible = !document.hidden;
+            
+            if (!isPageVisible) {
+                // Página ficou em background - inicia timer de 30 segundos
+                oauthTimeout = setTimeout(() => {
+                    // Se ainda estiver em background após 30s, cancela qualquer OAuth pendente
+                    if (!isPageVisible && window.location.pathname === '/' || window.location.pathname === '/index.html') {
+                        console.log('[PWA] Página inativa por muito tempo, limpando estado OAuth');
+                        // Fecha qualquer popup OAuth que possa estar aberto
+                        if (window.opener) {
+                            try { window.close(); } catch(e) {}
+                        }
+                    }
+                }, 30000); // 30 segundos
+            } else {
+                // Página voltou ao foreground - cancela o timer
+                if (oauthTimeout) {
+                    clearTimeout(oauthTimeout);
+                    oauthTimeout = null;
+                }
+            }
+        });
+
         // ---- MOBILE & DESKTOP FILTER TOGGLE (UNIFICADO) ----
         const btnToggleFilters = document.getElementById('btn-toggle-filters');
         if(btnToggleFilters) {
@@ -1091,5 +1124,33 @@
 
     <script src="./js/performance-monitor.js"></script>
     <script type="module" src="./js/app.js"></script>
+    
+    <script>
+        // ---- SERVICE WORKER: FORÇA ATUALIZAÇÃO ----
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js').then(reg => {
+                console.log('[PWA] Service Worker registrado');
+                
+                // Força checagem de atualização a cada 30 segundos
+                setInterval(() => {
+                    reg.update().catch(() => {});
+                }, 30000);
+                
+                // Detecta quando há uma nova versão esperando
+                reg.addEventListener('updatefound', () => {
+                    const newWorker = reg.installing;
+                    newWorker.addEventListener('statechange', () => {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            console.log('[PWA] Nova versão disponível! Recarregando...');
+                            // Recarrega automaticamente para aplicar a nova versão
+                            window.location.reload();
+                        }
+                    });
+                });
+            }).catch(err => {
+                console.warn('[PWA] Erro ao registrar Service Worker:', err);
+            });
+        }
+    </script>
 </body>
 </html>

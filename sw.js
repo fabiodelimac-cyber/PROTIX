@@ -1,6 +1,6 @@
 // sw.js — APP Service Worker
 // CACHE_VERSION é atualizado automaticamente pelo deploy.sh — não edite manualmente
-const CACHE_NAME = 'app-20260423.1736';
+const CACHE_NAME = 'app-20260425.1313';
 
 // Assets essenciais para funcionar offline (shell do app)
 const SHELL_ASSETS = [
@@ -23,31 +23,45 @@ const SHELL_ASSETS = [
 
 // ── INSTALL: pré-cacheia o shell ──────────────────────────────────────────────
 self.addEventListener('install', (event) => {
+  console.log('[SW] Instalando nova versão:', CACHE_NAME);
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(SHELL_ASSETS);
     })
   );
-  self.skipWaiting();
+  self.skipWaiting(); // Força ativação imediata
 });
 
 // ── ACTIVATE: limpa caches antigos ───────────────────────────────────────────
 self.addEventListener('activate', (event) => {
+  console.log('[SW] Ativando nova versão:', CACHE_NAME);
   event.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(
         keys
           .filter((key) => key !== CACHE_NAME)
-          .map((key) => caches.delete(key))
+          .map((key) => {
+            console.log('[SW] Removendo cache antigo:', key);
+            return caches.delete(key);
+          })
       )
     )
   );
-  self.clients.claim();
+  self.clients.claim(); // Assume controle imediato
 });
 
 // ── FETCH: Network-first para API Supabase, Cache-first para assets ───────────
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
+
+  // Bloqueia conexões de dev server (Vite, Webpack, etc.)
+  if (url.protocol === 'ws:' || url.protocol === 'wss:' || 
+      url.pathname.includes('/__vite') || 
+      url.pathname.includes('/webpack-hmr') ||
+      url.pathname.includes('/@vite/client') ||
+      url.hostname === 'localhost' && url.port !== location.port) {
+    return; // Ignora completamente
+  }
 
   // Deixa passar sem cache: Supabase, CDNs externos, Google Fonts
   const bypass = [

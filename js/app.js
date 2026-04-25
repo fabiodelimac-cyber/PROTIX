@@ -92,13 +92,51 @@ let isLoggingOut = false; // Flag para evitar múltiplos logouts simultâneos
 
 // --- AUTENTICAÇÃO (MOTOR SUPABASE) ---
 // --- AUTENTICAÇÃO (MOTOR SUPABASE COM ESTEIRA DE APROVAÇÃO) ---
+
+// Previne notificações OAuth quando a página fica inativa
+let authInProgress = false;
+let visibilityTimer = null;
+
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        // Página ficou em background
+        // Se não há autenticação em progresso, limpa qualquer estado OAuth pendente após 10 segundos
+        visibilityTimer = setTimeout(async () => {
+            if (!authInProgress && document.hidden) {
+                console.log('🔐 Página inativa por muito tempo, limpando estado OAuth pendente');
+                // Limpa qualquer callback OAuth pendente no localStorage
+                try {
+                    const keys = Object.keys(localStorage);
+                    keys.forEach(key => {
+                        if (key.includes('supabase.auth') && key.includes('code-verifier')) {
+                            localStorage.removeItem(key);
+                            console.log('🔐 Removido:', key);
+                        }
+                    });
+                } catch (e) {
+                    console.warn('🔐 Erro ao limpar OAuth:', e);
+                }
+            }
+        }, 10000); // 10 segundos
+    } else {
+        // Página voltou ao foreground
+        if (visibilityTimer) {
+            clearTimeout(visibilityTimer);
+            visibilityTimer = null;
+        }
+    }
+});
+
 supabase.auth.onAuthStateChange(async (event, session) => {
     console.log('🔐 AUTH STATE CHANGE:', event, session ? 'Session exists' : 'No session');
     
     if (session) {
+        authInProgress = true; // Marca que há autenticação em progresso
+        
         // Ignora eventos de refresh de token — o usuário já está logado
         if (event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
             console.log('🔐 Ignorando evento de refresh/update');
+            authInProgress = false;
             return;
         }
         
@@ -143,19 +181,24 @@ supabase.auth.onAuthStateChange(async (event, session) => {
                 
                 if (!isDataLoaded) initData();
                 
+                authInProgress = false; // Autenticação concluída
+                
             } else {
                 console.log('🔐 Usuário não aprovado');
                 // FLUXO BLOQUEADO: Usuário é pending ou a tabela falhou
                 alert("Sua conta foi cadastrada com sucesso, mas aguarda aprovação do Administrador para acessar a dashboard.");
                 await supabase.auth.signOut(); // Desloga o cidadão na mesma hora
+                authInProgress = false;
             }
         } catch (err) {
             console.error("🔐 Erro ao validar acesso:", err);
             alert("Erro ao validar permissões. Contate o administrador.");
             await supabase.auth.signOut();
+            authInProgress = false;
         }
     } else {
         console.log('🔐 Sem sessão, mostrando tela de login');
+        authInProgress = false; // Reseta flag
         // FLUXO DE SAÍDA (LOGOUT NORMAL)
         isLoggingOut = false; // Reseta a flag de logout
         stopPerformanceMonitoring();
@@ -188,11 +231,36 @@ document.getElementById('btn-email-login').addEventListener('click', async () =>
 });
 
 document.getElementById('btn-google-login').addEventListener('click', async () => {
+    const btn = document.getElementById('btn-google-login');
+    const originalHTML = btn.innerHTML;
+    
     try {
-        const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
+        btn.disabled = true;
+        btn.innerHTML = '<span class="font-[\'Archivo\',_sans-serif] font-medium text-[13px] tracking-[0.04em]" style="font-stretch: 120%;">ABRINDO GOOGLE...</span>';
+        
+        const { error } = await supabase.auth.signInWithOAuth({ 
+            provider: 'google',
+            options: {
+                // Redireciona para a mesma página após login
+                redirectTo: window.location.origin
+            }
+        });
+        
         if (error) throw error;
+        
+        // Feedback visual de que o popup foi aberto
+        btn.innerHTML = '<span class="font-[\'Archivo\',_sans-serif] font-medium text-[13px] tracking-[0.04em]" style="font-stretch: 120%;">AGUARDANDO APROVAÇÃO...</span>';
+        
+        // Timeout de 2 minutos - se o usuário não aprovar, reseta o botão
+        setTimeout(() => {
+            btn.disabled = false;
+            btn.innerHTML = originalHTML;
+        }, 120000);
+        
     } catch (error) { 
         alert('Falha ao iniciar autenticação com Google.'); 
+        btn.disabled = false;
+        btn.innerHTML = originalHTML;
     }
 });
 
@@ -200,18 +268,37 @@ document.getElementById('btn-google-login').addEventListener('click', async () =
 const btnMicrosoftLogin = document.getElementById('btn-microsoft-login');
 if (btnMicrosoftLogin) {
     btnMicrosoftLogin.addEventListener('click', async () => {
+        const originalHTML = btnMicrosoftLogin.innerHTML;
+        
         try {
+            btnMicrosoftLogin.disabled = true;
+            btnMicrosoftLogin.innerHTML = '<span class="font-[\'Archivo\',_sans-serif] font-medium text-[13px] tracking-[0.04em]" style="font-stretch: 120%;">ABRINDO MICROSOFT...</span>';
+            
             // No Supabase, o provedor Microsoft é identificado como 'azure'
             const { error } = await supabase.auth.signInWithOAuth({
                 provider: 'azure',
                 options: {
-                    scopes: 'email profile' // Escopos básicos para pegar o usuário
+                    scopes: 'email profile', // Escopos básicos para pegar o usuário
+                    redirectTo: window.location.origin
                 }
             });
+            
             if (error) throw error;
+            
+            // Feedback visual de que o popup foi aberto
+            btnMicrosoftLogin.innerHTML = '<span class="font-[\'Archivo\',_sans-serif] font-medium text-[13px] tracking-[0.04em]" style="font-stretch: 120%;">AGUARDANDO APROVAÇÃO...</span>';
+            
+            // Timeout de 2 minutos - se o usuário não aprovar, reseta o botão
+            setTimeout(() => {
+                btnMicrosoftLogin.disabled = false;
+                btnMicrosoftLogin.innerHTML = originalHTML;
+            }, 120000);
+            
         } catch (err) {
             console.error("Erro no login Microsoft:", err);
             alert("Erro ao conectar com Microsoft: " + err.message);
+            btnMicrosoftLogin.disabled = false;
+            btnMicrosoftLogin.innerHTML = originalHTML;
         }
     });
 }
