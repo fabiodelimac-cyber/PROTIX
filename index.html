@@ -6,8 +6,8 @@
     <title>ProSolution APP</title>
 
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="/icon.png">
-    <link rel="shortcut icon" href="/icon.png">
+    <link rel="icon" type="image/png" href="/images/icon.png">
+    <link rel="shortcut icon" href="/images/icon.png">
 
     <!-- PWA: Manifest -->
     <link rel="manifest" href="/manifest.json?v=3">
@@ -20,12 +20,12 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="APP">
-    <link rel="apple-touch-icon" sizes="180x180" href="/icon-bg.png">
-    <link rel="apple-touch-icon" sizes="152x152" href="/icon-bg.png">
-    <link rel="apple-touch-icon" sizes="120x120" href="/icon-bg.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/icon-bg.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/images/icon-bg.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="/images/icon-bg.png">
 
     <!-- PWA: Windows / Edge / Chrome -->
-    <meta name="msapplication-TileImage" content="/icon.png">
+    <meta name="msapplication-TileImage" content="/images/icon.png">
     <meta name="msapplication-TileColor" content="#685BC7">
     <meta name="application-name" content="APP">
     <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@700&display=swap" rel="stylesheet">
@@ -83,6 +83,61 @@
 
         /* Nome do produto na tela de login — fonte Syncopate exclusiva */
         .ds-login-product { font-family: 'Syncopate', sans-serif; font-weight: 700; letter-spacing: 0.5em; color: #ffffff; }
+
+        /* Título da tela de login (ex: "Faça seu login") */
+        .ds-login-title { font-family: 'Archivo', sans-serif; font-weight: 400; font-stretch: 140%; font-size: 15px; letter-spacing: 0.2em; color: rgba(255,255,255,0.70); text-align: center; }
+
+        /* Pílula de versão na tela de login (ex: "BETA 0.90") */
+        .ds-login-version-pill { display: inline-flex; align-items: center; background: rgba(255,255,255,0.10); padding: 4px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); }
+        .ds-login-version { font-family: 'Archivo', sans-serif; font-weight: 700; font-stretch: 140%; font-size: 10px; letter-spacing: 0.2em;color: rgba(255,255,255,0.50); }
+
+        /* =============================================
+           FLOATING BOXES BACKGROUND (login screen)
+        ============================================= */
+        .bg-bubbles {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 0; overflow: hidden;
+            list-style: none; margin: 0; padding: 0;
+            pointer-events: none;
+        }
+        .bg-bubbles li {
+            position: absolute;
+            bottom: -180px;
+            display: block;
+            min-width: 40px;
+            min-height: 40px;
+            border-radius: 6px;
+            background: rgba(104, 91, 199, 0.10);
+            border: 1px solid rgba(104, 91, 199, 0.18);
+            opacity: 0;
+            animation: bubbleRise 28s infinite linear;
+            animation-fill-mode: both;
+            will-change: transform;
+        }
+        /* Tamanhos e posições individuais */
+        .bg-bubbles li:nth-child(1)  { left: 8%;  width: 44px;  height: 44px;  animation-duration: 26s; animation-delay: 1s; }
+        .bg-bubbles li:nth-child(2)  { left: 18%; width: 80px;  height: 80px;  animation-duration: 20s; animation-delay: 3s;  background: rgba(130,110,240,0.08); }
+        .bg-bubbles li:nth-child(3)  { left: 28%; width: 44px;  height: 44px;  animation-duration: 30s; animation-delay: 6s; }
+        .bg-bubbles li:nth-child(4)  { left: 40%; width: 64px;  height: 64px;  animation-duration: 24s; animation-delay: 1s;  background: rgba(104,91,199,0.14); }
+        .bg-bubbles li:nth-child(5)  { left: 52%; width: 44px;  height: 44px;  animation-duration: 28s; animation-delay: 9s; }
+        .bg-bubbles li:nth-child(6)  { left: 63%; width: 110px; height: 110px; animation-duration: 22s; animation-delay: 4s;  background: rgba(130,110,240,0.07); }
+        .bg-bubbles li:nth-child(7)  { left: 33%; width: 150px; height: 150px; animation-duration: 32s; animation-delay: 8s;  background: rgba(104,91,199,0.06); }
+        .bg-bubbles li:nth-child(8)  { left: 55%; width: 48px;  height: 48px;  animation-duration: 38s; animation-delay: 16s; }
+        .bg-bubbles li:nth-child(9)  { left: 22%; width: 40px;  height: 40px;  animation-duration: 36s; animation-delay: 5s;  background: rgba(155,135,255,0.12); }
+        .bg-bubbles li:nth-child(10) { left: 82%; width: 140px; height: 140px; animation-duration: 25s; animation-delay: 12s; background: rgba(104,91,199,0.07); }
+
+        @keyframes bubbleRise {
+            0%   { transform: translateY(0)      rotate(0deg);   opacity: 0; }
+            5%   { opacity: 1; }
+            95%  { opacity: 1; }
+            100% { transform: translateY(-110vh) rotate(720deg); opacity: 0; }
+        }
+
+        /* Respeita prefers-reduced-motion */
+        @media (prefers-reduced-motion: reduce) {
+            .bg-bubbles li { animation: none !important; }
+        }
 
         /* Classe utilitária para TODOS os números em tabelas, tooltips, badges e drilldowns — Michroma garante consistência numérica */
         .font-numbers { font-family: 'Michroma', sans-serif !important; }
@@ -639,9 +694,9 @@
             background-color: rgba(15, 23, 42, 0.08) !important;
         }
 
-        .bg-mesh { background: linear-gradient(-45deg, #131417, #1c1e22, #2a2552, #131417); background-size: 400% 400%; animation: meshGradient 10s ease infinite; }
+        .bg-mesh { background: linear-gradient(to top, #685BC7 0%, #2a1f5e 35%, #000000 100%); }
+        .bg-mesh-static { background: linear-gradient(to top, #685BC7 0%, #2a1f5e 35%, #000000 100%); }
         @keyframes meshGradient { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-        .bg-mesh-static { background: linear-gradient(-45deg, #131417, #1c1e22, #2a2552, #131417); background-size: 400% 400%; background-position: 50% 50%; }
         #disclaimer-modal { border-radius: 20px; }
         
         /* =============================================
@@ -682,50 +737,205 @@
         }
 
         /* =============================================
-           GLASSMORFISMO - LOGIN BOX (dark glass, mesma linha do float-nav)
+           LOGIN BOX — NOVO DESIGN (inspirado no template)
         ============================================= */
-        .glass-card {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.09);
+        .login-box {
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
             box-shadow: 
-                0 20px 60px rgba(0, 0, 0, 0.6),
-                0 4px 24px rgba(0, 0, 0, 0.35),
-                inset 0 1px 0 rgba(255, 255, 255, 0.07);
+                0 25px 80px rgba(0, 0, 0, 0.55),
+                0 8px 32px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.06);
             position: relative;
             overflow: hidden;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
         }
 
-        .glass-card::before {
+        .login-box::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
+            top: 0; left: 0; right: 0;
             height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12), transparent);
             z-index: 1;
         }
 
-        .glass-card::after {
-            content: '';
+        /* Logo area */
+        .login-logo-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-bottom: 8px;
+        }
+
+        /* Input com ícone */
+        .login-input-group {
+            position: relative;
+            width: 100%;
+        }
+        .login-input-group .login-icon {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 1px;
-            height: 100%;
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent, rgba(255, 255, 255, 0.04));
-            z-index: 1;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255,255,255,0.3);
+            font-size: 16px;
+            pointer-events: none;
+            z-index: 2;
+        }
+        .login-input-group input {
+            padding-left: 48px !important;
         }
 
-        /* Painéis internos transparentes (exceto lado esquerdo) */
-        .glass-card > div:not(.glass-left) {
-            background: transparent !important;
-            border-color: rgba(255, 255, 255, 0.07) !important;
+        /* Divider */
+        .login-divider {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            width: 100%;
         }
-        .glass-left {
-            background: rgba(0, 0, 0, 0.30) !important;
-            border-color: rgba(255, 255, 255, 0.07) !important;
+        .login-divider::before,
+        .login-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255,255,255,0.08);
+        }
+        .login-divider span {
+            font-family: 'Archivo', sans-serif;
+            font-size: 9px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: rgba(255,255,255,0.25);
+            white-space: nowrap;
+        }
+
+        /* Social buttons row */
+        .login-social-row {
+            display: flex;
+            gap: 12px;
+            width: 100%;
+        }
+        .login-social-row button {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 14px 16px;
+            border-radius: 16px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            color: rgba(255,255,255,0.75);
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+        .login-social-row button:hover {
+            background: rgba(255,255,255,0.09);
+            border-color: rgba(255,255,255,0.15);
+            color: #fff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        /* CTA button */
+        .login-cta-btn {
+            width: 100%;
+            padding: 15px;
+            border-radius: 16px;
+            border: none;
+            background: #685BC7;
+            color: #fff;
+            font-family: 'Archivo', sans-serif;
+            font-weight: 700;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 20px rgba(104,91,199,0.35);
+        }
+        .login-cta-btn:hover {
+            background: #5a4eb3;
+            transform: translateY(-1px);
+            box-shadow: 0 8px 30px rgba(104,91,199,0.45);
+        }
+
+        /* Back link */
+        .login-back-link {
+            font-family: 'Archivo', sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.45);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            background: none;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            width: 100%;
+            padding: 8px;
+        }
+        .login-back-link:hover {
+            color: rgba(255,255,255,0.85);
+        }
+
+        /* Email text link */
+        .login-email-link {
+            font-family: 'Archivo', sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            color: #685BC7;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            background: none;
+            border: none;
+            padding: 6px 0;
+        }
+        .login-email-link:hover {
+            color: #8b7fe8;
+            text-shadow: 0 0 12px rgba(104,91,199,0.4);
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .login-box { margin: 0 8px; }
+            .login-social-row { flex-direction: column; }
+        }
+
+        /* =============================================
+           LOGIN LOADING SPINNER
+        ============================================= */
+        .login-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.15);
+            border-top-color: #685BC7;
+            border-radius: 50%;
+            animation: loginSpin 0.8s linear infinite;
+        }
+
+        @keyframes loginSpin {
+            to { transform: rotate(360deg); }
+        }
+
+        #login-loading-overlay.show {
+            display: flex !important;
+            animation: fadeInOverlay 0.3s ease forwards;
+        }
+
+        @keyframes fadeInOverlay {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
         /* =============================================
@@ -791,58 +1001,79 @@
     </script>
 
     <div id="login-screen" class="font-['Archivo',_sans-serif] bg-mesh fixed inset-0 flex flex-col items-center justify-center p-6 z-[100] transition-opacity duration-500">
-        <div class="glass-card w-full max-w-4xl flex flex-col md:flex-row overflow-hidden min-h-[500px] z-10">
+        
+
+        <ul class="bg-bubbles" aria-hidden="true">
+            <li></li><li></li><li></li><li></li><li></li>
+            <li></li><li></li><li></li><li></li><li></li>
+        </ul>
+
+        <div class="login-box w-full max-w-[420px] p-10 md:p-12 z-10">
             
-            <div class="glass-left w-full md:w-1/2 p-12 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-white/20">
-                <img src="login-white.png" alt="ProSolution Logo" class="max-w-[240px] h-auto mb-8 drop-shadow-sm">
-                <h2 class="ds-login-product text-[36px] text-center mb-6">APP</h2>
-                <div class="bg-white/15 px-5 py-2 rounded-2xl border border-white/20 shadow-sm">
-                    <span class="font-['Michroma',_sans-serif] text-[12px] font-bold uppercase tracking-[0.3em] text-white/70">BETA 0.90</span>
+            <!-- Logo -->
+            <div class="flex flex-col items-center mb-8">
+                <img src="images/login-white.png" alt="ProSolution Logo" class="w-[160px] h-auto mb-5 drop-shadow-sm">
+                <!-- APP + BETA na mesma linha -->
+                <div class="flex items-center gap-3">
+                    <h2 class="ds-login-product text-[22px]">APP</h2>
+                    <div class="ds-login-version-pill">
+                        <span class="ds-login-version">BETA 0.92</span>
+                    </div>
                 </div>
             </div>
 
-            <div class="w-full md:w-1/2 p-12 md:p-14 flex flex-col relative min-h-[460px]">
-                <h3 class="font-['Archivo',_sans-serif] font-light text-[18px] tracking-[-0.02em] uppercase text-white/90 mb-8 text-center md:text-left shrink-0" style="font-stretch: 140%;">Faça seu login</h3>
-                
-                <div class="relative flex-1 w-full flex items-center">
-                    
-                    <div id="login-social-view" class="space-y-4 transition-all duration-300 opacity-100 transform translate-x-0 w-full absolute left-0 pointer-events-auto">
-                        
-                        <button id="btn-google-login" class="w-full flex items-center justify-center gap-3 bg-white/[0.05] border border-white/[0.09] text-white/80 py-4 rounded-2xl hover:bg-white/[0.1] hover:text-white hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 backdrop-blur-sm">
-                            <svg class="w-5 h-5" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.73 17.74 9.5 24 9.5z"></path><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path></svg>
-                            <span class="font-['Archivo',_sans-serif] font-medium text-[13px] tracking-[0.04em]" style="font-stretch: 120%;">Entrar com Google</span>
-                        </button>
+            <!-- Título -->
+            <h3 class="ds-login-title mb-7">Faça seu login</h3>
 
-                        <button id="btn-microsoft-login" class="w-full flex items-center justify-center gap-3 bg-white/[0.05] border border-white/[0.09] text-white/80 py-4 rounded-2xl hover:bg-white/[0.1] hover:text-white hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 backdrop-blur-sm">
-                            <svg class="w-5 h-5" viewBox="0 0 21 21"><path fill="#f25022" d="M1 1h9v9H1z"/><path fill="#7fba00" d="M11 1h9v9h-9z"/><path fill="#00a4ef" d="M1 11h9v9H1z"/><path fill="#ffb900" d="M11 11h9v9h-9z"/></svg>
-                            <span class="font-['Archivo',_sans-serif] font-medium text-[13px] tracking-[0.04em]" style="font-stretch: 120%;">Entrar com Microsoft</span>
-                        </button>
-
-                        <div class="flex items-center justify-center my-6"><div class="border-t border-white/[0.09] flex-grow"></div><span class="font-['Archivo',_sans-serif] px-4 text-[9px] text-white/30 font-black tracking-[0.2em] uppercase">Ou</span><div class="border-t border-white/[0.09] flex-grow"></div></div>
-                        
-                        <button id="btn-show-email" class="font-['Archivo',_sans-serif] w-full text-center text-[11px] font-bold text-white/70 hover:text-white hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)] uppercase tracking-[0.1em] transition-all duration-300 py-2">
-                            Logar com E-mail e Senha
-                        </button>
-
-                    </div>
-
-                    <div id="login-email-view" class="space-y-4 transition-all duration-300 opacity-0 pointer-events-none transform translate-x-8 w-full absolute left-0">
-                        <input type="email" id="user" placeholder="E-mail" style="font-stretch: 130%;" class="font-['Archivo',_sans-serif] w-full px-5 py-4 rounded-2xl bg-white/[0.05] border border-white/[0.09] text-white placeholder-white/30 focus:border-[#685BC7] focus:ring-4 focus:ring-[#685BC7]/20 outline-none transition-all">
-                        <input type="password" id="pass" placeholder="Senha" style="font-stretch: 130%;" class="font-['Archivo',_sans-serif] w-full px-5 py-4 rounded-2xl bg-white/[0.05] border border-white/[0.09] text-white placeholder-white/30 focus:border-[#685BC7] focus:ring-4 focus:ring-[#685BC7]/20 outline-none transition-all">
-                        <button id="btn-email-login" style="font-stretch: 130%;" class="font-['Archivo',_sans-serif] font-bold uppercase w-full bg-[#685BC7]/30 border border-[#685BC7]/45 text-white py-4 rounded-2xl hover:bg-[#685BC7] hover:border-[#685BC7] hover:shadow-lg hover:shadow-[#685BC7]/30 hover:-translate-y-0.5 transition-all duration-300 mt-2">Autenticar</button>
-                        <div class="pt-4">
-                            <button id="btn-back-social" class="font-['Archivo',_sans-serif] w-full text-center text-[10px] font-bold text-white/70 hover:text-white hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)] uppercase tracking-[0.1em] transition-all duration-300 py-2 flex items-center justify-center gap-2">
-                                <span>←</span> Voltar para opções
-                            </button>
-                        </div>
-                    </div>
+            <!-- Formulário e-mail/senha -->
+            <div class="space-y-3 mb-5">
+                <div class="login-input-group">
+                    <span class="login-icon">✉</span>
+                    <input type="email" id="user" placeholder="E-mail" style="font-stretch: 125%;" class="font-['Archivo',_sans-serif] w-full px-5 py-4 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-white placeholder-white/25 focus:border-[#685BC7] focus:ring-4 focus:ring-[#685BC7]/20 outline-none transition-all text-[13px]">
                 </div>
-
+                <div class="login-input-group">
+                    <span class="login-icon">🔒</span>
+                    <input type="password" id="pass" placeholder="Senha" style="font-stretch: 125%;" class="font-['Archivo',_sans-serif] w-full px-5 py-4 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-white placeholder-white/25 focus:border-[#685BC7] focus:ring-4 focus:ring-[#685BC7]/20 outline-none transition-all text-[13px]">
+                </div>
+                <button id="btn-email-login" class="login-cta-btn" style="font-stretch: 125%;">Autenticar</button>
             </div>
+
+            <!-- Divider -->
+            <div class="login-divider mb-5">
+                <span>ou entre com</span>
+            </div>
+
+            <!-- Botões sociais lado a lado -->
+            <div class="login-social-row">
+                <button id="btn-google-login">
+                    <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.73 17.74 9.5 24 9.5z"></path><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path></svg>
+                    <span class="font-['Archivo',_sans-serif] font-medium text-[12px] tracking-[0.02em]" style="font-stretch: 115%;">Google</span>
+                </button>
+                <button id="btn-microsoft-login">
+                    <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 21 21"><path fill="#f25022" d="M1 1h9v9H1z"/><path fill="#7fba00" d="M11 1h9v9h-9z"/><path fill="#00a4ef" d="M1 11h9v9H1z"/><path fill="#ffb900" d="M11 11h9v9h-9z"/></svg>
+                    <span class="font-['Archivo',_sans-serif] font-medium text-[12px] tracking-[0.02em]" style="font-stretch: 115%;">Microsoft</span>
+                </button>
+            </div>
+
+            <!-- IDs mantidos para compatibilidade com app.js (ocultos, sem função visual) -->
+            <div id="login-social-view" style="display:none;"></div>
+            <div id="login-email-view" style="display:none;"></div>
+            <button id="btn-show-email" style="display:none;"></button>
+            <button id="btn-back-social" style="display:none;"></button>
+
         </div>
         
+        <!-- Footer -->
         <div class="absolute bottom-8 left-0 w-full flex justify-center z-0 pointer-events-none">
             <p class="font-['Archivo',_sans-serif] text-[10px] font-medium text-white/50 uppercase tracking-[0.3em] text-center drop-shadow-md">Desenvolvido por <span class="text-white/90 font-bold">ProSolution Marketing</span></p>
+        </div>
+
+        <!-- OVERLAY DE LOADING: aparece quando OAuth está processando -->
+        <div id="login-loading-overlay" class="hidden absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity duration-300" style="border-radius: inherit;">
+            <div class="flex flex-col items-center gap-6">
+                <div class="login-spinner"></div>
+                <p id="login-loading-text" class="font-['Archivo',_sans-serif] text-[11px] font-bold text-white/70 uppercase tracking-[0.2em]">Autenticando...</p>
+            </div>
         </div>
     </div>
 
@@ -866,8 +1097,8 @@
                 <div id="topbar-row">
 
                     <div id="float-logo">
-                        <img src="header.png" alt="Logo">
-                        <span id="float-logo-badge">BETA 0.90</span>
+                        <img src="images/header.png" alt="Logo">
+                        <span id="float-logo-badge">BETA 0.92</span>
                     </div>
 
                     <div id="nav-and-filter-wrapper">
@@ -1124,32 +1355,71 @@
 
     <script src="./js/performance-monitor.js"></script>
     <script type="module" src="./js/app.js"></script>
-    
+
     <script>
         // ---- SERVICE WORKER: FORÇA ATUALIZAÇÃO ----
+        // IMPORTANTE: Só registra Service Worker em produção (não em localhost)
+        
+        // Detecta se está em localhost
+        const isLocalhost = window.location.hostname === 'localhost' || 
+                           window.location.hostname === '127.0.0.1' ||
+                           window.location.hostname === '[::1]';
+        
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw.js').then(reg => {
-                console.log('[PWA] Service Worker registrado');
+            if (isLocalhost) {
+                // LOCALHOST: Desregistra Service Worker imediatamente
+                console.log('[DEV] 🚫 Service Worker desabilitado em localhost');
                 
-                // Força checagem de atualização a cada 30 segundos
-                setInterval(() => {
-                    reg.update().catch(() => {});
-                }, 30000);
-                
-                // Detecta quando há uma nova versão esperando
-                reg.addEventListener('updatefound', () => {
-                    const newWorker = reg.installing;
-                    newWorker.addEventListener('statechange', () => {
-                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            console.log('[PWA] Nova versão disponível! Recarregando...');
-                            // Recarrega automaticamente para aplicar a nova versão
-                            window.location.reload();
-                        }
-                    });
+                navigator.serviceWorker.getRegistrations().then(registrations => {
+                    if (registrations.length > 0) {
+                        console.log('[DEV] 🧹 Limpando', registrations.length, 'Service Worker(s) antigo(s)...');
+                        
+                        Promise.all(registrations.map(reg => reg.unregister())).then(() => {
+                            console.log('[DEV] ✅ Service Worker(s) desregistrado(s)');
+                            
+                            // Limpa todos os caches também
+                            caches.keys().then(keys => {
+                                Promise.all(keys.map(key => caches.delete(key))).then(() => {
+                                    console.log('[DEV] 🗑️ Caches limpos');
+                                    
+                                    // Recarrega a página UMA VEZ para aplicar mudanças
+                                    if (!sessionStorage.getItem('sw-cleaned')) {
+                                        sessionStorage.setItem('sw-cleaned', 'true');
+                                        console.log('[DEV] 🔄 Recarregando página...');
+                                        window.location.reload();
+                                    }
+                                });
+                            });
+                        });
+                    } else {
+                        console.log('[DEV] ✅ Nenhum Service Worker ativo');
+                    }
                 });
-            }).catch(err => {
-                console.warn('[PWA] Erro ao registrar Service Worker:', err);
-            });
+                
+            } else {
+                // PRODUÇÃO: Registra Service Worker normalmente
+                navigator.serviceWorker.register('/sw.js').then(reg => {
+                    console.log('[PWA] ✅ Service Worker registrado');
+                    
+                    // Força checagem de atualização a cada 30 segundos
+                    setInterval(() => {
+                        reg.update().catch(() => {});
+                    }, 30000);
+                    
+                    // Detecta quando há uma nova versão esperando
+                    reg.addEventListener('updatefound', () => {
+                        const newWorker = reg.installing;
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                console.log('[PWA] 🆕 Nova versão disponível! Recarregando...');
+                                window.location.reload();
+                            }
+                        });
+                    });
+                }).catch(err => {
+                    console.warn('[PWA] ❌ Erro ao registrar Service Worker:', err);
+                });
+            }
         }
     </script>
 </body>
