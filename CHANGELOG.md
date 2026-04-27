@@ -1,100 +1,119 @@
 # Changelog
 
-Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
+All notable changes to this project will be documented in this file.
 
-O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
-e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/).
+
+## [0.92.0-rc2] - 2026-04-27
+
+### 🎨 Added
+
+#### Full Login Screen Redesign
+- **Unified layout**: email/password form + Google/Microsoft buttons on a single page (no more multi-step views)
+- **Animated background**: CSS-only floating boxes with rotation and fade — zero JavaScript overhead
+- **Depth gradient**: purple (#685BC7) at the bottom fading to absolute black at the top
+- **Design System expansion**: new classes `.ds-login-title`, `.ds-login-version`, `.ds-login-version-pill` for centralized login typography control
+
+### ♿ Accessibility
+- Respects `prefers-reduced-motion` to disable floating box animations
+
+### ⚡ Performance
+- Background animations promoted to GPU via `will-change: transform`
+- Replaced canvas-based animation with pure CSS (10 animated elements, no JS)
+
+### 🔍 Files Modified
+- `index.html` — Login screen HTML/CSS redesign, floating boxes, gradient background, design system classes
+
+---
 
 ## [0.90.1] - 2026-04-25
 
-### 🐛 Corrigido (Hotfix)
+### 🐛 Fixed (Hotfix)
 
-#### Notificações OAuth Aleatórias no PWA
-- **Problema**: Notificação "aguardando aprovação" aparecia aleatoriamente quando usuário deixava a tela de login inativa e trocava de app, mesmo sem ter clicado em nenhum botão de login
-- **Causa**: Supabase Auth SDK tentando renovar tokens OAuth em background, deixando code-verifiers órfãos no localStorage
-- **Solução**: 
-  - Configuração explícita do Supabase Auth com flowType PKCE
-  - Limpeza automática de code-verifiers após 10s de inatividade
-  - Flag de autenticação em progresso para não interferir com logins reais
-  - Detector de visibilidade de página (visibilitychange API)
+#### Random OAuth Notifications on PWA
+- **Issue**: "Waiting for approval" notification appeared randomly when user left the login screen idle and switched apps, even without clicking any login button
+- **Cause**: Supabase Auth SDK attempting to renew OAuth tokens in background, leaving orphaned code-verifiers in localStorage
+- **Solution**: 
+  - Explicit Supabase Auth configuration with PKCE flowType
+  - Automatic cleanup of code-verifiers after 10s of inactivity
+  - Authentication-in-progress flag to avoid interfering with real logins
+  - Page visibility detector (visibilitychange API)
 
-#### Mensagem "Lost Connection to Dev Server" no PWA
-- **Problema**: Mensagem de erro aparecia no topo da página apenas no PWA instalado (Firebase)
-- **Causa**: Service Worker cacheando scripts de ferramentas de desenvolvimento (Vite, Webpack)
-- **Solução**: Bloqueio de conexões WebSocket e caminhos de dev server no Service Worker
+#### "Lost Connection to Dev Server" Message on PWA
+- **Issue**: Error message appeared at the top of the page only on the installed PWA (Firebase)
+- **Cause**: Service Worker caching development tool scripts (Vite, Webpack)
+- **Solution**: Blocking WebSocket connections and dev server paths in the Service Worker
 
-### 🔧 Melhorias
+### 🔧 Improvements
 
 #### Service Worker
-- Adicionados logs de debug para facilitar troubleshooting
-- Atualizada versão do cache para `app-20260425.0001`
-- Bloqueio explícito de:
+- Added debug logs for easier troubleshooting
+- Updated cache version to `app-20260425.0001`
+- Explicit blocking of:
   - WebSockets (ws://, wss://)
-  - Caminhos Vite (`/__vite`, `/@vite/client`)
+  - Vite paths (`/__vite`, `/@vite/client`)
   - Webpack HMR (`/webpack-hmr`)
-  - Conexões localhost em portas diferentes
+  - Localhost connections on different ports
 
-#### Autenticação OAuth
-- Feedback visual melhorado nos botões Google e Microsoft
-- Botões mostram "AGUARDANDO APROVAÇÃO..." durante OAuth
-- Timeout de 2 minutos para resetar botões se usuário não aprovar
-- RedirectTo configurado para origem atual
+#### OAuth Authentication
+- Improved visual feedback on Google and Microsoft buttons
+- Buttons show "WAITING FOR APPROVAL..." during OAuth
+- 2-minute timeout to reset buttons if user doesn't approve
+- RedirectTo configured to current origin
 
 #### PWA
-- Auto-atualização do Service Worker a cada 30 segundos
-- Reload automático quando nova versão é detectada
-- Melhor gerenciamento de cache e sessão
+- Service Worker auto-update every 30 seconds
+- Automatic reload when new version is detected
+- Better cache and session management
 
-### 📚 Documentação
+### 📚 Documentation
+- Added `docs/CORRECAO_PWA_DEV_SERVER.md` — Full technical documentation
+- Added `docs/RESUMO_CORRECAO_OAUTH.md` — Executive summary
+- Added `CHANGELOG.md` — Change history
 
-- Adicionado `docs/CORRECAO_PWA_DEV_SERVER.md` - Documentação técnica completa
-- Adicionado `docs/RESUMO_CORRECAO_OAUTH.md` - Resumo executivo
-- Adicionado `CHANGELOG.md` - Histórico de mudanças
+### 🔍 Files Modified
+- `sw.js` — Service Worker with blocks and logs
+- `js/services/supabaseClient.js` — Explicit Auth configuration
+- `js/app.js` — OAuth cleanup + inactivity detector
+- `index.html` — SW auto-update
 
-### 🔍 Arquivos Modificados
-
-- `sw.js` - Service Worker com bloqueios e logs
-- `js/services/supabaseClient.js` - Configuração explícita do Auth
-- `js/app.js` - Limpeza de OAuth + detector de inatividade
-- `index.html` - Auto-atualização do SW
-
-### 🧪 Testes
-
-- ✅ Tela de login parada não gera mais notificações
-- ✅ Login OAuth funciona normalmente
-- ✅ PWA instalado não mostra mais "lost connection to dev server"
-- ✅ Service Worker atualiza automaticamente
+### 🧪 Tests
+- ✅ Idle login screen no longer triggers notifications
+- ✅ OAuth login works normally
+- ✅ Installed PWA no longer shows "lost connection to dev server"
+- ✅ Service Worker updates automatically
 
 ---
 
 ## [0.90.0] - 2026-04-23
 
-### Versão Base
-- Dashboard de Analytics com múltiplas views
-- Autenticação via Supabase (Google, Microsoft, Email/Senha)
-- Sistema de aprovação de usuários
+### Base Version
+- Analytics Dashboard with multiple views
+- Authentication via Supabase (Google, Microsoft, Email/Password)
+- User approval system
 - Performance Monitor
-- PWA com Service Worker
+- PWA with Service Worker
 - Light/Dark Mode
-- Filtros hierárquicos (Data, Shopping, PDV, Linha, Regional, 80/20, Visibilidade)
-- Views: Overview, Positivação, Heatmap, Performance
-- Gráficos interativos com Chart.js
-- Sistema de cache inteligente
-- GPU Lite Mode para hardware fraco
+- Hierarchical filters (Date, Mall, Store, Product Line, Region, 80/20, Visibility)
+- Views: Overview, Activation, Heatmap, Performance
+- Interactive charts with Chart.js
+- Smart caching system
+- GPU Lite Mode for low-end hardware
 
 ---
 
-## Formato das Entradas
+## Entry Format
 
-### Tipos de Mudanças
-- `Adicionado` para novas funcionalidades
-- `Modificado` para mudanças em funcionalidades existentes
-- `Descontinuado` para funcionalidades que serão removidas
-- `Removido` para funcionalidades removidas
-- `Corrigido` para correções de bugs
-- `Segurança` para vulnerabilidades corrigidas
+### Types of Changes
+- `Added` for new features
+- `Changed` for changes to existing features
+- `Deprecated` for features that will be removed
+- `Removed` for removed features
+- `Fixed` for bug fixes
+- `Security` for fixed vulnerabilities
 
-### Versionamento
-- **MAJOR** (X.0.0): Mudanças incompatíveis na API
-- **MINOR** (0.X.0): Novas funcionalidades compatíveis
-- **PATCH** (0.0.X): Correções de bugs compatíveis
+### Versioning
+- **MAJOR** (X.0.0): Incompatible API changes
+- **MINOR** (0.X.0): Backwards-compatible new features
+- **PATCH** (0.0.X): Backwards-compatible bug fixes

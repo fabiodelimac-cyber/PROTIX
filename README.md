@@ -6,33 +6,33 @@ PROTIX is a high-performance Business Intelligence platform built for real-time 
 
 ## 🔥 Latest Release: v0.92 RC2
 
-**Data**: 27/04/2026  
+**Date**: 04/27/2026  
 **Status**: 🧪 Release Candidate
 
-### Novidades da v0.92 RC2
-- 🎨 **Redesign completo da tela de login** — layout unificado com formulário email/senha + botões Google/Microsoft em página única
-- 🎨 **Novo background animado** — boxes flutuantes em CSS puro com rotação e fade, sem JavaScript (ultra performático)
-- 🎨 **Gradiente de profundidade** — fundo com gradiente roxo (#685BC7) na base até preto absoluto no topo
-- 🎨 **Design System expandido** — novas classes `.ds-login-title`, `.ds-login-version`, `.ds-login-version-pill` para controle centralizado da tipografia do login
-- ♿ **Acessibilidade** — respeita `prefers-reduced-motion` para desabilitar animações
-- ⚡ **Performance** — animações via `will-change: transform` promovidas para GPU, zero overhead de canvas/JS
+### What's New in v0.92 RC2
+- 🎨 **Full login screen redesign** — unified layout with email/password form + Google/Microsoft buttons on a single page
+- 🎨 **Animated background** — CSS-only floating boxes with rotation and fade, zero JavaScript overhead
+- 🎨 **Depth gradient** — purple (#685BC7) at the bottom fading to absolute black at the top
+- 🎨 **Expanded Design System** — new classes `.ds-login-title`, `.ds-login-version`, `.ds-login-version-pill` for centralized login typography control
+- ♿ **Accessibility** — respects `prefers-reduced-motion` to disable animations
+- ⚡ **Performance** — animations promoted to GPU via `will-change: transform`, no canvas/JS overhead
 
-### Versão Anterior: v0.90.1 (Hotfix)
+### Previous Release: v0.90.1 (Hotfix)
 
-**Data**: 25/04/2026  
-**Status**: ✅ Produção
+**Date**: 04/25/2026  
+**Status**: ✅ Production
 
-#### O Que Foi Corrigido
-- 🐛 **Notificações OAuth aleatórias** no PWA (problema crítico de UX)
-- 🐛 **Mensagem "Lost Connection to Dev Server"** no PWA instalado
-- 🔧 Melhorias no Service Worker e gerenciamento de cache
-- 🔧 Auto-atualização automática do PWA
+#### What Was Fixed
+- 🐛 **Random OAuth notifications** on PWA (critical UX issue)
+- 🐛 **"Lost Connection to Dev Server" message** on installed PWA
+- 🔧 Service Worker and cache management improvements
+- 🔧 Automatic PWA self-update
 
-### Documentação do Hotfix
-- 📄 [Resumo Rápido](docs/HOTFIX_v0.90.1_SUMMARY.md) - 2 min
-- 📄 [Resumo Executivo](docs/RESUMO_CORRECAO_OAUTH.md) - 5 min
-- 📄 [Documentação Técnica](docs/CORRECAO_PWA_DEV_SERVER.md) - 15 min
+### Hotfix Documentation
+- 📄 [Quick Summary](docs/HOTFIX_v0.90.1_SUMMARY.md) - 2 min
+- 📄 [Executive Summary](docs/RESUMO_CORRECAO_OAUTH.md) - 5 min
+- 📄 [Technical Documentation](docs/CORRECAO_PWA_DEV_SERVER.md) - 15 min
 - 📄 [Release Notes](docs/RELEASE_NOTES_v0.90.1.md) - 10 min
-- 📄 [Changelog](CHANGELOG.md) - Histórico completo
+- 📄 [Changelog](CHANGELOG.md) - Full history
 
 ---
