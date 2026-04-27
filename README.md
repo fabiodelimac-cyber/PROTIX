@@ -4,12 +4,25 @@ PROTIX is a high-performance Business Intelligence platform built for real-time 
 
 ---
 
-## 🔥 Latest Release: v0.90.1 (Hotfix)
+## 🔥 Latest Release: v0.92 RC2
+
+**Data**: 27/04/2026  
+**Status**: 🧪 Release Candidate
+
+### Novidades da v0.92 RC2
+- 🎨 **Redesign completo da tela de login** — layout unificado com formulário email/senha + botões Google/Microsoft em página única
+- 🎨 **Novo background animado** — boxes flutuantes em CSS puro com rotação e fade, sem JavaScript (ultra performático)
+- 🎨 **Gradiente de profundidade** — fundo com gradiente roxo (#685BC7) na base até preto absoluto no topo
+- 🎨 **Design System expandido** — novas classes `.ds-login-title`, `.ds-login-version`, `.ds-login-version-pill` para controle centralizado da tipografia do login
+- ♿ **Acessibilidade** — respeita `prefers-reduced-motion` para desabilitar animações
+- ⚡ **Performance** — animações via `will-change: transform` promovidas para GPU, zero overhead de canvas/JS
+
+### Versão Anterior: v0.90.1 (Hotfix)
 
 **Data**: 25/04/2026  
 **Status**: ✅ Produção
 
-### O Que Foi Corrigido
+#### O Que Foi Corrigido
 - 🐛 **Notificações OAuth aleatórias** no PWA (problema crítico de UX)
 - 🐛 **Mensagem "Lost Connection to Dev Server"** no PWA instalado
 - 🔧 Melhorias no Service Worker e gerenciamento de cache
