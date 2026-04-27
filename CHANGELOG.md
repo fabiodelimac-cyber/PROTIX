@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.92.1] - 2026-04-27
+
+### 🐛 Fixed (Hotfix)
+
+#### Filtro de Data — Meses Anteriores Não Apareciam
+- **Problema**: O filtro de data hierárquico (slicer) não exibia meses anteriores (ex: março/2026), mesmo com dados existentes no banco e os gráficos exibindo-os corretamente
+- **Causa**: A query de carga inicial da tabela `interactions` tinha `.limit(10000)` com ordenação descendente por data. Com mais de 10.000 registros, os dados mais antigos (março) eram cortados antes de chegar ao cliente. As RPCs dos gráficos não tinham esse limite, por isso exibiam março normalmente
+- **Solução**: Removido o `.limit(10000)` da query de carga de dados em `js/app.js`
+
+#### Filtro de Data — Comparação Incorreta com Filtros Array
+- **Problema**: Ao aplicar filtros de shopping ou PDV (que armazenam arrays de valores), o filtro de data descartava todos os registros por comparar arrays como string (`String([...])`)
+- **Causa**: Lógica de filtragem em `updateDropdownUI` não tratava valores do tipo array, diferente do `getFilteredData()` do DataManager
+- **Solução**: Adicionado tratamento de array com `.includes()` na lógica de filtragem do slicer de data
+
+### 🔍 Files Modified
+- `js/app.js` — Removido `.limit(10000)` da query de carga; corrigida comparação de filtros array no slicer de data
+
+---
+
 ## [0.92.0-rc2] - 2026-04-27
 
 ### 🎨 Added

@@ -49,7 +49,7 @@ if (localStorage.getItem('theme') === 'light') {
     // Atualiza o logo para a versão light
     const logoImg = document.querySelector('#float-logo img');
     if (logoImg) {
-        logoImg.src = 'header-light.png';
+        logoImg.src = 'images/header-light.png';
     }
     // ícones gerenciados pelo syncThemeIcons no index.html
 }
@@ -67,7 +67,7 @@ themeToggles.forEach(btn => {
         // Atualiza o logo
         const logoImg = document.querySelector('#float-logo img');
         if (logoImg) {
-            logoImg.src = isDark ? 'header.png' : 'header-light.png';
+            logoImg.src = isDark ? 'images/header.png' : 'images/header-light.png';
         }
         
         // Atualiza os ícones (gerenciado pelo syncThemeIcons no index.html via MutationObserver)
@@ -90,8 +90,43 @@ let isDataLoaded = false;
 let currentRoute = 'view-overview';
 let isLoggingOut = false; // Flag para evitar múltiplos logouts simultâneos
 
+// --- LOGIN LOADING OVERLAY ---
+// userInitiatedLogin: só é true quando o usuário clicou num botão de login
+let userInitiatedLogin = false;
+
+function showLoginLoading(text = 'Autenticando...') {
+    const overlay = document.getElementById('login-loading-overlay');
+    const textEl = document.getElementById('login-loading-text');
+    if (overlay) {
+        if (textEl) textEl.textContent = text;
+        overlay.classList.remove('hidden');
+        overlay.classList.add('show');
+    }
+}
+
+function hideLoginLoading() {
+    const overlay = document.getElementById('login-loading-overlay');
+    if (overlay) {
+        overlay.classList.remove('show');
+        overlay.classList.add('hidden');
+    }
+}
+
 // --- AUTENTICAÇÃO (MOTOR SUPABASE) ---
 // --- AUTENTICAÇÃO (MOTOR SUPABASE COM ESTEIRA DE APROVAÇÃO) ---
+
+// Detecta retorno do OAuth (URL contém ?code= com formato UUID válido)
+// Só mostra loading se for um callback OAuth real (não um reload)
+(function() {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    if (code && code.length > 10) {
+        userInitiatedLogin = true;
+        showLoginLoading('Validando acesso...');
+        // Limpa a URL para evitar reloads com o código
+        window.history.replaceState({}, '', window.location.pathname);
+    }
+})();
 
 // Previne notificações OAuth quando a página fica inativa
 let authInProgress = false;
@@ -142,6 +177,10 @@ supabase.auth.onAuthStateChange(async (event, session) => {
         
         console.log('🔐 Processando login/signup...');
         
+        if (userInitiatedLogin) {
+            showLoginLoading('Validando acesso...');
+        }
+        
         // INTERCEPTAÇÃO: O usuário logou no Google, mas temos que checar se você aprovou
         try {
             const { data, error } = await supabase
@@ -152,6 +191,9 @@ supabase.auth.onAuthStateChange(async (event, session) => {
 
             if (data && data.status === 'approved') {
                 console.log('🔐 Usuário aprovado, mostrando dashboard');
+                hideLoginLoading();
+                userInitiatedLogin = false;
+                sessionStorage.removeItem('oauth-processed');
                 // FLUXO LIBERADO: Usuário está aprovado
                 const loginScreen = document.getElementById('login-screen');
                 loginScreen.style.opacity = '0';
@@ -185,6 +227,9 @@ supabase.auth.onAuthStateChange(async (event, session) => {
                 
             } else {
                 console.log('🔐 Usuário não aprovado');
+                hideLoginLoading();
+                userInitiatedLogin = false;
+                sessionStorage.removeItem('oauth-processed');
                 // FLUXO BLOQUEADO: Usuário é pending ou a tabela falhou
                 alert("Sua conta foi cadastrada com sucesso, mas aguarda aprovação do Administrador para acessar a dashboard.");
                 await supabase.auth.signOut(); // Desloga o cidadão na mesma hora
@@ -192,6 +237,9 @@ supabase.auth.onAuthStateChange(async (event, session) => {
             }
         } catch (err) {
             console.error("🔐 Erro ao validar acesso:", err);
+            hideLoginLoading();
+            userInitiatedLogin = false;
+            sessionStorage.removeItem('oauth-processed');
             alert("Erro ao validar permissões. Contate o administrador.");
             await supabase.auth.signOut();
             authInProgress = false;
@@ -199,6 +247,7 @@ supabase.auth.onAuthStateChange(async (event, session) => {
     } else {
         console.log('🔐 Sem sessão, mostrando tela de login');
         authInProgress = false; // Reseta flag
+        hideLoginLoading();
         // FLUXO DE SAÍDA (LOGOUT NORMAL)
         isLoggingOut = false; // Reseta a flag de logout
         stopPerformanceMonitoring();
@@ -221,46 +270,30 @@ document.getElementById('btn-email-login').addEventListener('click', async () =>
     
     try { 
         btn.innerText = 'AUTENTICANDO...'; 
+        userInitiatedLogin = true;
+        showLoginLoading('Autenticando...');
         const { error } = await supabase.auth.signInWithPassword({ email: email, password: pass });
         if (error) throw error;
         btn.innerText = 'AUTENTICAR'; 
     } catch (error) { 
+        hideLoginLoading();
         alert('Acesso Negado: ' + error.message); 
         btn.innerText = 'AUTENTICAR'; 
     }
 });
 
 document.getElementById('btn-google-login').addEventListener('click', async () => {
-    const btn = document.getElementById('btn-google-login');
-    const originalHTML = btn.innerHTML;
-    
     try {
-        btn.disabled = true;
-        btn.innerHTML = '<span class="font-[\'Archivo\',_sans-serif] font-medium text-[13px] tracking-[0.04em]" style="font-stretch: 120%;">ABRINDO GOOGLE...</span>';
-        
+        userInitiatedLogin = true;
+        showLoginLoading('Conectando com Google...');
         const { error } = await supabase.auth.signInWithOAuth({ 
             provider: 'google',
-            options: {
-                // Redireciona para a mesma página após login
-                redirectTo: window.location.origin
-            }
+            options: { redirectTo: window.location.origin }
         });
-        
         if (error) throw error;
-        
-        // Feedback visual de que o popup foi aberto
-        btn.innerHTML = '<span class="font-[\'Archivo\',_sans-serif] font-medium text-[13px] tracking-[0.04em]" style="font-stretch: 120%;">AGUARDANDO APROVAÇÃO...</span>';
-        
-        // Timeout de 2 minutos - se o usuário não aprovar, reseta o botão
-        setTimeout(() => {
-            btn.disabled = false;
-            btn.innerHTML = originalHTML;
-        }, 120000);
-        
     } catch (error) { 
+        hideLoginLoading();
         alert('Falha ao iniciar autenticação com Google.'); 
-        btn.disabled = false;
-        btn.innerHTML = originalHTML;
     }
 });
 
@@ -268,37 +301,21 @@ document.getElementById('btn-google-login').addEventListener('click', async () =
 const btnMicrosoftLogin = document.getElementById('btn-microsoft-login');
 if (btnMicrosoftLogin) {
     btnMicrosoftLogin.addEventListener('click', async () => {
-        const originalHTML = btnMicrosoftLogin.innerHTML;
-        
         try {
-            btnMicrosoftLogin.disabled = true;
-            btnMicrosoftLogin.innerHTML = '<span class="font-[\'Archivo\',_sans-serif] font-medium text-[13px] tracking-[0.04em]" style="font-stretch: 120%;">ABRINDO MICROSOFT...</span>';
-            
-            // No Supabase, o provedor Microsoft é identificado como 'azure'
+            userInitiatedLogin = true;
+            showLoginLoading('Conectando com Microsoft...');
             const { error } = await supabase.auth.signInWithOAuth({
                 provider: 'azure',
                 options: {
-                    scopes: 'email profile', // Escopos básicos para pegar o usuário
+                    scopes: 'email profile',
                     redirectTo: window.location.origin
                 }
             });
-            
             if (error) throw error;
-            
-            // Feedback visual de que o popup foi aberto
-            btnMicrosoftLogin.innerHTML = '<span class="font-[\'Archivo\',_sans-serif] font-medium text-[13px] tracking-[0.04em]" style="font-stretch: 120%;">AGUARDANDO APROVAÇÃO...</span>';
-            
-            // Timeout de 2 minutos - se o usuário não aprovar, reseta o botão
-            setTimeout(() => {
-                btnMicrosoftLogin.disabled = false;
-                btnMicrosoftLogin.innerHTML = originalHTML;
-            }, 120000);
-            
         } catch (err) {
+            hideLoginLoading();
             console.error("Erro no login Microsoft:", err);
             alert("Erro ao conectar com Microsoft: " + err.message);
-            btnMicrosoftLogin.disabled = false;
-            btnMicrosoftLogin.innerHTML = originalHTML;
         }
     });
 }
@@ -574,8 +591,7 @@ async function initData() {
         const { data, error } = await supabase
             .from('interactions')
             .select('*')
-            .order('pure_date', { ascending: false })
-            .limit(10000); // Limite para evitar sobrecarga inicial, ajuste conforme necessário
+            .order('pure_date', { ascending: false });
 
         if (error) throw error;
 
@@ -850,8 +866,14 @@ function updateDropdownUI() {
         let dataForDateFilter = raw.filter(item => {
             let matches = true;
             for (const fKey in currentFilters) {
-                if (fKey === 'pure_date') continue; 
-                if (item[fKey] && String(item[fKey]) !== String(currentFilters[fKey])) matches = false;
+                if (fKey === 'pure_date') continue;
+                const filterVal = currentFilters[fKey];
+                const itemVal = item[fKey];
+                if (Array.isArray(filterVal)) {
+                    if (filterVal.length > 0 && (!itemVal || !filterVal.includes(itemVal))) matches = false;
+                } else {
+                    if (filterVal && itemVal && String(itemVal) !== String(filterVal)) matches = false;
+                }
             }
             return matches;
         });
@@ -1353,11 +1375,5 @@ function updateDropdownUI() {
 }
 
 // ── PWA: Registro do Service Worker ──────────────────────────────────────────
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker
-      .register('/sw.js')
-      .then((reg) => console.log('✅ PWA: Service Worker registrado', reg.scope))
-      .catch((err) => console.warn('⚠️ PWA: Falha ao registrar SW', err));
-  });
-}
+// REMOVIDO: Registro agora é feito no index.html com detecção de localhost
+// Ver index.html para o código de registro do Service Worker
