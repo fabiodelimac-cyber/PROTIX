@@ -5,19 +5,7 @@ const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 
 // Cliente permanente: usado para autenticação (login, sessão, onAuthStateChange)
 // Este precisa ser estável e persistente — não pode ser recriado.
-// IMPORTANTE: detectRefreshToken previne notificações indesejadas quando a página fica inativa
-export const supabase = createClient(supabaseUrl, supabaseKey, {
-    auth: {
-        detectSessionInUrl: true,  // Detecta callback OAuth na URL
-        flowType: 'pkce',          // Usa PKCE para segurança
-        autoRefreshToken: true,    // Renova token automaticamente quando logado
-        persistSession: true,      // Mantém sessão no localStorage
-        storage: window.localStorage,
-        storageKey: 'supabase.auth.token',
-        // Previne tentativas de refresh quando não há sessão ativa
-        debug: false
-    }
-});
+export const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Fábrica de cliente descartável: usado para buscar dados (RPC, queries)
 // Cria um cliente novo e limpo a cada chamada, evitando estado corrompido

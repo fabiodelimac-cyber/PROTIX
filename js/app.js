@@ -89,6 +89,117 @@ import { supabase } from './services/supabaseClient.js';
 let isDataLoaded = false;
 let currentRoute = 'view-overview';
 let isLoggingOut = false; // Flag para evitar múltiplos logouts simultâneos
+let loggedOutByInactivity = false; // Flag para exibir o modal de inatividade
+
+// --- AUTO-LOGOUT POR INATIVIDADE ---
+const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000;   // 30 minutos
+const INACTIVITY_WARNING_BEFORE_MS = 2 * 60 * 1000; // Avisa 2 minutos antes do logout
+let inactivityTimer = null;
+let inactivityWarningTimer = null;
+let toastCountdownInterval = null;
+
+function showInactivityToast() {
+    const toast = document.getElementById('inactivity-toast');
+    const countdown = document.getElementById('inactivity-toast-countdown');
+    if (!toast || !countdown) return;
+
+    let seconds = Math.round(INACTIVITY_WARNING_BEFORE_MS / 1000);
+
+    function formatCountdown(s) {
+        if (s >= 60) {
+            const m = Math.floor(s / 60);
+            const sec = s % 60;
+            return sec > 0 ? `${m}min ${sec}s` : `${m}min`;
+        }
+        return `${s}s`;
+    }
+
+    countdown.innerHTML = `Você será desconectado em <strong style="color:rgba(234,179,8,0.85);">${formatCountdown(seconds)}</strong>`;
+
+    toast.style.display = 'flex';
+    // Força reflow para a transição funcionar
+    toast.getBoundingClientRect();
+    toast.style.opacity = '1';
+    toast.style.transform = 'translateY(0)';
+
+    toastCountdownInterval = setInterval(() => {
+        seconds--;
+        if (seconds > 0) {
+            countdown.innerHTML = `Você será desconectado em <strong style="color:rgba(234,179,8,0.85);">${formatCountdown(seconds)}</strong>`;
+        } else {
+            clearInterval(toastCountdownInterval);
+            toastCountdownInterval = null;
+        }
+    }, 1000);
+}
+
+function hideInactivityToast() {
+    const toast = document.getElementById('inactivity-toast');
+    if (!toast) return;
+
+    if (toastCountdownInterval) {
+        clearInterval(toastCountdownInterval);
+        toastCountdownInterval = null;
+    }
+
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(10px)';
+    setTimeout(() => {
+        toast.style.display = 'none';
+    }, 350);
+}
+
+function startInactivityTimer() {
+    stopInactivityTimer(); // Garante que não há timer duplicado
+
+    // Timer do aviso (dispara INACTIVITY_WARNING_BEFORE_MS antes do logout)
+    inactivityWarningTimer = setTimeout(() => {
+        showInactivityToast();
+    }, INACTIVITY_TIMEOUT_MS - INACTIVITY_WARNING_BEFORE_MS);
+
+    // Timer do logout
+    inactivityTimer = setTimeout(async () => {
+        hideInactivityToast();
+        console.log('⏱️ AUTO-LOGOUT: Inatividade detectada, deslogando...');
+        if (!isLoggingOut) {
+            isLoggingOut = true;
+            loggedOutByInactivity = true; // Sinaliza que foi por inatividade
+            try {
+                await supabase.auth.signOut();
+            } catch (err) {
+                console.error('⏱️ AUTO-LOGOUT: Erro ao deslogar:', err);
+                isLoggingOut = false;
+                loggedOutByInactivity = false;
+            }
+        }
+    }, INACTIVITY_TIMEOUT_MS);
+}
+
+function resetInactivityTimer() {
+    if (inactivityTimer !== null) {
+        // Só reseta se o timer estiver ativo (usuário logado)
+        hideInactivityToast();
+        startInactivityTimer();
+    }
+}
+
+function stopInactivityTimer() {
+    if (inactivityTimer !== null) {
+        clearTimeout(inactivityTimer);
+        inactivityTimer = null;
+    }
+    if (inactivityWarningTimer !== null) {
+        clearTimeout(inactivityWarningTimer);
+        inactivityWarningTimer = null;
+    }
+    hideInactivityToast();
+}
+
+// Eventos que indicam atividade do usuário
+const ACTIVITY_EVENTS = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click'];
+ACTIVITY_EVENTS.forEach(event => {
+    document.addEventListener(event, resetInactivityTimer, { passive: true });
+});
 
 // --- LOGIN LOADING OVERLAY ---
 // userInitiatedLogin: só é true quando o usuário clicou num botão de login
@@ -217,6 +328,9 @@ supabase.auth.onAuthStateChange(async (event, session) => {
                 // Inicia o monitoramento de performance
                 await initPerformanceMonitoring(session.user);
 
+                // Inicia o timer de inatividade
+                startInactivityTimer();
+
                 // Sempre mostra o disclaimer ao logar
                 document.getElementById('disclaimer-modal').classList.remove('hidden');
                 startDisclaimerCountdown();
@@ -250,6 +364,7 @@ supabase.auth.onAuthStateChange(async (event, session) => {
         hideLoginLoading();
         // FLUXO DE SAÍDA (LOGOUT NORMAL)
         isLoggingOut = false; // Reseta a flag de logout
+        stopInactivityTimer(); // Para o timer de inatividade
         stopPerformanceMonitoring();
         const loginScreen = document.getElementById('login-screen');
         loginScreen.style.display = 'flex';
@@ -257,6 +372,15 @@ supabase.auth.onAuthStateChange(async (event, session) => {
         loginScreen.style.pointerEvents = 'auto';
         document.getElementById('dash-shell').style.display = 'none';
         document.getElementById('disclaimer-modal').classList.add('hidden');
+
+        // Exibe o modal de inatividade se o logout foi automático
+        if (loggedOutByInactivity) {
+            loggedOutByInactivity = false;
+            const inactivityModal = document.getElementById('inactivity-modal');
+            if (inactivityModal) {
+                inactivityModal.style.display = 'flex';
+            }
+        }
     }
 });
 
@@ -413,6 +537,10 @@ document.getElementById('app-box').addEventListener('click', async (e) => {
 
 document.getElementById('btn-accept-beta').addEventListener('click', () => {
     document.getElementById('disclaimer-modal').classList.add('hidden');
+});
+
+document.getElementById('btn-inactivity-ok').addEventListener('click', () => {
+    document.getElementById('inactivity-modal').style.display = 'none';
 });
 
 // Função para iniciar a contagem regressiva no disclaimer

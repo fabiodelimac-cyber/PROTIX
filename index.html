@@ -82,10 +82,10 @@
         .ds-login-input { font-weight: 600; font-stretch: 100%; font-size: 11px; }
 
         /* Nome do produto na tela de login — fonte Syncopate exclusiva */
-        .ds-login-product { font-family: 'Syncopate', sans-serif; font-weight: 700; letter-spacing: 0.5em; color: #ffffff; }
+        .ds-login-product { font-family: 'Syncopate', sans-serif; font-weight: 700;letter-spacing: 0.2em; color: #ffffff; }
 
         /* Título da tela de login (ex: "Faça seu login") */
-        .ds-login-title { font-family: 'Archivo', sans-serif; font-weight: 400; font-stretch: 140%; font-size: 15px; letter-spacing: 0.2em; color: rgba(255,255,255,0.70); text-align: center; }
+        .ds-login-title { font-family: 'Archivo', sans-serif; font-weight: 800; font-stretch: 140%; font-size: 15px; letter-spacing: 0.2em; text-transform:uppercase; color: rgba(255,255,255,0.70); text-align: center; }
 
         /* Pílula de versão na tela de login (ex: "BETA 0.90") */
         .ds-login-version-pill { display: inline-flex; align-items: center; background: rgba(255,255,255,0.10); padding: 4px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); }
@@ -171,6 +171,10 @@
 
         /* Texto do score/gauge de saúde dos PDVs (fonte Michroma para números de score) */
         .ds-gauge-text { font-family: 'Michroma', sans-serif; font-weight: 900; fill: var(--text-main); }
+
+        /* Aviso de isenção de responsabilidade — versão de desenvolvimento (entre filtros e conteúdo) */
+        .ds-dev-disclaimer { font-family: 'Archivo', sans-serif; font-size: 10px; font-weight: 400; font-stretch: 140%; text-align: center; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-muted); opacity: 0.6; padding: 1px 0px; width: 100%; pointer-events: none; user-select: none; }
+        #dev-disclaimer-bar { flex-shrink: 0; width: 100%; position: relative; z-index: 2; }
 
         /* =============================================
            CANVAS EXTERNA
@@ -698,6 +702,25 @@
         .bg-mesh-static { background: linear-gradient(to top, #685BC7 0%, #2a1f5e 35%, #000000 100%); }
         @keyframes meshGradient { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
         #disclaimer-modal { border-radius: 20px; }
+
+        @keyframes modalPop {
+            0%   { opacity: 0; transform: scale(0.85) translateY(12px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        @keyframes toastPing {
+            0%   { transform: scale(1);    opacity: 0.7; }
+            70%  { transform: scale(1.75); opacity: 0; }
+            100% { transform: scale(1.75); opacity: 0; }
+        }
+
+        @keyframes toastPingCore {
+            0%   { transform: scale(1); }
+            15%  { transform: scale(0.78); }
+            45%  { transform: scale(1.06); }
+            65%  { transform: scale(0.97); }
+            100% { transform: scale(1); }
+        }
         
         /* =============================================
            KPI SPINNER (Loading nos KPIs)
@@ -780,10 +803,22 @@
             left: 16px;
             top: 50%;
             transform: translateY(-50%);
-            color: rgba(255,255,255,0.3);
-            font-size: 16px;
             pointer-events: none;
             z-index: 2;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-input-group .login-icon svg {
+            width: 100%;
+            height: 100%;
+            fill: rgba(255,255,255,0.3);
+            transition: fill 0.3s ease;
+        }
+        .login-input-group input:focus + .login-icon svg {
+            fill: rgba(104,91,199,0.6);
         }
         .login-input-group input {
             padding-left: 48px !important;
@@ -1017,7 +1052,7 @@
                 <div class="flex items-center gap-3">
                     <h2 class="ds-login-product text-[22px]">APP</h2>
                     <div class="ds-login-version-pill">
-                        <span class="ds-login-version">BETA 0.92</span>
+                        <span class="ds-login-version">BETA 0.93</span>
                     </div>
                 </div>
             </div>
@@ -1028,12 +1063,20 @@
             <!-- Formulário e-mail/senha -->
             <div class="space-y-3 mb-5">
                 <div class="login-input-group">
-                    <span class="login-icon">✉</span>
                     <input type="email" id="user" placeholder="E-mail" style="font-stretch: 125%;" class="font-['Archivo',_sans-serif] w-full px-5 py-4 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-white placeholder-white/25 focus:border-[#685BC7] focus:ring-4 focus:ring-[#685BC7]/20 outline-none transition-all text-[13px]">
+                    <span class="login-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                        </svg>
+                    </span>
                 </div>
                 <div class="login-input-group">
-                    <span class="login-icon">🔒</span>
                     <input type="password" id="pass" placeholder="Senha" style="font-stretch: 125%;" class="font-['Archivo',_sans-serif] w-full px-5 py-4 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-white placeholder-white/25 focus:border-[#685BC7] focus:ring-4 focus:ring-[#685BC7]/20 outline-none transition-all text-[13px]">
+                    <span class="login-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm9 14H6V10h12v10zm-6-3c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/>
+                        </svg>
+                    </span>
                 </div>
                 <button id="btn-email-login" class="login-cta-btn" style="font-stretch: 125%;">Autenticar</button>
             </div>
@@ -1090,6 +1133,8 @@
             </div>
         </div>
 
+        <!-- Modal: Auto-logout por inatividade (movido para fora do app-box) -->
+
         <div id="dash-shell" style="display:none; flex-direction:column; flex:1; overflow:hidden; min-height:0; position:relative;">
 
             <div id="floating-ui">
@@ -1098,7 +1143,7 @@
 
                     <div id="float-logo">
                         <img src="images/header.png" alt="Logo">
-                        <span id="float-logo-badge">BETA 0.92</span>
+                        <span id="float-logo-badge">BETA 0.93</span>
                     </div>
 
                     <div id="nav-and-filter-wrapper">
@@ -1160,8 +1205,7 @@
 
                 </div>
                 
-                <div id="filterbar-row" class="filters-hidden">
-                    <div style="display:flex; flex-direction:column; gap:4px; position:relative; z-index:100;" id="date-slicer-container">
+                <div id="filterbar-row" class="filters-hidden">                    <div style="display:flex; flex-direction:column; gap:4px; position:relative; z-index:100;" id="date-slicer-container">
                         <label class="ds-filter-label">Período</label>
                         <button id="btn-date-slicer" class="slicer-btn p-2 rounded-xl ds-filter-input border flex justify-between items-center transition-all" style="min-width:130px;">
                             <span id="date-slicer-label" class="truncate text-left" style="width:85%;">TODOS</span>
@@ -1217,6 +1261,10 @@
                         </button>
                         <div id="vis-slicer-panel" class="slicer-panel border rounded-xl shadow-2xl custom-scrollbar p-4" style="position:absolute; top:calc(100% + 8px); left:0; min-width:260px; max-height:350px; overflow-y:auto; z-index:94; color:var(--text-main);"></div>
                     </div>
+                </div>
+
+                <div id="dev-disclaimer-bar">
+                    <p class="ds-dev-disclaimer">VERSÃO DE DESENVOLVIMENTO: Não deve ser utilizada para decisões operacionais</p>
                 </div>
 
             </div>
@@ -1422,5 +1470,89 @@
             }
         }
     </script>
+
+    <!-- Toast: Aviso de sessão prestes a expirar -->
+    <div id="inactivity-toast" style="
+        display: none;
+        position: fixed;
+        bottom: 28px;
+        right: 28px;
+        z-index: 9998;
+        align-items: center;
+        gap: 14px;
+        background: rgba(20, 21, 25, 0.92);
+        border: 1px solid rgba(234, 179, 8, 0.35);
+        border-radius: 14px;
+        padding: 14px 20px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.45), 0 0 0 1px rgba(234,179,8,0.1);
+        backdrop-filter: blur(12px);
+        max-width: 320px;
+        opacity: 0;
+        transform: translateY(10px);
+        transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+    ">
+        <!-- Ícone ! com efeito ping -->
+        <div style="position: relative; flex-shrink: 0; width: 36px; height: 36px;">
+            <!-- Anel de ping (expande e some) -->
+            <span style="
+                position: absolute; inset: 0;
+                border-radius: 50%;
+                border: 2px solid rgba(202, 138, 4, 0.6);
+                animation: toastPing 1.2s cubic-bezier(0, 0, 0.2, 1) infinite;
+            "></span>
+            <!-- Círculo base com ! -->
+            <div style="
+                position: absolute; inset: 0;
+                border-radius: 50%;
+                border: 2px solid rgba(202, 138, 4, 0.85);
+                display: flex; align-items: center; justify-content: center;
+                background: rgba(202, 138, 4, 0.08);
+                animation: toastPingCore 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+            ">
+                <span style="
+                    font-family: 'Archivo', sans-serif;
+                    font-size: 15px;
+                    font-weight: 900;
+                    color: #ca8a04;
+                    line-height: 1;
+                ">!</span>
+            </div>
+        </div>
+        <!-- Texto -->
+        <div>
+            <p style="
+                font-family: 'Archivo', sans-serif;
+                font-size: 11px;
+                font-weight: 700;
+                font-stretch: 120%;
+                text-transform: uppercase;
+                letter-spacing: 0.12em;
+                color: rgba(255,255,255,0.9);
+                margin: 0 0 3px;
+            ">Sessão expirando</p>
+            <p id="inactivity-toast-countdown" style="
+                font-family: 'Archivo', sans-serif;
+                font-size: 11px;
+                font-weight: 400;
+                color: rgba(255,255,255,0.45);
+                margin: 0;
+                letter-spacing: 0.04em;
+            ">Você será desconectado em <strong style="color:rgba(234,179,8,0.85);">2min</strong></p>
+        </div>
+    </div>
+
+    <!-- Modal: Auto-logout por inatividade (fora do app-box para fixed funcionar corretamente) -->
+    <div id="inactivity-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.82); backdrop-filter:blur(6px); z-index:9999; align-items:center; justify-content:center; padding:24px;">
+        <div style="background:#1c1e22; border:1px solid #2d3139; padding:40px 36px; border-radius:2rem; max-width:360px; width:100%; box-shadow:0 25px 60px rgba(0,0,0,0.6); text-align:center; animation: modalPop 0.35s cubic-bezier(0.34,1.56,0.64,1) both;">
+            <div style="width:64px; height:64px; background:rgba(96,165,250,0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 24px;">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="#60a5fa" style="width:32px;height:32px;">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                </svg>
+            </div>
+            <h2 style="font-family:'Archivo',sans-serif; font-size:16px; font-weight:800; color:#ffffff; margin:0 0 12px; text-transform:uppercase; letter-spacing:0.15em;">Sessão Encerrada</h2>
+            <p style="font-family:'Archivo',sans-serif; font-size:13px; color:rgba(255,255,255,0.5); margin:0 0 32px; line-height:1.6;">Você foi desconectado por inatividade.<br>Faça login novamente para continuar.</p>
+            <button id="btn-inactivity-ok" style="width:100%; background:#685BC7; color:#fff; font-family:'Archivo',sans-serif; font-size:11px; font-weight:900; text-transform:uppercase; letter-spacing:0.2em; padding:16px; border:none; border-radius:12px; cursor:pointer; transition:background 0.2s;" onmouseover="this.style.background='#5a4eb3'" onmouseout="this.style.background='#685BC7'">Entendido</button>
+        </div>
+    </div>
 </body>
 </html>

@@ -1,15 +1,16 @@
 // sw.js — APP Service Worker
 // CACHE_VERSION é atualizado automaticamente pelo deploy.sh — não edite manualmente
-const CACHE_NAME = 'app-20260425.1313';
+// IMPORTANTE: Este Service Worker NÃO é registrado em localhost (ver index.html)
+const CACHE_NAME = 'app-20260428.1313';
 
 // Assets essenciais para funcionar offline (shell do app)
 const SHELL_ASSETS = [
   '/',
   '/index.html',
-  '/icon.png',
-  '/header.png',
-  '/header-light.png',
-  '/pros_white.png',
+  '/images/icon.png',
+  '/images/header.png',
+  '/images/header-light.png',
+  '/images/pros_white.png',
   '/js/app.js',
   '/js/view-overview.js',
   '/js/view-positivacao.js',
@@ -54,6 +55,11 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
+  // Ignora protocolos não-HTTP (chrome-extension, about, data, blob, etc.)
+  if (!url.protocol.startsWith('http')) {
+    return; // Deixa o browser resolver
+  }
+
   // Bloqueia conexões de dev server (Vite, Webpack, etc.)
   if (url.protocol === 'ws:' || url.protocol === 'wss:' || 
       url.pathname.includes('/__vite') || 
@@ -92,7 +98,12 @@ self.addEventListener('fetch', (event) => {
             event.request.method === 'GET'
           ) {
             const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+            caches.open(CACHE_NAME).then((cache) => {
+              // Tenta cachear, mas ignora erros (ex: chrome-extension://)
+              cache.put(event.request, clone).catch((err) => {
+                console.warn('[SW] Não foi possível cachear:', event.request.url, err.message);
+              });
+            });
           }
           return response;
         })

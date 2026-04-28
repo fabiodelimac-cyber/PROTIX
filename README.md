@@ -4,7 +4,19 @@ PROTIX is a high-performance Business Intelligence platform built for real-time 
 
 ---
 
-## 🔥 Latest Release: v0.92.1 (Hotfix)
+## 🔥 Latest Release: v0.93 RC3
+
+**Date**: 04/28/2026  
+**Status**: 🧪 Release Candidate
+
+### What's New in v0.93 RC3
+- ⚠️ **Testing disclaimer banner** — visible disclaimer at the top of the page indicating this is a test version
+- 🔒 **Auto-logoff after 30 min of inactivity** — automatic session termination for security and resource management
+- 🔔 **Inactivity warning toast** — animated toast notification appears at 28 min of inactivity to alert the user, automatically dismissed if activity is detected, resetting the counter
+
+---
+
+### Previous Release: v0.92.1 (Hotfix)
 
 **Date**: 04/27/2026  
 **Status**: ✅ Production

@@ -21,7 +21,7 @@ export function getAboutHTML() {
 
             <div class="p-8 overflow-y-auto max-h-[60vh] custom-scrollbar space-y-6">
                 
-                <img src="pros_white.png" alt="ProSolution Logo" class="h-8 mx-auto mb-8 object-contain opacity-90 dark:opacity-100 invert dark:invert-0">
+                <img src="images/pros_white.png" alt="ProSolution Logo" class="h-8 mx-auto mb-8 object-contain opacity-90 dark:opacity-100 invert dark:invert-0">
 
                 <div class="p-4 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/50">
                     <p class="font-['Archivo',_sans-serif] text-sm leading-relaxed text-blue-900 dark:text-blue-100" style="font-stretch: 100%;">
@@ -44,7 +44,7 @@ export function getAboutHTML() {
                         Desenvolvido com carinho pelo time de Business Intelligence
                     </p>
                     <p class="font-['Archivo',_sans-serif] mt-3 text-center text-[10px] font-thin tracking-[0.2em] text-gray-500 dark:text-white uppercase">
-                        Versão 0.9.0 Build 20260422.1655 RC1
+                        Versão 0.9.3 Build 20260428.1356 RC3
                     </p>
                 </div>
             </div>
