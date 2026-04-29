@@ -1,7 +1,7 @@
 // sw.js — APP Service Worker
 // CACHE_VERSION é atualizado automaticamente pelo deploy.sh — não edite manualmente
 // IMPORTANTE: Este Service Worker NÃO é registrado em localhost (ver index.html)
-const CACHE_NAME = 'app-20260429.1154';
+const CACHE_NAME = 'app-20260429.1552';
 
 // Assets essenciais para funcionar offline (shell do app)
 const SHELL_ASSETS = [
@@ -19,7 +19,8 @@ const SHELL_ASSETS = [
   '/js/view-about.js',
   '/js/performance-integration.js',
   '/js/performance-monitor.js',
-  '/js/services/dataManager.js'
+  '/js/services/dataManager.js',
+  '/js/services/supabaseClient.js'
 ];
 
 // ── INSTALL: pré-cacheia o shell ──────────────────────────────────────────────
@@ -84,35 +85,52 @@ self.addEventListener('fetch', (event) => {
     return; // Deixa o browser resolver normalmente
   }
 
-  // Para tudo mais: Cache-first com fallback para rede
+  // Para tudo mais: Network-first para JS/HTML (garante versão atualizada),
+  // Cache-first para imagens e outros assets estáticos
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
+    (async () => {
+      const isCodeOrPage = event.request.url.endsWith('.js') ||
+                           event.request.url.endsWith('.html') ||
+                           event.request.mode === 'navigate';
 
-      return fetch(event.request)
-        .then((response) => {
-          // Só cacheia respostas válidas de mesma origem
-          if (
-            response.ok &&
-            response.type === 'basic' &&
-            event.request.method === 'GET'
-          ) {
+      if (isCodeOrPage) {
+        // Network-first: tenta a rede, cai no cache se offline
+        try {
+          const response = await fetch(event.request);
+          if (response.ok && response.type === 'basic' && event.request.method === 'GET') {
             const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              // Tenta cachear, mas ignora erros (ex: chrome-extension://)
-              cache.put(event.request, clone).catch((err) => {
-                console.warn('[SW] Não foi possível cachear:', event.request.url, err.message);
-              });
-            });
+            const cache = await caches.open(CACHE_NAME);
+            cache.put(event.request, clone).catch(() => {});
           }
           return response;
-        })
-        .catch(() => {
-          // Fallback offline: retorna index.html para navegação
+        } catch (e) {
+          const cached = await caches.match(event.request);
+          if (cached) return cached;
           if (event.request.mode === 'navigate') {
             return caches.match('/index.html');
           }
-        });
-    })
+          throw e;
+        }
+      }
+
+      // Cache-first para imagens e outros assets estáticos
+      const cached = await caches.match(event.request);
+      if (cached) return cached;
+
+      try {
+        const response = await fetch(event.request);
+        if (response.ok && response.type === 'basic' && event.request.method === 'GET') {
+          const clone = response.clone();
+          const cache = await caches.open(CACHE_NAME);
+          cache.put(event.request, clone).catch(() => {});
+        }
+        return response;
+      } catch (e) {
+        if (event.request.mode === 'navigate') {
+          return caches.match('/index.html');
+        }
+        throw e;
+      }
+    })()
   );
 });

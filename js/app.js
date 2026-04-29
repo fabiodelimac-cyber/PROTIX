@@ -564,6 +564,30 @@ function renderActiveView() {
     }
 }
 
+// Reinjecta o HTML da view ativa e re-renderiza — usado na reativação de aba
+// para garantir que o DOM existe antes de tentar renderizar.
+// O setTimeout(0) garante que os unsubscribes processaram antes do novo render.
+function reactivateView() {
+    // 1. Destrói gráficos e faz unsubscribe dos listeners antigos
+    try { destroyOverviewCharts(); } catch(e){}
+    try { destroyHeatProdutosCharts(); } catch(e){}
+    try { destroyPerformanceCharts(); } catch(e){}
+
+    // 2. Aguarda o event loop limpar os listeners antes de reinjetar e renderizar
+    setTimeout(() => {
+        if (currentRoute === 'view-overview') {
+            appContent.innerHTML = getOverviewHTML();
+        } else if (currentRoute === 'view-positivacao') {
+            appContent.innerHTML = getPositivacaoHTML();
+        } else if (currentRoute === 'view-heat-produtos') {
+            appContent.innerHTML = getHeatProdutosHTML();
+        } else if (currentRoute === 'view-performance') {
+            appContent.innerHTML = getPerformanceHTML();
+        }
+        renderActiveView();
+    }, 0);
+}
+
 navItems.forEach(btn => {
     btn.addEventListener('click', () => {
         const target = btn.getAttribute('data-target');
@@ -654,7 +678,12 @@ window.addEventListener('bypass-login', () => {
 // --- CARGA DE DADOS INICIAL (SUPABASE) ---
 async function initData() {
     isDataLoaded = true;
-    
+
+    // Registra o callback de re-renderização para quando a aba acordar
+    appData.onReactivation = () => {
+        reactivateView();
+    };
+
     appContent.innerHTML = getOverviewHTML();
     appContent.classList.add('view-visible');
 

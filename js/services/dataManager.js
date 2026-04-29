@@ -6,17 +6,20 @@ class DataManager {
         this.rawData = [];
         this.currentFilters = {};
         this.listeners = [];
+        this.onReactivation = null; // Callback registrado pelo app.js para re-renderizar a view ativa
 
         // Listener de reativação de aba
-        // Quando o Chrome "acorda" a aba, aguarda 1s e dispara nova busca.
-        // O cliente Supabase será recriado do zero nessa chamada (createFreshClient),
-        // eliminando qualquer estado corrompido da hibernação.
+        // Quando o Chrome "acorda" a aba, re-renderiza a view ativa do zero.
         let reactivationTimer = null;
         document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'visible') {
                 clearTimeout(reactivationTimer);
                 reactivationTimer = setTimeout(() => {
-                    this.notify();
+                    if (typeof this.onReactivation === 'function') {
+                        this.onReactivation();
+                    } else {
+                        this.notify();
+                    }
                 }, 1000);
             }
         });
@@ -24,36 +27,22 @@ class DataManager {
 
     /**
      * Normaliza parâmetros de filtro para arrays, mantendo backward compatibility.
-     * Converte strings únicas para arrays de um elemento, mantém arrays como estão,
-     * e retorna null para valores vazios ou "TODOS".
-     * 
-     * @param {*} filterValue - Valor do filtro (string, array, null, undefined)
-     * @returns {Array|null} - Array normalizado ou null
      */
     normalizeFilterParam(filterValue) {
         try {
-            // Se é null, undefined ou string vazia, retorna null
             if (!filterValue || filterValue === "" || filterValue === "TODOS") {
                 return null;
             }
-            
-            // Se é array vazio, retorna null
             if (Array.isArray(filterValue) && filterValue.length === 0) {
                 return null;
             }
-            
-            // Se é array com valores, retorna o array
             if (Array.isArray(filterValue)) {
-                // Validação de tamanho (máximo 100 itens)
                 if (filterValue.length > 100) {
                     return filterValue.slice(0, 100);
                 }
                 return filterValue;
             }
-            
-            // Se é valor único, converte para array
             return [filterValue];
-            
         } catch (error) {
             console.error('Erro ao normalizar parâmetro de filtro:', error);
             return null;
@@ -61,23 +50,10 @@ class DataManager {
     }
 
     /**
-     * Busca os dados consolidados no Supabase para o Heatmap Operacional.
-     * Aceita p_aparelho como filtro interno da view (select de modelo).
-     * ATUALIZADO: Agora envia arrays completos para suporte a seleção múltipla.
+     * Executa uma chamada RPC com retry e timeout.
+     * Cria um cliente descartável a cada tentativa para evitar estado corrompido.
      */
-    async fetchHeatmapRPC(p_aparelho = null) {
-        const params = {
-            p_shopping: this.normalizeFilterParam(this.currentFilters['shopping']),
-            p_rede: null, // Removido filtro de rede
-            p_store_name: this.normalizeFilterParam(this.currentFilters['store_name']),
-            p_linha: this.normalizeFilterParam(this.currentFilters['linha_de_produto']),
-            p_regional: this.normalizeFilterParam(this.currentFilters['regional']),
-            p_p8020: this.normalizeFilterParam(this.currentFilters['p8020']),
-            p_visibilidade: this.normalizeFilterParam(this.currentFilters['visibilidade']),
-            p_dates: this.currentFilters['pure_date'] || null,
-            p_aparelho: this.normalizeFilterParam(p_aparelho)
-        };
-
+    async _callRPC(functionName, params) {
         const tentativas = [0, 3000];
 
         for (let i = 0; i < tentativas.length; i++) {
@@ -89,13 +65,13 @@ class DataManager {
             }
 
             try {
-                const freshClient = createFreshClient();
+                const freshClient = await createFreshClient();
 
                 const timeoutPromise = new Promise((_, reject) =>
                     setTimeout(() => reject(new Error("TIMEOUT_REDE")), 15000)
                 );
 
-                const dbPromise = freshClient.rpc('get_heatmap_metrics', params);
+                const dbPromise = freshClient.rpc(functionName, params);
 
                 const { data, error } = await Promise.race([dbPromise, timeoutPromise]);
 
@@ -106,11 +82,11 @@ class DataManager {
             } catch (err) {
                 if (err.message === "TIMEOUT_REDE") {
                     if (numTentativa === tentativas.length) {
-                        console.error("🚨 Heatmap: falha crítica após todas as tentativas.");
+                        console.error(`🚨 ${functionName}: falha crítica após todas as tentativas.`);
                         return null;
                     }
                 } else {
-                    console.error("🚨 Heatmap: erro inesperado:", err);
+                    console.error(`🚨 ${functionName}: erro inesperado:`, err);
                     return null;
                 }
             }
@@ -119,218 +95,51 @@ class DataManager {
         return null;
     }
 
-    /**
-     * Busca os dados consolidados no Supabase para a Positivação.
-     * Mesma estratégia do fetchOverviewRPC: cliente fresco + 2 tentativas.
-     * ATUALIZADO: Agora envia arrays completos para suporte a seleção múltipla.
-     */
-    async fetchPositivacaoRPC() {
-        const params = {
-            p_shopping: this.normalizeFilterParam(this.currentFilters['shopping']),
-            p_rede: null, // Removido filtro de rede
-            p_store_name: this.normalizeFilterParam(this.currentFilters['store_name']),
-            p_linha: this.normalizeFilterParam(this.currentFilters['linha_de_produto']),
-            p_regional: this.normalizeFilterParam(this.currentFilters['regional']),
-            p_p8020: this.normalizeFilterParam(this.currentFilters['p8020']),
-            p_visibilidade: this.normalizeFilterParam(this.currentFilters['visibilidade']),
-            p_dates: this.currentFilters['pure_date'] || null
-        };
-
-        const tentativas = [0, 3000];
-
-        for (let i = 0; i < tentativas.length; i++) {
-            const espera = tentativas[i];
-            const numTentativa = i + 1;
-
-            if (espera > 0) {
-                await new Promise(resolve => setTimeout(resolve, espera));
-            }
-
-            try {
-                const freshClient = createFreshClient();
-
-                const timeoutPromise = new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error("TIMEOUT_REDE")), 15000)
-                );
-
-                const dbPromise = freshClient.rpc('get_positivacao_metrics', params);
-
-                const { data, error } = await Promise.race([dbPromise, timeoutPromise]);
-
-                if (error) throw error;
-
-                return data;
-
-            } catch (err) {
-                if (err.message === "TIMEOUT_REDE") {
-                    if (numTentativa === tentativas.length) {
-                        console.error("🚨 Positivação: falha crítica após todas as tentativas.");
-                        return null;
-                    }
-                } else {
-                    console.error("🚨 Positivação: erro inesperado:", err);
-                    return null;
-                }
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Busca os dados consolidados no Supabase para a Visão Geral.
-     * Cria um cliente Supabase NOVO a cada chamada para evitar estado corrompido
-     * após hibernação do Chrome. Possui 2 tentativas com espera entre elas.
-     * ATUALIZADO: Agora envia arrays completos para suporte a seleção múltipla.
-     */
-    async fetchOverviewRPC() {
-        const params = {
-            p_shopping: this.normalizeFilterParam(this.currentFilters['shopping']),
-            p_rede: null, // Removido filtro de rede
-            p_store_name: this.normalizeFilterParam(this.currentFilters['store_name']),
-            p_linha: this.normalizeFilterParam(this.currentFilters['linha_de_produto']),
-            p_regional: this.normalizeFilterParam(this.currentFilters['regional']),
-            p_p8020: this.normalizeFilterParam(this.currentFilters['p8020']),
-            p_visibilidade: this.normalizeFilterParam(this.currentFilters['visibilidade']),
-            p_dates: this.currentFilters['pure_date'] || null
-        };
-
-        // Tenta 2 vezes: primeira imediata, segunda após 3s
-        const tentativas = [0, 3000];
-
-        for (let i = 0; i < tentativas.length; i++) {
-            const espera = tentativas[i];
-            const numTentativa = i + 1;
-
-            if (espera > 0) {
-                await new Promise(resolve => setTimeout(resolve, espera));
-            }
-
-            try {
-                // PONTO CRÍTICO: cliente novo e limpo a cada tentativa
-                const freshClient = createFreshClient();
-
-                const timeoutPromise = new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error("TIMEOUT_REDE")), 15000)
-                );
-
-                const dbPromise = freshClient.rpc('get_overview_metrics', params);
-
-                const { data, error } = await Promise.race([dbPromise, timeoutPromise]);
-
-                if (error) throw error;
-
-                return data;
-
-            } catch (err) {
-                if (err.message === "TIMEOUT_REDE") {
-                    if (numTentativa === tentativas.length) {
-                        console.error("🚨 Falha Crítica: Conexão não restaurada após todas as tentativas.");
-                        return null;
-                    }
-                } else {
-                    console.error("🚨 Erro inesperado:", err);
-                    return null;
-                }
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Busca os dados consolidados no Supabase para a view Performance.
-     * Mesma estratégia: cliente fresco + 2 tentativas.
-     * ATUALIZADO: Agora envia arrays completos para suporte a seleção múltipla.
-     */
-    async fetchPerformanceRPC() {
-        const params = {
-            p_shopping: this.normalizeFilterParam(this.currentFilters['shopping']),
-            p_rede: null, // Removido filtro de rede
-            p_store_name: this.normalizeFilterParam(this.currentFilters['store_name']),
-            p_linha: this.normalizeFilterParam(this.currentFilters['linha_de_produto']),
-            p_regional: this.normalizeFilterParam(this.currentFilters['regional']),
-            p_p8020: this.normalizeFilterParam(this.currentFilters['p8020']),
-            p_visibilidade: this.normalizeFilterParam(this.currentFilters['visibilidade']),
-            p_dates: this.currentFilters['pure_date'] || null
-        };
-
-        const tentativas = [0, 3000];
-
-        for (let i = 0; i < tentativas.length; i++) {
-            const espera = tentativas[i];
-            const numTentativa = i + 1;
-
-            if (espera > 0) {
-                await new Promise(resolve => setTimeout(resolve, espera));
-            }
-
-            try {
-                const freshClient = createFreshClient();
-
-                const timeoutPromise = new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error("TIMEOUT_REDE")), 15000)
-                );
-
-                const dbPromise = freshClient.rpc('get_performance_metrics', params);
-
-                const { data, error } = await Promise.race([dbPromise, timeoutPromise]);
-
-                if (error) throw error;
-
-                return data;
-
-            } catch (err) {
-                if (err.message === "TIMEOUT_REDE") {
-                    if (numTentativa === tentativas.length) {
-                        console.error("🚨 Performance: falha crítica após todas as tentativas.");
-                        return null;
-                    }
-                } else {
-                    console.error("🚨 Performance: erro inesperado:", err);
-                    return null;
-                }
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Busca o raio-x detalhado de uma loja específica.
-     * Retorna: aparelhos, fluxo por hora, dia da semana, semana vs fds, linha de produto.
-     */
-    async fetchStoreXrayRPC(storeName) {
-        const params = {
+    /** Monta os parâmetros padrão de filtro usados por todas as RPCs */
+    _buildFilterParams() {
+        return {
             p_shopping: this.normalizeFilterParam(this.currentFilters['shopping']),
             p_rede: null,
-            p_store_name: this.normalizeFilterParam(storeName),
+            p_store_name: this.normalizeFilterParam(this.currentFilters['store_name']),
             p_linha: this.normalizeFilterParam(this.currentFilters['linha_de_produto']),
             p_regional: this.normalizeFilterParam(this.currentFilters['regional']),
             p_p8020: this.normalizeFilterParam(this.currentFilters['p8020']),
             p_visibilidade: this.normalizeFilterParam(this.currentFilters['visibilidade']),
             p_dates: this.currentFilters['pure_date'] || null
         };
+    }
 
-        try {
-            const freshClient = createFreshClient();
+    /** Busca dados consolidados para o Heatmap Operacional */
+    async fetchHeatmapRPC(p_aparelho = null) {
+        const params = {
+            ...this._buildFilterParams(),
+            p_aparelho: this.normalizeFilterParam(p_aparelho)
+        };
+        return this._callRPC('get_heatmap_metrics', params);
+    }
 
-            const timeoutPromise = new Promise((_, reject) =>
-                setTimeout(() => reject(new Error("TIMEOUT_REDE")), 15000)
-            );
+    /** Busca dados consolidados para a Positivação */
+    async fetchPositivacaoRPC() {
+        return this._callRPC('get_positivacao_metrics', this._buildFilterParams());
+    }
 
-            const dbPromise = freshClient.rpc('get_store_xray', params);
+    /** Busca dados consolidados para a Visão Geral */
+    async fetchOverviewRPC() {
+        return this._callRPC('get_overview_metrics', this._buildFilterParams());
+    }
 
-            const { data, error } = await Promise.race([dbPromise, timeoutPromise]);
+    /** Busca dados consolidados para a view Performance */
+    async fetchPerformanceRPC() {
+        return this._callRPC('get_performance_metrics', this._buildFilterParams());
+    }
 
-            if (error) throw error;
-
-            return data;
-
-        } catch (err) {
-            console.error("🚨 Store X-Ray: erro:", err);
-            return null;
-        }
+    /** Busca o raio-x detalhado de uma loja específica */
+    async fetchStoreXrayRPC(storeName) {
+        const params = {
+            ...this._buildFilterParams(),
+            p_store_name: this.normalizeFilterParam(storeName)
+        };
+        return this._callRPC('get_store_xray', params);
     }
 
     setRawData(data) {
@@ -377,15 +186,11 @@ class DataManager {
                 const rowVal = row[key];
                 
                 if (Array.isArray(filterVal)) {
-                    // Se o array está vazio, não filtra
                     if (filterVal.length === 0) continue;
-                    
-                    // Verifica se o valor da linha existe e está no array de filtros
                     if (!rowVal || rowVal === 'N/A' || !filterVal.includes(rowVal)) {
                         return false;
                     }
                 } else {
-                    // Para valores únicos, compara normalmente
                     if (filterVal && rowVal && String(rowVal) !== String(filterVal)) {
                         return false;
                     }

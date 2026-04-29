@@ -44,7 +44,7 @@ export function getAboutHTML() {
                         Desenvolvido com carinho pelo time de Business Intelligence
                     </p>
                     <p class="font-['Archivo',_sans-serif] mt-3 text-center text-[10px] font-thin tracking-[0.2em] text-gray-500 dark:text-white uppercase">
-                        Versão 0.9.3 Build 20260428.1356 RC3
+                        Versão 0.94 Build 20260429 RC4
                     </p>
                 </div>
             </div>
