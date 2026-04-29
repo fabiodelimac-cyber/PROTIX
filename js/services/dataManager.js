@@ -16,7 +16,6 @@ class DataManager {
             if (document.visibilityState === 'visible') {
                 clearTimeout(reactivationTimer);
                 reactivationTimer = setTimeout(() => {
-                    console.log('👁️ Aba reativada. Recriando conexão com o banco...');
                     this.notify();
                 }, 1000);
             }
@@ -47,7 +46,6 @@ class DataManager {
             if (Array.isArray(filterValue)) {
                 // Validação de tamanho (máximo 100 itens)
                 if (filterValue.length > 100) {
-                    console.warn('Array de filtro muito grande, limitando a 100 itens');
                     return filterValue.slice(0, 100);
                 }
                 return filterValue;
@@ -87,11 +85,8 @@ class DataManager {
             const numTentativa = i + 1;
 
             if (espera > 0) {
-                console.log(`⏳ Aguardando ${espera / 1000}s antes da tentativa ${numTentativa} (Heatmap)...`);
                 await new Promise(resolve => setTimeout(resolve, espera));
             }
-
-            console.log(`⏳ Heatmap: buscando dados... (Tentativa ${numTentativa}/${tentativas.length})`);
 
             try {
                 const freshClient = createFreshClient();
@@ -106,12 +101,10 @@ class DataManager {
 
                 if (error) throw error;
 
-                console.log(`✅ Heatmap: dados recebidos (tentativa ${numTentativa}).`);
                 return data;
 
             } catch (err) {
                 if (err.message === "TIMEOUT_REDE") {
-                    console.warn(`⏱️ Timeout na tentativa ${numTentativa} (Heatmap).`);
                     if (numTentativa === tentativas.length) {
                         console.error("🚨 Heatmap: falha crítica após todas as tentativas.");
                         return null;
@@ -150,11 +143,8 @@ class DataManager {
             const numTentativa = i + 1;
 
             if (espera > 0) {
-                console.log(`⏳ Aguardando ${espera / 1000}s antes da tentativa ${numTentativa} (Positivação)...`);
                 await new Promise(resolve => setTimeout(resolve, espera));
             }
-
-            console.log(`⏳ Positivação: buscando dados... (Tentativa ${numTentativa}/${tentativas.length})`);
 
             try {
                 const freshClient = createFreshClient();
@@ -169,12 +159,10 @@ class DataManager {
 
                 if (error) throw error;
 
-                console.log(`✅ Positivação: dados recebidos (tentativa ${numTentativa}).`);
                 return data;
 
             } catch (err) {
                 if (err.message === "TIMEOUT_REDE") {
-                    console.warn(`⏱️ Timeout na tentativa ${numTentativa} (Positivação).`);
                     if (numTentativa === tentativas.length) {
                         console.error("🚨 Positivação: falha crítica após todas as tentativas.");
                         return null;
@@ -207,8 +195,6 @@ class DataManager {
             p_dates: this.currentFilters['pure_date'] || null
         };
 
-        console.log('🎯 Parâmetros enviados para fetchOverviewRPC:', params);
-
         // Tenta 2 vezes: primeira imediata, segunda após 3s
         const tentativas = [0, 3000];
 
@@ -217,11 +203,8 @@ class DataManager {
             const numTentativa = i + 1;
 
             if (espera > 0) {
-                console.log(`⏳ Aguardando ${espera / 1000}s antes da tentativa ${numTentativa}...`);
                 await new Promise(resolve => setTimeout(resolve, espera));
             }
-
-            console.log(`⏳ Buscando dados... (Tentativa ${numTentativa}/${tentativas.length})`);
 
             try {
                 // PONTO CRÍTICO: cliente novo e limpo a cada tentativa
@@ -237,12 +220,10 @@ class DataManager {
 
                 if (error) throw error;
 
-                console.log(`✅ Dados recebidos com sucesso (tentativa ${numTentativa}).`);
                 return data;
 
             } catch (err) {
                 if (err.message === "TIMEOUT_REDE") {
-                    console.warn(`⏱️ Timeout na tentativa ${numTentativa}.`);
                     if (numTentativa === tentativas.length) {
                         console.error("🚨 Falha Crítica: Conexão não restaurada após todas as tentativas.");
                         return null;
@@ -281,11 +262,8 @@ class DataManager {
             const numTentativa = i + 1;
 
             if (espera > 0) {
-                console.log(`⏳ Aguardando ${espera / 1000}s antes da tentativa ${numTentativa} (Performance)...`);
                 await new Promise(resolve => setTimeout(resolve, espera));
             }
-
-            console.log(`⏳ Performance: buscando dados... (Tentativa ${numTentativa}/${tentativas.length})`);
 
             try {
                 const freshClient = createFreshClient();
@@ -300,12 +278,10 @@ class DataManager {
 
                 if (error) throw error;
 
-                console.log(`✅ Performance: dados recebidos (tentativa ${numTentativa}).`);
                 return data;
 
             } catch (err) {
                 if (err.message === "TIMEOUT_REDE") {
-                    console.warn(`⏱️ Timeout na tentativa ${numTentativa} (Performance).`);
                     if (numTentativa === tentativas.length) {
                         console.error("🚨 Performance: falha crítica após todas as tentativas.");
                         return null;
@@ -349,7 +325,6 @@ class DataManager {
 
             if (error) throw error;
 
-            console.log('✅ Store X-Ray: dados recebidos.');
             return data;
 
         } catch (err) {
@@ -374,7 +349,6 @@ class DataManager {
             return { ...row, sessions: numSessions };
         });
 
-        console.log(`DataManager: ${this.rawData.length} linhas carregadas na memória.`);
         this.notify();
     }
 
@@ -429,20 +403,17 @@ class DataManager {
     }
 
     notify() {
-        console.log('🔔 Notificando views sobre mudança de filtros...');
         try {
             const filteredData = this.getFilteredData();
-            console.log(`📊 ${this.listeners.length} listeners registrados`);
-            this.listeners.forEach((callback, index) => {
+            this.listeners.forEach((callback) => {
                 try {
-                    console.log(`📞 Chamando listener ${index + 1}`);
                     callback(filteredData);
                 } catch (error) {
-                    console.error(`❌ Erro no listener ${index + 1}:`, error);
+                    console.error('Erro em listener do DataManager:', error);
                 }
             });
         } catch (error) {
-            console.error('❌ Erro na função notify:', error);
+            console.error('Erro na função notify do DataManager:', error);
         }
     }
 }

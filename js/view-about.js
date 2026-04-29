@@ -73,13 +73,9 @@ export function initAbout() {
     });
 
     const closeAbout = () => {
-        if (isClosing) {
-            console.log('🔍 ABOUT: Já está fechando, ignorando');
-            return;
-        }
+        if (isClosing) return;
         
         isClosing = true;
-        console.log('🔍 ABOUT: Iniciando fechamento');
         
         // Bloqueia cliques imediatamente para não interceptar nada
         overlay.style.pointerEvents = 'none';
@@ -106,7 +102,6 @@ export function initAbout() {
         setTimeout(() => {
             if (overlay && overlay.parentNode) {
                 overlay.remove();
-                console.log('🔍 ABOUT: Overlay removido do DOM');
             }
         }, 300);
     };

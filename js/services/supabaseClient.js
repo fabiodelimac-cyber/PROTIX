@@ -9,12 +9,14 @@ export const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Fábrica de cliente descartável: usado para buscar dados (RPC, queries)
 // Cria um cliente novo e limpo a cada chamada, evitando estado corrompido
-// após o Chrome hibernar a aba.
+// após o Chrome hibernar a aba. Usa storageKey única para evitar o aviso
+// de múltiplas instâncias do GoTrueClient no mesmo contexto.
 export function createFreshClient() {
     return createClient(supabaseUrl, supabaseKey, {
         auth: {
-            persistSession: false, // Não tenta reusar sessão — apenas busca dados
-            autoRefreshToken: false
+            persistSession: false,
+            autoRefreshToken: false,
+            storageKey: `sb-fresh-${Date.now()}-${Math.random().toString(36).slice(2)}`
         }
     });
 }

@@ -4,12 +4,24 @@ PROTIX is a high-performance Business Intelligence platform built for real-time 
 
 ---
 
-## 🔥 Latest Release: v0.93 RC3
+## 🔥 Latest Release: v0.93.1 RC3
+
+**Date**: 04/29/2026  
+**Status**: 🧪 Release Candidate
+
+### What's New in v0.93.1 RC3
+- 🧹 **Clean console output** — all debug `console.log` statements removed; developer console is now noise-free in production
+- 🛠️ **Tailwind CSS production build** — replaced CDN script tag with a local production-optimized build, eliminating the browser warning about CDN usage in production
+- 🛠️ **Multiple GoTrueClient instances warning resolved** — disposable Supabase clients now use a unique `storageKey` per instance (`sb-fresh-{timestamp}-{random}`), suppressing the concurrent-instance warning while preserving the fresh-client-per-query strategy that prevents stale state after tab hibernation
+
+---
+
+### Previous Release: v0.93 RC3
 
 **Date**: 04/28/2026  
 **Status**: 🧪 Release Candidate
 
-### What's New in v0.93 RC3
+#### What's New in v0.93 RC3
 - ⚠️ **Testing disclaimer banner** — visible disclaimer at the top of the page indicating this is a test version
 - 🔒 **Auto-logoff after 30 min of inactivity** — automatic session termination for security and resource management
 - 🔔 **Inactivity warning toast** — animated toast notification appears at 28 min of inactivity to alert the user, automatically dismissed if activity is detected, resetting the counter

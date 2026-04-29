@@ -414,13 +414,6 @@ function updateKPIWithFade(elementId, newContent, isHTML = false) {
 function generateInsights(dbData) {
     const insights = [];
     
-    console.log('🔍 Dados recebidos para insights:', {
-        kpis: dbData.kpis,
-        aparelhos: dbData.aparelhos?.length,
-        rede: dbData.rede?.length,
-        linha: dbData.linha?.length
-    });
-    
     // Insight 1: Aparelho com mais tração
     const aparelhosArray = dbData.aparelhos || [];
     const topDev = [...aparelhosArray].sort((a,b) => b.total - a.total)[0];
@@ -442,8 +435,6 @@ function generateInsights(dbData) {
     // Ver: BACKUPS/== SUPABASE BACKUP/README_OVERVIEW_UPDATE.md
     if (dbData.kpis && dbData.kpis.top_store) {
         insights.push(`O PDV ${dbData.kpis.top_store} lidera o ranking de engajamento no período analisado.`);
-    } else {
-        console.warn('⚠️ Campo top_store não encontrado nos KPIs. Atualize a RPC get_overview_metrics.');
     }
     
     // Insight 4: Linha de produto com mais tração
@@ -460,7 +451,6 @@ function generateInsights(dbData) {
         insights.push('Aguardando massa de dados para análise preditiva.');
     }
     
-    console.log(`📊 Total de insights gerados: ${insights.length}`, insights);
     return insights;
 }
 
@@ -540,8 +530,6 @@ function startInsightRotation(dbData) {
 }
 
 async function executeRenderLogic() {
-    console.log('🎬 Overview: executeRenderLogic chamado');
-    
     // 1. Gera um "ticket" exclusivo para este clico de renderização
     const renderToken = ++currentRenderToken;
 

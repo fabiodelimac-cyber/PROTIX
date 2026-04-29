@@ -31,7 +31,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62.5..125,100..900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Michroma&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/tailwind.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
@@ -116,16 +116,17 @@
             will-change: transform;
         }
         /* Tamanhos e posições individuais */
-        .bg-bubbles li:nth-child(1)  { left: 8%;  width: 44px;  height: 44px;  animation-duration: 26s; animation-delay: 1s; }
-        .bg-bubbles li:nth-child(2)  { left: 18%; width: 80px;  height: 80px;  animation-duration: 20s; animation-delay: 3s;  background: rgba(130,110,240,0.08); }
-        .bg-bubbles li:nth-child(3)  { left: 28%; width: 44px;  height: 44px;  animation-duration: 30s; animation-delay: 6s; }
-        .bg-bubbles li:nth-child(4)  { left: 40%; width: 64px;  height: 64px;  animation-duration: 24s; animation-delay: 1s;  background: rgba(104,91,199,0.14); }
-        .bg-bubbles li:nth-child(5)  { left: 52%; width: 44px;  height: 44px;  animation-duration: 28s; animation-delay: 9s; }
-        .bg-bubbles li:nth-child(6)  { left: 63%; width: 110px; height: 110px; animation-duration: 22s; animation-delay: 4s;  background: rgba(130,110,240,0.07); }
-        .bg-bubbles li:nth-child(7)  { left: 33%; width: 150px; height: 150px; animation-duration: 32s; animation-delay: 8s;  background: rgba(104,91,199,0.06); }
-        .bg-bubbles li:nth-child(8)  { left: 55%; width: 48px;  height: 48px;  animation-duration: 38s; animation-delay: 16s; }
-        .bg-bubbles li:nth-child(9)  { left: 22%; width: 40px;  height: 40px;  animation-duration: 36s; animation-delay: 5s;  background: rgba(155,135,255,0.12); }
-        .bg-bubbles li:nth-child(10) { left: 82%; width: 140px; height: 140px; animation-duration: 25s; animation-delay: 12s; background: rgba(104,91,199,0.07); }
+        /* Delays pequenos e escalonados para começar do fundo imediatamente ao abrir */
+        .bg-bubbles li:nth-child(1)  { left: 8%;  width: 44px;  height: 44px;  animation-duration: 26s; animation-delay: 0s; }
+        .bg-bubbles li:nth-child(2)  { left: 18%; width: 80px;  height: 80px;  animation-duration: 20s; animation-delay: 0.3s; background: rgba(130,110,240,0.08); }
+        .bg-bubbles li:nth-child(3)  { left: 28%; width: 44px;  height: 44px;  animation-duration: 30s; animation-delay: 0.7s; }
+        .bg-bubbles li:nth-child(4)  { left: 40%; width: 64px;  height: 64px;  animation-duration: 24s; animation-delay: 0.1s; background: rgba(104,91,199,0.14); }
+        .bg-bubbles li:nth-child(5)  { left: 52%; width: 44px;  height: 44px;  animation-duration: 28s; animation-delay: 1.0s; }
+        .bg-bubbles li:nth-child(6)  { left: 63%; width: 110px; height: 110px; animation-duration: 22s; animation-delay: 0.5s; background: rgba(130,110,240,0.07); }
+        .bg-bubbles li:nth-child(7)  { left: 33%; width: 150px; height: 150px; animation-duration: 32s; animation-delay: 0.8s; background: rgba(104,91,199,0.06); }
+        .bg-bubbles li:nth-child(8)  { left: 55%; width: 48px;  height: 48px;  animation-duration: 38s; animation-delay: 1.5s; }
+        .bg-bubbles li:nth-child(9)  { left: 22%; width: 40px;  height: 40px;  animation-duration: 36s; animation-delay: 0.4s; background: rgba(155,135,255,0.12); }
+        .bg-bubbles li:nth-child(10) { left: 82%; width: 140px; height: 140px; animation-duration: 25s; animation-delay: 1.2s; background: rgba(104,91,199,0.07); }
 
         @keyframes bubbleRise {
             0%   { transform: translateY(0)      rotate(0deg);   opacity: 0; }
@@ -1022,14 +1023,12 @@
                     const isWeakGPU = /intel.*uhd|intel.*hd|intel.*iris(?!.*xe)|radeon.*vega\s?[3-8]|mali|adreno\s?[1-5]/i.test(renderer);
                     if (isWeakGPU) {
                         document.body.classList.add('gpu-lite');
-                        console.log('🔋 GPU Lite Mode ativado — GPU detectada:', renderer);
                     }
                 }
             }
             // Também ativa se o dispositivo tem pouca memória (< 4GB)
             if (navigator.deviceMemory && navigator.deviceMemory < 4) {
                 document.body.classList.add('gpu-lite');
-                console.log('🔋 GPU Lite Mode ativado — memória baixa:', navigator.deviceMemory + 'GB');
             }
         } catch(e) { /* silencioso */ }
     })();
@@ -1050,9 +1049,9 @@
                 <img src="images/login-white.png" alt="ProSolution Logo" class="w-[160px] h-auto mb-5 drop-shadow-sm">
                 <!-- APP + BETA na mesma linha -->
                 <div class="flex items-center gap-3">
-                    <h2 class="ds-login-product text-[22px]">APP</h2>
+                    <h2 class="ds-login-product text-[22px]">app</h2>
                     <div class="ds-login-version-pill">
-                        <span class="ds-login-version">BETA 0.93</span>
+                        <span class="ds-login-version">BETA 0.93.1 RC3</span>
                     </div>
                 </div>
             </div>
@@ -1143,7 +1142,7 @@
 
                     <div id="float-logo">
                         <img src="images/header.png" alt="Logo">
-                        <span id="float-logo-badge">BETA 0.93</span>
+                        <span id="float-logo-badge">BETA 0.93.1</span>
                     </div>
 
                     <div id="nav-and-filter-wrapper">
@@ -1303,7 +1302,6 @@
                 oauthTimeout = setTimeout(() => {
                     // Se ainda estiver em background após 30s, cancela qualquer OAuth pendente
                     if (!isPageVisible && window.location.pathname === '/' || window.location.pathname === '/index.html') {
-                        console.log('[PWA] Página inativa por muito tempo, limpando estado OAuth');
                         // Fecha qualquer popup OAuth que possa estar aberto
                         if (window.opener) {
                             try { window.close(); } catch(e) {}
@@ -1416,39 +1414,26 @@
         if ('serviceWorker' in navigator) {
             if (isLocalhost) {
                 // LOCALHOST: Desregistra Service Worker imediatamente
-                console.log('[DEV] 🚫 Service Worker desabilitado em localhost');
-                
                 navigator.serviceWorker.getRegistrations().then(registrations => {
                     if (registrations.length > 0) {
-                        console.log('[DEV] 🧹 Limpando', registrations.length, 'Service Worker(s) antigo(s)...');
-                        
                         Promise.all(registrations.map(reg => reg.unregister())).then(() => {
-                            console.log('[DEV] ✅ Service Worker(s) desregistrado(s)');
-                            
                             // Limpa todos os caches também
                             caches.keys().then(keys => {
                                 Promise.all(keys.map(key => caches.delete(key))).then(() => {
-                                    console.log('[DEV] 🗑️ Caches limpos');
-                                    
                                     // Recarrega a página UMA VEZ para aplicar mudanças
                                     if (!sessionStorage.getItem('sw-cleaned')) {
                                         sessionStorage.setItem('sw-cleaned', 'true');
-                                        console.log('[DEV] 🔄 Recarregando página...');
                                         window.location.reload();
                                     }
                                 });
                             });
                         });
-                    } else {
-                        console.log('[DEV] ✅ Nenhum Service Worker ativo');
                     }
                 });
                 
             } else {
                 // PRODUÇÃO: Registra Service Worker normalmente
                 navigator.serviceWorker.register('/sw.js').then(reg => {
-                    console.log('[PWA] ✅ Service Worker registrado');
-                    
                     // Força checagem de atualização a cada 30 segundos
                     setInterval(() => {
                         reg.update().catch(() => {});
@@ -1459,14 +1444,11 @@
                         const newWorker = reg.installing;
                         newWorker.addEventListener('statechange', () => {
                             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                console.log('[PWA] 🆕 Nova versão disponível! Recarregando...');
                                 window.location.reload();
                             }
                         });
                     });
-                }).catch(err => {
-                    console.warn('[PWA] ❌ Erro ao registrar Service Worker:', err);
-                });
+                }).catch(() => {});
             }
         }
     </script>

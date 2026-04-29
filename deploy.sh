@@ -15,6 +15,11 @@ echo "🔧 Atualizando Service Worker: CACHE_NAME = '${CACHE_NAME}'"
 sed -i '' "s/const CACHE_NAME = '.*'/const CACHE_NAME = '${CACHE_NAME}'/" sw.js
 
 echo "✅ sw.js atualizado"
+echo "🎨 Gerando CSS do Tailwind..."
+
+npx tailwindcss -i tailwind.src.css -o tailwind.min.css --minify
+
+echo "✅ tailwind.min.css gerado"
 echo "🚀 Iniciando deploy no Firebase..."
 
 firebase deploy --only hosting

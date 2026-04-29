@@ -92,8 +92,8 @@ let isLoggingOut = false; // Flag para evitar múltiplos logouts simultâneos
 let loggedOutByInactivity = false; // Flag para exibir o modal de inatividade
 
 // --- AUTO-LOGOUT POR INATIVIDADE ---
-const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000;   // 30 minutos
-const INACTIVITY_WARNING_BEFORE_MS = 2 * 60 * 1000; // Avisa 2 minutos antes do logout
+const INACTIVITY_TIMEOUT_MS = 10 * 60 * 1000;   // 10 minutos
+const INACTIVITY_WARNING_BEFORE_MS = 2 * 60 * 1000; // Avisa 2 minutos antes do logout (aos 8min)
 let inactivityTimer = null;
 let inactivityWarningTimer = null;
 let toastCountdownInterval = null;
@@ -160,14 +160,13 @@ function startInactivityTimer() {
     // Timer do logout
     inactivityTimer = setTimeout(async () => {
         hideInactivityToast();
-        console.log('⏱️ AUTO-LOGOUT: Inatividade detectada, deslogando...');
         if (!isLoggingOut) {
             isLoggingOut = true;
             loggedOutByInactivity = true; // Sinaliza que foi por inatividade
             try {
                 await supabase.auth.signOut();
             } catch (err) {
-                console.error('⏱️ AUTO-LOGOUT: Erro ao deslogar:', err);
+                console.error('Erro ao deslogar por inatividade:', err);
                 isLoggingOut = false;
                 loggedOutByInactivity = false;
             }
@@ -249,19 +248,15 @@ document.addEventListener('visibilitychange', () => {
         // Se não há autenticação em progresso, limpa qualquer estado OAuth pendente após 10 segundos
         visibilityTimer = setTimeout(async () => {
             if (!authInProgress && document.hidden) {
-                console.log('🔐 Página inativa por muito tempo, limpando estado OAuth pendente');
                 // Limpa qualquer callback OAuth pendente no localStorage
                 try {
                     const keys = Object.keys(localStorage);
                     keys.forEach(key => {
                         if (key.includes('supabase.auth') && key.includes('code-verifier')) {
                             localStorage.removeItem(key);
-                            console.log('🔐 Removido:', key);
                         }
                     });
-                } catch (e) {
-                    console.warn('🔐 Erro ao limpar OAuth:', e);
-                }
+                } catch (e) { /* silencioso */ }
             }
         }, 10000); // 10 segundos
     } else {
@@ -274,19 +269,15 @@ document.addEventListener('visibilitychange', () => {
 });
 
 supabase.auth.onAuthStateChange(async (event, session) => {
-    console.log('🔐 AUTH STATE CHANGE:', event, session ? 'Session exists' : 'No session');
     
     if (session) {
         authInProgress = true; // Marca que há autenticação em progresso
         
         // Ignora eventos de refresh de token — o usuário já está logado
         if (event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
-            console.log('🔐 Ignorando evento de refresh/update');
             authInProgress = false;
             return;
         }
-        
-        console.log('🔐 Processando login/signup...');
         
         if (userInitiatedLogin) {
             showLoginLoading('Validando acesso...');
@@ -301,7 +292,6 @@ supabase.auth.onAuthStateChange(async (event, session) => {
                 .single();
 
             if (data && data.status === 'approved') {
-                console.log('🔐 Usuário aprovado, mostrando dashboard');
                 hideLoginLoading();
                 userInitiatedLogin = false;
                 sessionStorage.removeItem('oauth-processed');
@@ -340,7 +330,6 @@ supabase.auth.onAuthStateChange(async (event, session) => {
                 authInProgress = false; // Autenticação concluída
                 
             } else {
-                console.log('🔐 Usuário não aprovado');
                 hideLoginLoading();
                 userInitiatedLogin = false;
                 sessionStorage.removeItem('oauth-processed');
@@ -359,7 +348,6 @@ supabase.auth.onAuthStateChange(async (event, session) => {
             authInProgress = false;
         }
     } else {
-        console.log('🔐 Sem sessão, mostrando tela de login');
         authInProgress = false; // Reseta flag
         hideLoginLoading();
         // FLUXO DE SAÍDA (LOGOUT NORMAL)
@@ -449,13 +437,8 @@ document.getElementById('app-box').addEventListener('click', async (e) => {
     const logoutBtn = e.target.closest('#btn-logout');
     if (!logoutBtn) return;
     
-    console.log('🚪 LOGOUT: Clique detectado no botão Sair');
-    
     // Proteção contra múltiplos cliques
-    if (isLoggingOut) {
-        console.log('🚪 LOGOUT: Já está fazendo logout, ignorando clique');
-        return;
-    }
+    if (isLoggingOut) return;
     
     isLoggingOut = true;
     
@@ -474,18 +457,14 @@ document.getElementById('app-box').addEventListener('click', async (e) => {
     // Remove about-overlay se estiver aberto (pode estar bloqueando)
     const aboutOverlay = document.getElementById('about-overlay');
     if (aboutOverlay) {
-        console.log('🚪 LOGOUT: Removendo about-overlay');
         aboutOverlay.remove();
     }
     
     // Remove disclaimer-modal se estiver visível (pode estar bloqueando)
     const disclaimerModal = document.getElementById('disclaimer-modal');
     if (disclaimerModal && !disclaimerModal.classList.contains('hidden')) {
-        console.log('🚪 LOGOUT: Ocultando disclaimer-modal');
         disclaimerModal.classList.add('hidden');
     }
-    
-    console.log('🚪 LOGOUT: Chamando supabase.auth.signOut()...');
     
     try {
         // Timeout de 5 segundos para o signOut
@@ -495,9 +474,8 @@ document.getElementById('app-box').addEventListener('click', async (e) => {
         );
         
         await Promise.race([signOutPromise, timeoutPromise]);
-        console.log('🚪 LOGOUT: signOut() concluído com sucesso');
     } catch (error) {
-        console.error('🚪 LOGOUT: Erro ou timeout ao fazer logout:', error);
+        console.error('Erro ao fazer logout:', error);
         
         // Fallback: força a tela de login mesmo se o signOut falhar
         isLoggingOut = false; // Libera a flag
@@ -639,18 +617,13 @@ function closeSidebarMobile() { /* noop - sem sidebar */ }
 let isAboutOpen = false; // Flag para evitar múltiplas aberturas do About
 
 document.getElementById('btn-go-about').addEventListener('click', () => {
-    if (isAboutOpen) {
-        console.log('🔍 ABOUT: Já está aberto, ignorando clique');
-        return;
-    }
+    if (isAboutOpen) return;
     
     isAboutOpen = true;
-    console.log('🔍 ABOUT: Abrindo...');
     
     // Remove overlay anterior se existir (proteção contra clique duplo)
     const existingOverlay = document.getElementById('about-overlay');
     if (existingOverlay) {
-        console.log('🔍 ABOUT: Removendo overlay anterior');
         existingOverlay.remove();
     }
     
@@ -666,7 +639,6 @@ document.getElementById('btn-go-about').addEventListener('click', () => {
         const checkRemoval = setInterval(() => {
             if (!document.getElementById('about-overlay')) {
                 isAboutOpen = false;
-                console.log('🔍 ABOUT: Flag resetada');
                 clearInterval(checkRemoval);
             }
         }, 100);
@@ -679,34 +651,6 @@ window.addEventListener('bypass-login', () => {
     if (!isDataLoaded) initData();
 });
 
-// DEBUG: Log global de cliques para diagnosticar problema do botão Sair
-document.addEventListener('click', (e) => {
-    const target = e.target;
-    const isLogoutBtn = target.closest('#btn-logout');
-    if (isLogoutBtn) {
-        console.log('🔍 DEBUG: Clique no botão Sair detectado no document');
-        console.log('🔍 Target:', target);
-        console.log('🔍 CurrentTarget:', e.currentTarget);
-        console.log('🔍 EventPhase:', e.eventPhase);
-        
-        // Verifica se há elementos por cima
-        const rect = isLogoutBtn.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
-        const elementAtPoint = document.elementFromPoint(centerX, centerY);
-        
-        console.log('🔍 Elemento no centro do botão:', elementAtPoint);
-        console.log('🔍 É o próprio botão?', elementAtPoint === isLogoutBtn || isLogoutBtn.contains(elementAtPoint));
-        
-        if (elementAtPoint !== isLogoutBtn && !isLogoutBtn.contains(elementAtPoint)) {
-            console.warn('⚠️ PROBLEMA: Há um elemento por cima do botão Sair!');
-            console.warn('⚠️ Elemento bloqueador:', elementAtPoint);
-            console.warn('⚠️ ID:', elementAtPoint?.id);
-            console.warn('⚠️ Classes:', elementAtPoint?.className);
-            console.warn('⚠️ Z-index:', window.getComputedStyle(elementAtPoint).zIndex);
-        }
-    }
-}, true); // Capture phase para pegar antes de qualquer stopPropagation
 // --- CARGA DE DADOS INICIAL (SUPABASE) ---
 async function initData() {
     isDataLoaded = true;

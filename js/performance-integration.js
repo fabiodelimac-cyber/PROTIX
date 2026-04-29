@@ -5,15 +5,10 @@
  */
 
 export async function initPerformanceMonitoring(user) {
-    if (!window.performanceMonitor) {
-        console.warn('Performance Monitor não foi inicializado');
-        return;
-    }
+    if (!window.performanceMonitor) return;
 
     // Define o usuário atual no monitor
     await window.performanceMonitor.setCurrentUser(user);
-
-    console.log('✓ Monitoramento de performance iniciado (silencioso)');
 }
 
 export function stopPerformanceMonitoring() {

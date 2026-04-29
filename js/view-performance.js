@@ -785,11 +785,8 @@ async function executeRenderLogic() {
         chartInstances = {};
         
         if (!dbData) {
-            console.warn('⚠️ Performance: Sem dados retornados');
             return;
         }
-        
-        console.log('📊 Performance data received:', dbData); // DEBUG
         
         // Renderiza cada seção
         renderTop10(dbData.top10 || []);
@@ -1047,8 +1044,6 @@ function renderGrowthTrends(data) {
         return;
     }
     
-    console.log('Growth data received:', data); // DEBUG
-    
     // Agrupa dados por linha de produto
     const groupedData = {};
     data.forEach(item => {
@@ -1058,8 +1053,6 @@ function renderGrowthTrends(data) {
         }
         groupedData[linha].push(item);
     });
-    
-    console.log('Grouped data:', groupedData); // DEBUG
     
     // Ordena as linhas de produto alfabeticamente
     const sortedLines = Object.keys(groupedData).sort();
@@ -1325,12 +1318,9 @@ function renderHealthScores(data) {
         const healthCards = container.querySelectorAll('.health-card');
         healthCards.forEach(card => {
             card.addEventListener('click', () => {
-                console.log('Card clicado:', card.dataset.store);
                 showStoreReport(card);
             });
         });
-        
-        console.log(`Configurados ${healthCards.length} cards de saúde`);
         
         // Se o detail view está aberto, atualiza com os dados novos do filtro
         const detailView = document.getElementById('health-detail-view');
@@ -1339,11 +1329,9 @@ function renderHealthScores(data) {
             const openStoreName = titleEl.textContent;
             const updatedCard = container.querySelector(`.health-card[data-store="${openStoreName}"]`);
             if (updatedCard) {
-                console.log(`🔄 Atualizando detail view para "${openStoreName}" com dados do filtro`);
                 showStoreReport(updatedCard);
             } else {
                 // Loja não existe mais nos dados filtrados, volta para a lista de cards
-                console.log(`⚠️ Loja "${openStoreName}" não encontrada nos dados filtrados, voltando para cards`);
                 detailView.classList.add('hidden');
                 const cardsView = document.getElementById('health-cards-view');
                 if (cardsView) cardsView.classList.remove('hidden');
@@ -1841,10 +1829,7 @@ function setupHealthInfoToggle() {
     const toggleBtn = document.getElementById('health-info-toggle');
     const infoPanel = document.getElementById('health-info-panel');
     
-    if (!toggleBtn || !infoPanel) {
-        console.warn('Health info toggle elements not found');
-        return;
-    }
+    if (!toggleBtn || !infoPanel) return;
     
     // Remove listeners anteriores
     const newToggleBtn = toggleBtn.cloneNode(true);
@@ -1868,8 +1853,6 @@ function setupHealthInfoToggle() {
             newToggleBtn.classList.remove('active');
         }
     });
-    
-    console.log('Health info toggle configurado');
 }
 
 

@@ -1,0 +1,9 @@
+{
+  "scripts": {
+    "build:css": "tailwindcss -i tailwind.src.css -o tailwind.min.css --minify",
+    "deploy": "npm run build:css && firebase deploy"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.19"
+  }
+}

@@ -31,7 +31,6 @@ class PerformanceMonitor {
     }
 
     init() {
-        console.log('🚀 Performance Monitor: Iniciado');
         this.startMonitoring();
         this.setupAutoSave();
     }
@@ -128,8 +127,6 @@ class PerformanceMonitor {
     async setCurrentUser(user) {
         this.currentUser = user;
         
-        console.log('🔧 Performance Monitor: Usuário definido', user.email);
-        
         // Carrega config do Supabase uma vez
         try {
             const { supabase } = await import('./services/supabaseClient.js');
@@ -146,19 +143,13 @@ class PerformanceMonitor {
                 accessToken: session?.access_token || null  // Token do usuário
             };
             
-            console.log('✅ Performance Monitor: Config carregada', {
-                hasToken: !!this.supabaseConfig.accessToken
-            });
         } catch (e) {
-            console.error('❌ Erro ao carregar config Supabase:', e);
+            console.error('Erro ao carregar config Supabase no Performance Monitor:', e);
         }
     }
 
     async saveMetricsToDatabase() {
-        if (!this.currentUser) {
-            console.warn('⚠️ Performance Monitor: Usuário não definido, não salvando');
-            return;
-        }
+        if (!this.currentUser) return;
 
         try {
             const payload = {
@@ -172,12 +163,6 @@ class PerformanceMonitor {
                 device_info: this.getDeviceInfo()
             };
 
-            console.log('💾 Salvando métricas (normal):', {
-                sessao: this.metrics.sessionTime + 's',
-                cpu: this.metrics.cpu + '%',
-                gpu: this.metrics.gpu + '%'
-            });
-
             // Importa Supabase dinamicamente
             const { supabase } = await import('./services/supabaseClient.js');
 
@@ -186,37 +171,20 @@ class PerformanceMonitor {
                 .insert([payload]);
 
             if (error) {
-                console.error('❌ Erro ao salvar métricas:', error);
-            } else {
-                console.log('✅ Métricas salvas com sucesso!');
+                console.error('Erro ao salvar métricas de performance:', error);
             }
         } catch (error) {
-            console.error('❌ Erro ao salvar métricas no banco:', error);
+            console.error('Erro ao salvar métricas de performance no banco:', error);
         }
     }
 
     // Método especial para salvar ao fechar - usa fetch com keepalive
     saveOnUnload() {
         // Evita múltiplos saves (pagehide + beforeunload + visibilitychange)
-        if (this.isUnloading) {
-            console.log('⏭️ UNLOAD: Já salvando, ignorando evento duplicado');
-            return;
-        }
-        
-        if (!this.currentUser) {
-            console.warn('⚠️ UNLOAD: Usuário não definido');
-            return;
-        }
-        
-        if (!this.supabaseConfig) {
-            console.warn('⚠️ UNLOAD: Config não carregada');
-            return;
-        }
-        
-        if (!this.supabaseConfig.accessToken) {
-            console.warn('⚠️ UNLOAD: Token não disponível');
-            return;
-        }
+        if (this.isUnloading) return;
+        if (!this.currentUser) return;
+        if (!this.supabaseConfig) return;
+        if (!this.supabaseConfig.accessToken) return;
 
         // Marca como "salvando" para evitar duplicatas
         this.isUnloading = true;
@@ -231,12 +199,6 @@ class PerformanceMonitor {
             timestamp: new Date().toISOString(),
             device_info: this.getDeviceInfo()
         };
-
-        console.log('🚪 UNLOAD: Salvando ao fechar', {
-            sessao: this.metrics.sessionTime + 's',
-            cpu: this.metrics.cpu + '%',
-            gpu: this.metrics.gpu + '%'
-        });
 
         // Usa fetch com keepalive - CRÍTICO para funcionar ao fechar
         const url = `${this.supabaseConfig.url}/rest/v1/performance_metrics`;
@@ -253,10 +215,8 @@ class PerformanceMonitor {
                 body: JSON.stringify(payload),
                 keepalive: true  // CRÍTICO: mantém requisição após fechar página
             });
-            
-            console.log('✅ UNLOAD: Requisição enviada');
         } catch (error) {
-            console.error('❌ UNLOAD: Erro ao salvar:', error);
+            console.error('Erro ao salvar métricas no unload:', error);
         }
     }
 
