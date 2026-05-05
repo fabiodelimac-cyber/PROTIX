@@ -1,7 +1,7 @@
 // sw.js — APP Service Worker
 // CACHE_VERSION é atualizado automaticamente pelo deploy.sh — não edite manualmente
 // IMPORTANTE: Este Service Worker NÃO é registrado em localhost (ver index.html)
-const CACHE_NAME = 'app-20260429.1552';
+const CACHE_NAME = 'app-20260504.1832';
 
 // Assets essenciais para funcionar offline (shell do app)
 const SHELL_ASSETS = [

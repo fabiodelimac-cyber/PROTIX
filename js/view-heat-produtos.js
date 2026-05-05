@@ -151,13 +151,13 @@ export const getHeatProdutosHTML = () => {
                 margin: 0 auto;
                 padding: 16px 24px;
                 border-radius: 20px;
-                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
             }
             
             body.dark #hp-floating-filter-inner {
                 background: rgba(15, 16, 19, 0.92);
                 border: 1px solid rgba(255, 255, 255, 0.08);
-                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.04) inset;
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255,255,255,0.04) inset;
             }
             
             body:not(.dark) #hp-floating-filter-inner {
@@ -187,8 +187,8 @@ export const getHeatProdutosHTML = () => {
             body.dark #hp-floating-select {
                 background-color: rgba(0, 0, 0, 0.45);
                 border: 1px solid rgba(255, 255, 255, 0.15);
-                color: #ffffff;
-                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23ffffff'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+                color: #e4e4e4;
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23e4e4e4'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
             }
             
             body:not(.dark) #hp-floating-select {
@@ -222,7 +222,7 @@ export const getHeatProdutosHTML = () => {
         </div>
 
         <div id="view-heatmap-wrapper" class="pb-10">
-            <div class="anim-cascade delay-1 glass-panel p-6 md:p-8 rounded-[2rem] mb-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden group">
+            <div class="anim-cascade delay-1 glass-panel p-6 md:p-8 rounded-2xl mb-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden group">
                 <div class="relative z-10">
                     <h2 class="ds-title">Heatmap Operacional</h2>
                 </div>
@@ -234,7 +234,7 @@ export const getHeatProdutosHTML = () => {
                 </div>
             </div>
 
-            <div class="anim-cascade delay-2 glass-panel rounded-[2rem] mb-8 flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-adaptive overflow-hidden relative">
+            <div class="anim-cascade delay-2 glass-panel rounded-2xl mb-8 flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-adaptive overflow-hidden relative">
                 <div class="w-full md:w-1/4 p-6 md:p-8 flex flex-col justify-start shrink-0">
                     <p class="ds-kpi-label mb-3">Interações Globais</p>
                     <h3 id="hp-k-vol" class="ds-kpi-value text-2xl md:text-3xl text-glow">0</h3>
@@ -260,7 +260,7 @@ export const getHeatProdutosHTML = () => {
                 </div>
             </div>
 
-            <div class="anim-cascade delay-3 glass-panel p-8 md:p-12 rounded-[2.5rem] mb-8 relative overflow-hidden">
+            <div class="anim-cascade delay-3 glass-panel p-8 md:p-12 rounded-2xl mb-8 relative overflow-hidden">
                 <div class="flex justify-between items-end mb-8 relative z-10">
                     <h4 class="ds-chart-title">Concentração (Dia x Hora)</h4>
                     <div class="hidden md:flex items-center gap-3">
@@ -277,21 +277,21 @@ export const getHeatProdutosHTML = () => {
                 <div id="hp-drilldown-overlay" class="absolute inset-0 z-20 flex flex-col p-8 md:p-12 opacity-0 pointer-events-none translate-y-8" style="background: rgba(18, 19, 23, 0.96);">
                     <div class="flex justify-between items-start mb-6 border-b border-white/10 pb-6">
                         <div>
-                            <h3 class="text-2xl font-black text-white leading-tight">Análise Detalhada</h3>
+                            <h3 class="text-2xl font-black leading-tight" style="color:#e4e4e4;">Análise Detalhada</h3>
                             <p id="hp-drill-subtitle" class="text-xs font-bold text-[#685BC7] uppercase tracking-widest mt-1">-</p>
                         </div>
-                        <button id="btn-close-drilldown" class="px-6 py-2 rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 text-white font-bold text-[10px] uppercase tracking-widest transition-all shadow-lg hover:shadow-xl">
+                        <button id="btn-close-drilldown" class="px-6 py-2 rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 font-bold text-[10px] uppercase tracking-widest transition-all shadow-lg hover:shadow-xl" style="color:#e4e4e4;">
                             ← Voltar
                         </button>
                     </div>
                     <div class="flex-1 overflow-y-auto custom-scrollbar pr-4">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <h4 class="text-sm font-black text-white/60 uppercase tracking-widest mb-4 pb-2 border-b border-white/10">Por Aparelho</h4>
+                                <h4 class="text-sm font-black uppercase tracking-widest mb-4 pb-2 border-b border-white/10" style="color:rgba(228,228,228,0.6);">Por Aparelho</h4>
                                 <div id="hp-drill-list-produtos" class="space-y-2"></div>
                             </div>
                             <div>
-                                <h4 class="text-sm font-black text-white/60 uppercase tracking-widest mb-4 pb-2 border-b border-white/10">Por Rede</h4>
+                                <h4 class="text-sm font-black uppercase tracking-widest mb-4 pb-2 border-b border-white/10" style="color:rgba(228,228,228,0.6);">Por Rede</h4>
                                 <div id="hp-drill-list-redes" class="space-y-2"></div>
                             </div>
                         </div>
@@ -300,31 +300,31 @@ export const getHeatProdutosHTML = () => {
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mb-8">
-                <div class="anim-cascade delay-4 glass-panel p-8 md:p-10 rounded-[2rem]">
+                <div class="anim-cascade delay-4 glass-panel p-8 md:p-10 rounded-2xl">
                     <h4 class="ds-chart-title mb-8">DNA de Retenção (Perfil Horário)</h4>
                     <div class="chart-container" style="height: 450px;"><canvas id="hp-c-radar"></canvas></div>
                     <div id="hp-radar-comparison" class="mt-4" style="display:none;"></div>
                 </div>
                 <div class="anim-cascade delay-4 flex flex-col gap-6 md:gap-8">
-                    <div class="glass-panel p-8 rounded-[2rem] flex-1">
+                    <div class="glass-panel p-8 rounded-2xl flex-1">
                         <h4 class="ds-chart-title mb-8">Canal: Loja de Rua vs Shopping</h4>
                         <div class="chart-container" style="height: 200px;"><canvas id="hp-c-canal"></canvas></div>
                     </div>
-                    <div class="glass-panel p-8 rounded-[2rem] flex-1">
+                    <div class="glass-panel p-8 rounded-2xl flex-1">
                         <h4 class="ds-chart-title mb-8">Dias Úteis vs Fim de Semana</h4>
                         <div class="chart-container" style="height: 200px;"><canvas id="hp-c-semana"></canvas></div>
                     </div>
                 </div>
             </div>
 
-            <div class="anim-cascade delay-4 glass-panel p-8 md:p-10 rounded-[2.5rem] mb-8">
+            <div class="anim-cascade delay-4 glass-panel p-8 md:p-10 rounded-2xl mb-8">
                 <h4 class="ds-chart-title mb-8">Comparativo por Dia da Semana</h4>
                 <div class="chart-container" style="height: 300px;"><canvas id="hp-c-trend"></canvas></div>
             </div>
 
             <!-- Índice de Consistência - OCULTO TEMPORARIAMENTE -->
             <!--
-            <div class="anim-cascade delay-4 glass-panel p-8 md:p-10 rounded-[2.5rem] mb-8">
+            <div class="anim-cascade delay-4 glass-panel p-8 md:p-10 rounded-2xl mb-8">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                     <div>
                         <h4 class="ds-chart-title mb-2">Índice de Consistência</h4>
@@ -831,7 +831,7 @@ function renderStaticHeatmap(container, dataMap, catDataMap, drillDataMap, redeD
                 min-width: 200px; padding: 16px; border-radius: 16px;
                 background: var(--glass-bg, rgba(18, 19, 23, 0.95));
                 border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.1));
-                box-shadow: var(--glass-shadow, 0 10px 40px rgba(0, 0, 0, 0.5));
+                box-shadow: var(--glass-shadow, 0 4px 12px rgba(0, 0, 0, 0.15));
                 color: var(--text-main, #fff); font-family: 'Archivo', sans-serif;
                 transition: opacity 0.15s ease-out;
             `;
@@ -1095,7 +1095,7 @@ function drawRadarChart(id, labels, prodData, catData, catAvgData, selectedProdu
                 else color = isDark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.35)';
 
                 // Mede o texto para dimensionar a pill
-                c.font = '700 8px Michroma';
+                c.font = '700 8px Geist';
                 const tw = c.measureText(displayVal).width;
                 const pillW = tw + 8;
                 const pillH = 14;
@@ -1123,7 +1123,7 @@ function drawRadarChart(id, labels, prodData, catData, catAvgData, selectedProdu
                 c.stroke();
 
                 // Texto
-                c.font = '700 8px Michroma';
+                c.font = '700 8px Geist';
                 c.fillStyle = color;
                 c.textAlign = 'center';
                 c.textBaseline = 'middle';
@@ -1180,15 +1180,15 @@ function drawRadarChart(id, labels, prodData, catData, catAvgData, selectedProdu
             },
             plugins: {
                 datalabels: { display: false },
-                legend: { position: 'bottom', labels: { color: isDark ? '#fff' : '#000', font: { family: 'Archivo', size: 10, weight: 700 }, usePointStyle: true } },
+                legend: { position: 'bottom', labels: { color: isDark ? '#e4e4e4' : '#000', font: { family: 'Archivo', size: 10, weight: 700 }, usePointStyle: true } },
                 tooltip: {
                     enabled: !!selectedProduct,
                     filter: (tooltipItem) => tooltipItem.datasetIndex === 0,
                     backgroundColor: isDark ? 'rgba(18, 19, 23, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-                    titleColor: isDark ? '#ffffff' : '#131417',
+                    titleColor: isDark ? '#e4e4e4' : '#131417',
                     bodyColor: isDark ? 'rgba(255, 255, 255, 0.8)' : 'rgba(19, 20, 23, 0.8)',
                     titleFont: { family: 'Archivo', size: 11, weight: 800 },
-                    bodyFont: { family: 'Michroma', size: 10 },
+                    bodyFont: { family: 'Geist', size: 10 },
                     borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
                     borderWidth: 1,
                     padding: 12,
@@ -1262,7 +1262,7 @@ function drawRadarChart(id, labels, prodData, catData, catAvgData, selectedProdu
                     <span style="font-family:'Archivo',sans-serif; font-size:10px; font-weight:700; color:${isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.45)'}; text-transform:uppercase; letter-spacing:0.05em;">
                         ${selectedProduct} vs Operação
                     </span>
-                    <span style="font-family:'Michroma',sans-serif; font-size:16px; font-weight:900; color:${diffColor};">
+                    <span style="font-family:'Geist',sans-serif; font-size:16px; font-weight:900; color:${diffColor};">
                         ${diffStr} <span style="font-size:9px; opacity:0.7;">TT</span>
                     </span>
                     <span style="font-family:'Archivo',sans-serif; font-size:9px; font-weight:600; color:${isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'};">
@@ -1332,8 +1332,8 @@ function drawComparisonChart(id, labels, datasets) {
                 tooltip: { backgroundColor: isDark ? 'rgba(18, 19, 23, 0.9)' : 'rgba(255, 255, 255, 0.9)', titleFont: { family: 'Archivo', size: 10, weight: 800 }, bodyFont: { family: 'Archivo', size: 11, weight: 500 }, padding: 12, cornerRadius: 8 }
             },
             scales: {
-                y: { beginAtZero: true, grid: { color: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)' }, ticks: { color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.4)', font: { family: 'Archivo', size: 10, weight: 600 } }, border: { display: false } },
-                x: { grid: { display: false }, ticks: { color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.4)', font: { family: 'Archivo', size: 9, weight: 700 } }, border: { display: false } }
+                y: { beginAtZero: true, grid: { color: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }, ticks: { color: isDark ? '#A0A0A0' : 'rgba(0,0,0,0.55)', font: { family: 'Archivo', size: 10, weight: 600 } }, border: { display: false } },
+                x: { grid: { display: false }, ticks: { color: isDark ? '#A0A0A0' : 'rgba(0,0,0,0.55)', font: { family: 'Archivo', size: 9, weight: 700 } }, border: { display: false } }
             }
         }
     });
@@ -1351,14 +1351,14 @@ function drawChart(id, type, data, isArea = false, showPercentage = false) {
             plugins: {
                 legend: { display: false },
                 datalabels: {
-                    display: showPercentage, align: 'end', anchor: 'end', color: isDark ? '#ffffff' : '#131417', font: { family: 'Archivo', size: 12, weight: 800 },
+                    display: showPercentage, align: 'end', anchor: 'end', color: isDark ? '#e4e4e4' : '#131417', font: { family: 'Archivo', size: 12, weight: 800 },
                     formatter: (value) => totalData === 0 ? '0%' : ((value / totalData) * 100).toFixed(1).replace('.', ',') + '%'
                 },
                 tooltip: { backgroundColor: isDark ? 'rgba(18, 19, 23, 0.9)' : 'rgba(255, 255, 255, 0.9)', titleFont: { family: 'Archivo', size: 10, weight: 800 }, bodyFont: { family: 'Archivo', size: 11, weight: 500 }, padding: 12, cornerRadius: 8 }
             },
             scales: {
-                y: { beginAtZero: true, grace: showPercentage ? '15%' : '0%', grid: { color: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)' }, ticks: { color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.4)', font: { family: 'Archivo', size: 10, weight: 600 } }, border: { display: false } },
-                x: { grid: { display: false }, ticks: { color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.4)', font: { family: 'Archivo', size: 9, weight: 700 } }, border: { display: false } }
+                y: { beginAtZero: true, grace: showPercentage ? '15%' : '0%', grid: { color: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }, ticks: { color: isDark ? '#A0A0A0' : 'rgba(0,0,0,0.55)', font: { family: 'Archivo', size: 10, weight: 600 } }, border: { display: false } },
+                x: { grid: { display: false }, ticks: { color: isDark ? '#A0A0A0' : 'rgba(0,0,0,0.55)', font: { family: 'Archivo', size: 9, weight: 700 } }, border: { display: false } }
             }
         }
     });
@@ -1418,7 +1418,7 @@ function drawChartWithAverage(id, type, data, average, isArea = false, showPerce
                     display: showPercentage, 
                     align: 'end', 
                     anchor: 'end', 
-                    color: isDark ? '#ffffff' : '#131417', 
+                    color: isDark ? '#e4e4e4' : '#131417', 
                     font: { family: 'Archivo', size: 12, weight: 800 },
                     formatter: (value, context) => {
                         if (context.datasetIndex === 1) return null; // Não mostra label na linha de média
@@ -1445,9 +1445,9 @@ function drawChartWithAverage(id, type, data, average, isArea = false, showPerce
                 y: { 
                     beginAtZero: true, 
                     grace: showPercentage ? '15%' : '5%', 
-                    grid: { color: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)' }, 
+                    grid: { color: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }, 
                     ticks: { 
-                        color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.4)', 
+                        color: isDark ? '#A0A0A0' : 'rgba(0,0,0,0.55)', 
                         font: { family: 'Archivo', size: 10, weight: 600 } 
                     }, 
                     border: { display: false } 
@@ -1455,7 +1455,7 @@ function drawChartWithAverage(id, type, data, average, isArea = false, showPerce
                 x: { 
                     grid: { display: false }, 
                     ticks: { 
-                        color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.4)', 
+                        color: isDark ? '#A0A0A0' : 'rgba(0,0,0,0.55)', 
                         font: { family: 'Archivo', size: 9, weight: 700 } 
                     }, 
                     border: { display: false } 
@@ -1595,9 +1595,9 @@ function drawConsistencyChart(id, labels, values, mean, stdDev, cv) {
                 y: {
                     beginAtZero: true,
                     grace: '10%',
-                    grid: { color: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)' },
+                    grid: { color: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' },
                     ticks: {
-                        color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.4)',
+                        color: isDark ? '#A0A0A0' : 'rgba(0,0,0,0.55)',
                         font: { family: 'Archivo', size: 10, weight: 600 }
                     },
                     border: { display: false },
@@ -1613,7 +1613,7 @@ function drawConsistencyChart(id, labels, values, mean, stdDev, cv) {
                     labels: labels,
                     grid: { display: false },
                     ticks: {
-                        color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.4)',
+                        color: isDark ? '#A0A0A0' : 'rgba(0,0,0,0.55)',
                         font: { family: 'Archivo', size: 9, weight: 700 }
                     },
                     border: { display: false }

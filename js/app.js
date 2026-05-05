@@ -315,15 +315,14 @@ supabase.auth.onAuthStateChange(async (event, session) => {
                 const emailDisplay = document.getElementById('topbar-user-email');
                 if (emailDisplay) emailDisplay.innerText = session.user.email;
 
+                // Popula o menu de perfil do usuário
+                populateUserProfileMenu(session.user);
+
                 // Inicia o monitoramento de performance
                 await initPerformanceMonitoring(session.user);
 
                 // Inicia o timer de inatividade
                 startInactivityTimer();
-
-                // Sempre mostra o disclaimer ao logar
-                document.getElementById('disclaimer-modal').classList.remove('hidden');
-                startDisclaimerCountdown();
                 
                 if (!isDataLoaded) initData();
                 
@@ -359,7 +358,6 @@ supabase.auth.onAuthStateChange(async (event, session) => {
         loginScreen.style.opacity = '1';
         loginScreen.style.pointerEvents = 'auto';
         document.getElementById('dash-shell').style.display = 'none';
-        document.getElementById('disclaimer-modal').classList.add('hidden');
 
         // Exibe o modal de inatividade se o logout foi automático
         if (loggedOutByInactivity) {
@@ -456,15 +454,6 @@ document.getElementById('app-box').addEventListener('click', async (e) => {
     
     // Remove about-overlay se estiver aberto (pode estar bloqueando)
     const aboutOverlay = document.getElementById('about-overlay');
-    if (aboutOverlay) {
-        aboutOverlay.remove();
-    }
-    
-    // Remove disclaimer-modal se estiver visível (pode estar bloqueando)
-    const disclaimerModal = document.getElementById('disclaimer-modal');
-    if (disclaimerModal && !disclaimerModal.classList.contains('hidden')) {
-        disclaimerModal.classList.add('hidden');
-    }
     
     try {
         // Timeout de 5 segundos para o signOut
@@ -513,40 +502,9 @@ document.getElementById('app-box').addEventListener('click', async (e) => {
     }
 });
 
-document.getElementById('btn-accept-beta').addEventListener('click', () => {
-    document.getElementById('disclaimer-modal').classList.add('hidden');
-});
-
 document.getElementById('btn-inactivity-ok').addEventListener('click', () => {
     document.getElementById('inactivity-modal').style.display = 'none';
 });
-
-// Função para iniciar a contagem regressiva no disclaimer
-function startDisclaimerCountdown() {
-    const btnAccept = document.getElementById('btn-accept-beta');
-    let countdown = 3;
-    
-    // Desabilita o botão e mostra a contagem
-    btnAccept.disabled = true;
-    btnAccept.style.opacity = '0.5';
-    btnAccept.style.cursor = 'not-allowed';
-    btnAccept.innerText = `ESTOU CIENTE (${countdown}s)`;
-    
-    const interval = setInterval(() => {
-        countdown--;
-        
-        if (countdown > 0) {
-            btnAccept.innerText = `ESTOU CIENTE (${countdown}s)`;
-        } else {
-            // Contagem terminou, habilita o botão
-            btnAccept.disabled = false;
-            btnAccept.style.opacity = '1';
-            btnAccept.style.cursor = 'pointer';
-            btnAccept.innerText = 'ESTOU CIENTE';
-            clearInterval(interval);
-        }
-    }, 1000);
-}
 
 // --- ROTEAMENTO (NAVEGAÇÃO) - INTACTO ---
 const appContent = document.getElementById('app-content');
@@ -669,6 +627,84 @@ document.getElementById('btn-go-about').addEventListener('click', () => {
     }, 600);
 });
 
+
+// --- USER PROFILE FLOATING MENU ---
+function populateUserProfileMenu(user) {
+    const displayName = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || '—';
+    const email = user.email || '—';
+    const provider = user.app_metadata?.provider || user.app_metadata?.providers?.[0] || 'email';
+    const uid = user.id || '—';
+    const createdAt = user.created_at ? new Date(user.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
+    const avatarUrl = user.user_metadata?.avatar_url || user.user_metadata?.picture || null;
+
+    const elAvatar = document.getElementById('upm-avatar');
+    const elName = document.getElementById('upm-display-name');
+    const elEmail = document.getElementById('upm-email');
+    const elProvider = document.getElementById('upm-provider');
+    const elUid = document.getElementById('upm-uid');
+    const elCreated = document.getElementById('upm-created-at');
+
+    if (elAvatar) {
+        const defaultAvatar = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><circle cx="24" cy="24" r="24" fill="#c8c8c8"/><circle cx="24" cy="18" r="7" fill="#5a5a5a"/><ellipse cx="24" cy="38" rx="11" ry="8" fill="#5a5a5a"/></svg>');
+        if (avatarUrl) {
+            elAvatar.src = avatarUrl;
+            elAvatar.onerror = () => { elAvatar.src = defaultAvatar; };
+        } else {
+            elAvatar.src = defaultAvatar;
+        }
+    }
+    if (elName) elName.textContent = displayName;
+    if (elEmail) elEmail.textContent = email;
+    if (elProvider) elProvider.textContent = provider.charAt(0).toUpperCase() + provider.slice(1);
+    if (elUid) { elUid.textContent = uid; elUid.title = uid; }
+    if (elCreated) elCreated.textContent = createdAt;
+}
+
+// Toggle do menu ao clicar no email
+(function initUserProfileMenu() {
+    const emailEl = document.getElementById('topbar-user-email');
+    const menu = document.getElementById('user-profile-menu');
+    if (!emailEl || !menu) return;
+
+    function openMenu() {
+        emailEl.classList.add('menu-open');
+
+        // Posiciona o menu centralizado abaixo do email
+        const controls = document.getElementById('float-controls');
+        const emailRect = emailEl.getBoundingClientRect();
+        const controlsRect = controls.getBoundingClientRect();
+        const emailCenter = emailRect.left + emailRect.width / 2 - controlsRect.left;
+        menu.style.left = emailCenter + 'px';
+
+        menu.style.display = 'block';
+        menu.getBoundingClientRect();
+        menu.classList.add('open');
+    }
+
+    function closeMenu() {
+        emailEl.classList.remove('menu-open');
+        menu.classList.remove('open');
+        setTimeout(() => { menu.style.display = 'none'; }, 200);
+    }
+
+    emailEl.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (menu.classList.contains('open')) {
+            closeMenu();
+        } else {
+            openMenu();
+        }
+    });
+
+    // Fechar ao clicar fora
+    document.addEventListener('click', (e) => {
+        if (!emailEl.contains(e.target) && !menu.contains(e.target)) {
+            if (menu.classList.contains('open')) {
+                closeMenu();
+            }
+        }
+    });
+})();
 
 // --- BYPASS LOGIN (modo teste) ---
 window.addEventListener('bypass-login', () => {

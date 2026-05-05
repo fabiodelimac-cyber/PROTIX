@@ -30,7 +30,16 @@
     <meta name="application-name" content="APP">
     <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62.5..125,100..900&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Michroma&display=swap" rel="stylesheet">
+    <style>
+        /* Geist Sans Variable — self-hosted via jsDelivr (pacote oficial Vercel, com OpenType features completas) */
+        @font-face {
+            font-family: 'Geist';
+            font-style: normal;
+            font-display: swap;
+            font-weight: 100 900;
+            src: url('https://cdn.jsdelivr.net/npm/geist@latest/dist/fonts/geist-sans/Geist-Variable.woff2') format('woff2');
+        }
+    </style>
     <link rel="stylesheet" href="/tailwind.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -57,8 +66,8 @@
         /* Títulos de gráficos e seções de cards (ex: "Frequência de Interação por Hora", "Ranking de PDVs", "Matriz de Execução") */
         .ds-chart-title { font-family: 'Archivo', sans-serif; font-size: 13px; font-weight: 600; font-stretch: 125%; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.3em; }
 
-        /* Valores numéricos grandes dos KPIs (ex: "1.234", "56") — fonte Michroma para destaque */
-        .ds-kpi-value { font-family: 'Michroma', sans-serif; font-weight: 400; color: var(--text-main); }
+        /* Valores numéricos grandes dos KPIs (ex: "1.234", "56") — fonte Geist para destaque */
+        .ds-kpi-value { font-family: 'Geist', sans-serif; font-weight: 400; color: var(--text-main); font-feature-settings: "ss09" 1; }
 
         /* Labels acima dos KPIs (ex: "Volume de Sessões", "Pontos de Venda", "Aparelhos Ativos") */
         .ds-kpi-label { font-family: 'Archivo', sans-serif; font-size: 11px; font-weight: 600; font-stretch: 125%; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.3em; }
@@ -82,7 +91,7 @@
         .ds-login-input { font-weight: 600; font-stretch: 100%; font-size: 11px; }
 
         /* Nome do produto na tela de login — fonte Syncopate exclusiva */
-        .ds-login-product { font-family: 'Syncopate', sans-serif; font-weight: 700;letter-spacing: 0.2em; color: #ffffff; }
+        .ds-login-product { font-family: 'Syncopate', sans-serif; font-weight: 700;letter-spacing: 0.2em; color: #e4e4e4; }
 
         /* Título da tela de login (ex: "Faça seu login") */
         .ds-login-title { font-family: 'Archivo', sans-serif; font-weight: 800; font-stretch: 140%; font-size: 15px; letter-spacing: 0.2em; text-transform:uppercase; color: rgba(255,255,255,0.70); text-align: center; }
@@ -92,56 +101,11 @@
         .ds-login-version { font-family: 'Archivo', sans-serif; font-weight: 700; font-stretch: 140%; font-size: 10px; letter-spacing: 0.2em;color: rgba(255,255,255,0.50); }
 
         /* =============================================
-           FLOATING BOXES BACKGROUND (login screen)
+           FLOATING BOXES BACKGROUND — REMOVIDO
         ============================================= */
-        .bg-bubbles {
-            position: absolute; top: 0; left: 0;
-            width: 100%; height: 100%;
-            z-index: 0; overflow: hidden;
-            list-style: none; margin: 0; padding: 0;
-            pointer-events: none;
-        }
-        .bg-bubbles li {
-            position: absolute;
-            bottom: -180px;
-            display: block;
-            min-width: 40px;
-            min-height: 40px;
-            border-radius: 6px;
-            background: rgba(104, 91, 199, 0.10);
-            border: 1px solid rgba(104, 91, 199, 0.18);
-            opacity: 0;
-            animation: bubbleRise 28s infinite linear;
-            animation-fill-mode: both;
-            will-change: transform;
-        }
-        /* Tamanhos e posições individuais */
-        /* Delays pequenos e escalonados para começar do fundo imediatamente ao abrir */
-        .bg-bubbles li:nth-child(1)  { left: 8%;  width: 44px;  height: 44px;  animation-duration: 26s; animation-delay: 0s; }
-        .bg-bubbles li:nth-child(2)  { left: 18%; width: 80px;  height: 80px;  animation-duration: 20s; animation-delay: 0.3s; background: rgba(130,110,240,0.08); }
-        .bg-bubbles li:nth-child(3)  { left: 28%; width: 44px;  height: 44px;  animation-duration: 30s; animation-delay: 0.7s; }
-        .bg-bubbles li:nth-child(4)  { left: 40%; width: 64px;  height: 64px;  animation-duration: 24s; animation-delay: 0.1s; background: rgba(104,91,199,0.14); }
-        .bg-bubbles li:nth-child(5)  { left: 52%; width: 44px;  height: 44px;  animation-duration: 28s; animation-delay: 1.0s; }
-        .bg-bubbles li:nth-child(6)  { left: 63%; width: 110px; height: 110px; animation-duration: 22s; animation-delay: 0.5s; background: rgba(130,110,240,0.07); }
-        .bg-bubbles li:nth-child(7)  { left: 33%; width: 150px; height: 150px; animation-duration: 32s; animation-delay: 0.8s; background: rgba(104,91,199,0.06); }
-        .bg-bubbles li:nth-child(8)  { left: 55%; width: 48px;  height: 48px;  animation-duration: 38s; animation-delay: 1.5s; }
-        .bg-bubbles li:nth-child(9)  { left: 22%; width: 40px;  height: 40px;  animation-duration: 36s; animation-delay: 0.4s; background: rgba(155,135,255,0.12); }
-        .bg-bubbles li:nth-child(10) { left: 82%; width: 140px; height: 140px; animation-duration: 25s; animation-delay: 1.2s; background: rgba(104,91,199,0.07); }
 
-        @keyframes bubbleRise {
-            0%   { transform: translateY(0)      rotate(0deg);   opacity: 0; }
-            5%   { opacity: 1; }
-            95%  { opacity: 1; }
-            100% { transform: translateY(-110vh) rotate(720deg); opacity: 0; }
-        }
-
-        /* Respeita prefers-reduced-motion */
-        @media (prefers-reduced-motion: reduce) {
-            .bg-bubbles li { animation: none !important; }
-        }
-
-        /* Classe utilitária para TODOS os números em tabelas, tooltips, badges e drilldowns — Michroma garante consistência numérica */
-        .font-numbers { font-family: 'Michroma', sans-serif !important; }
+        /* Classe utilitária para TODOS os números em tabelas, tooltips, badges e drilldowns — Geist garante consistência numérica */
+        .font-numbers { font-family: 'Geist', sans-serif !important; font-feature-settings: "ss09" 1; }
 
         /* Pills de navegação principal e botão de logout (ex: "Visão Geral", "Positivação", "Heatmap", "Performance", "Sair") */
         .ds-nav-pill { font-family: 'Archivo', sans-serif; font-size: 12px; font-weight: 600; font-stretch: 120%; text-transform: uppercase; letter-spacing: 0.06em; }
@@ -161,17 +125,17 @@
         /* Células de texto em tabelas (ex: nomes de lojas, aparelhos, redes) */
         .ds-table-cell { font-family: 'Archivo', sans-serif; font-size: 11px; font-weight: 600; color: var(--text-main); }
 
-        /* Valores numéricos em tabelas (ex: quantidades, percentuais) — herda Michroma de .font-numbers */
-        .ds-table-value { font-family: 'Michroma', sans-serif; font-weight: 900; color: #685BC7; }
+        /* Valores numéricos em tabelas (ex: quantidades, percentuais) — herda Geist de .font-numbers */
+        .ds-table-value { font-family: 'Geist', sans-serif; font-weight: 900; color: #685BC7; font-feature-settings: "ss09" 1; }
 
         /* Texto do insight rotativo na Overview (ex: "PROSOLUTION ANALYTICS: O modelo...") */
-        .ds-insight-text { font-family: 'Archivo', sans-serif; font-size: 14px; font-weight: 500; letter-spacing: -0.01em; color: var(--text-main); }
+        .ds-insight-text { font-family: 'Archivo', sans-serif; font-size: 14px; font-weight: 500; letter-spacing: -0.01em; font-stretch: 140%; color: var(--text-main); }
 
         /* Botões de alternância de modo (ex: "Dia/Semana/Mês", "Por Rede/Por Tipo de Loja", "Visão por Loja/Aparelho") */
         .ds-mode-btn { font-family: 'Archivo', sans-serif; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; }
 
-        /* Texto do score/gauge de saúde dos PDVs (fonte Michroma para números de score) */
-        .ds-gauge-text { font-family: 'Michroma', sans-serif; font-weight: 900; fill: var(--text-main); }
+        /* Texto do score/gauge de saúde dos PDVs (fonte Geist para números de score) */
+        .ds-gauge-text { font-family: 'Geist', sans-serif; font-weight: 900; fill: var(--text-main); font-feature-settings: "ss09" 1; }
 
         /* Aviso de isenção de responsabilidade — versão de desenvolvimento (entre filtros e conteúdo) */
         .ds-dev-disclaimer { font-family: 'Archivo', sans-serif; font-size: 10px; font-weight: 400; font-stretch: 140%; text-align: center; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-muted); opacity: 0.6; padding: 1px 0px; width: 100%; pointer-events: none; user-select: none; }
@@ -180,7 +144,7 @@
         /* =============================================
            CANVAS EXTERNA
         ============================================= */
-        body.dark { background-color: #08090b; background-image: radial-gradient(ellipse 80% 60% at 20% 10%, rgba(104,91,199,0.18) 0%, transparent 60%), radial-gradient(ellipse 60% 50% at 80% 90%, rgba(30,25,60,0.4) 0%, transparent 55%); }
+        body.dark { background-color: #0a0a0c; background-image: radial-gradient(ellipse 80% 60% at 20% 10%, rgba(104,91,199,0.18) 0%, transparent 60%), radial-gradient(ellipse 60% 50% at 80% 90%, rgba(30,25,60,0.4) 0%, transparent 55%); }
         body:not(.dark) { background-color: #c8d1e0; background-image: radial-gradient(ellipse 80% 60% at 20% 10%, rgba(104,91,199,0.14) 0%, transparent 60%), radial-gradient(ellipse 60% 50% at 80% 90%, rgba(148,163,184,0.35) 0%, transparent 55%); }
 
         /* =============================================
@@ -193,9 +157,9 @@
         body.dark #app-box {
             background-color: #0f1013;
             background-image: radial-gradient(ellipse 90% 50% at 85% 5%, rgba(104,91,199,0.12) 0%, transparent 55%), radial-gradient(ellipse 60% 40% at 10% 95%, rgba(104,91,199,0.07) 0%, transparent 50%);
-            box-shadow: 0 0 0 1px rgba(255,255,255,0.05), 0 20px 60px rgba(0,0,0,0.7);
-            --glass-bg: rgba(255,255,255,0.03); --glass-border: rgba(255,255,255,0.07); --glass-shadow: 0 8px 32px rgba(0,0,0,0.4);
-            --text-main: #ffffff; --text-muted: rgba(255,255,255,0.35); --text-muted-strong: rgba(255,255,255,0.55);
+            box-shadow: 0 0 0 1px rgba(255,255,255,0.05), 0 8px 24px rgba(0,0,0,0.25);
+            --glass-bg: rgba(22,22,28,0.55); --glass-border: rgba(255,255,255,0.10); --glass-shadow: 0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.07);
+            --text-main: #e4e4e4; --text-muted: #A0A0A0; --text-muted-strong: #C0C0C0;
             --glow-shadow: 0 0 24px rgba(255,255,255,0.15); --glow-accent: 0 0 20px rgba(104,91,199,0.5); --glow-green: 0 0 15px rgba(34,197,94,0.3);
             --neon-bg: radial-gradient(circle at top right, rgba(104,91,199,0.12), transparent 60%); --input-bg: rgba(255,255,255,0.05);
             --bg-sticky: rgba(15,16,19,0.92); --hover-table: rgba(104,91,199,0.05); --table-wrapper-bg: rgba(255,255,255,0.02);
@@ -242,7 +206,7 @@
         /* Glassmorfismo no topo quando há scroll */
         #floating-ui.scrolled {
             background: rgba(15, 16, 19, 0.92) !important;
-            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
         }
         
         body:not(.dark) #floating-ui.scrolled {
@@ -312,7 +276,7 @@
         }
 
         #float-nav { position: relative; display: flex; align-items: center; padding: 5px; border-radius: 999px; gap: 0; }
-        body.dark #float-nav { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09); box-shadow: 0 4px 24px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.07); }
+        body.dark #float-nav { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09); box-shadow: 0 2px 8px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.07); }
         body:not(.dark) #float-nav { 
             background: rgba(255,255,255,0.82); 
             border: 1px solid rgba(255,255,255,0.98); 
@@ -335,7 +299,7 @@
         .nav-pill { position: relative; z-index: 1; display: flex; align-items: center; gap: 7px; padding: 8px 18px; border-radius: 999px; border: none; cursor: pointer; transition: color 0.2s ease; white-space: nowrap; background: none; }
         body.dark .nav-pill { color: rgba(255,255,255,0.38); }
         body.dark .nav-pill:hover { color: rgba(255,255,255,0.7); }
-        body.dark .nav-pill.active { color: #fff; }
+        body.dark .nav-pill.active { color: #e4e4e4; }
         body:not(.dark) .nav-pill { color: #6b7280; }
         body:not(.dark) .nav-pill:hover { color: #292929; }
         body:not(.dark) .nav-pill.active { color: #685BC7; }
@@ -362,7 +326,7 @@
         }
 
         #btn-toggle-filters.active {
-            background: var(--ps-blue) !important; color: white !important;
+            background: var(--ps-blue) !important; color: #e4e4e4 !important;
             border-color: var(--ps-blue) !important; box-shadow: 0 4px 15px rgba(104,91,199,0.4) !important;
         }
 
@@ -375,7 +339,7 @@
             display: inline-flex; align-items: center; gap: 4px; padding: 5px 8px; border-radius: 999px; 
             max-width: 100%; flex-shrink: 1; position: relative; z-index: 110;
         }
-        body.dark #float-controls { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09); box-shadow: 0 4px 24px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.07); }
+        body.dark #float-controls { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09); box-shadow: 0 2px 8px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.07); }
         body:not(.dark) #float-controls { 
             background: rgba(255,255,255,0.82); 
             border: 1px solid rgba(255,255,255,0.98); 
@@ -389,9 +353,146 @@
             white-space: nowrap; padding: 0 8px; 
             overflow: hidden; text-overflow: ellipsis;
             flex-shrink: 1; min-width: 50px;
+            transition: font-weight 0.2s ease, opacity 0.15s ease;
         }
         body.dark #topbar-user-email { color: rgba(255,255,255,0.4); }
         body:not(.dark) #topbar-user-email { color: #6b7280; }
+        #topbar-user-email:hover { opacity: 0.7; }
+        #topbar-user-email.menu-open { font-weight: 700; }
+
+        /* =============================================
+           USER PROFILE FLOATING MENU (Glassmorfismo)
+        ============================================= */
+        .user-profile-menu {
+            position: absolute;
+            top: calc(100% + 12px);
+            left: 50%;
+            transform: translateX(-50%) translateY(-10px);
+            min-width: 280px;
+            border-radius: 16px;
+            z-index: 9999;
+            overflow: hidden;
+            opacity: 0;
+            transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            backdrop-filter: blur(40px) saturate(1.6);
+            -webkit-backdrop-filter: blur(40px) saturate(1.6);
+        }
+        body.dark .user-profile-menu {
+            background: rgba(15, 16, 20, 0.88);
+        }
+        body:not(.dark) .user-profile-menu {
+            background: rgba(245, 248, 252, 0.90);
+        }
+        .user-profile-menu.open {
+            display: block !important;
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+            pointer-events: auto;
+        }
+
+        /* Efeito de luz superior esquerda */
+        .upm-light {
+            position: absolute;
+            top: -40px;
+            left: -40px;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        body.dark .upm-light {
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, transparent 70%);
+        }
+        body:not(.dark) .upm-light {
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.35) 0%, transparent 70%);
+        }
+
+        .upm-content {
+            position: relative;
+            padding: 20px;
+            z-index: 1;
+        }
+
+        .upm-avatar-wrapper {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 12px;
+        }
+
+        .upm-avatar {
+            width: 68px;
+            height: 68px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+        }
+
+        .upm-name {
+            font-family: 'Archivo', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            font-stretch: 125%;
+            color: var(--text-main);
+            margin-bottom: 2px;
+            text-align: center;
+        }
+
+        .upm-email {
+            font-family: 'Archivo', sans-serif;
+            font-size: 11px;
+            font-weight: 400;
+            color: var(--text-muted);
+            margin-bottom: 0;
+            text-align: center;
+        }
+
+        .upm-divider {
+            height: 1px;
+            margin: 14px 0;
+            border-radius: 1px;
+        }
+        body.dark .upm-divider { background: rgba(255,255,255,0.08); }
+        body:not(.dark) .upm-divider { background: rgba(15,23,42,0.08); }
+
+        .upm-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+        }
+
+        .upm-label {
+            font-family: 'Archivo', sans-serif;
+            font-size: 9px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--text-muted);
+        }
+
+        .upm-value {
+            font-family: 'Geist', sans-serif;
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-main);
+            font-feature-settings: "ss09" 1;
+        }
+
+        .upm-uid {
+            font-size: 9px;
+            opacity: 0.7;
+            cursor: pointer;
+            max-width: 160px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            transition: opacity 0.2s;
+        }
+        .upm-uid:hover { opacity: 1; }
 
         .ctrl-divider { width: 1px; height: 18px; flex-shrink: 0; border-radius: 1px; margin: 0 8px; }
         body.dark .ctrl-divider { background: rgba(255,255,255,0.09); }
@@ -399,7 +500,7 @@
 
         .ctrl-btn { display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 50%; border: none; cursor: pointer; transition: all 0.18s ease; background: none; font-size: 14px; flex-shrink: 0; }
         body.dark .ctrl-btn { color: rgba(255,255,255,0.45); }
-        body.dark .ctrl-btn:hover { color: #fff; background: rgba(255,255,255,0.09); }
+        body.dark .ctrl-btn:hover { color: #e4e4e4; background: rgba(255,255,255,0.09); }
         body:not(.dark) .ctrl-btn { color: #6b7280; }
         body:not(.dark) .ctrl-btn:hover { color: #292929; background: rgba(15,23,42,0.08); }
 
@@ -500,7 +601,7 @@
         ============================================= */
         body.dark select, body.dark .slicer-btn { 
             background-color: rgba(0, 0, 0, 0.55) !important;
-            color: #ffffff !important;
+            color: #e4e4e4 !important;
             border: 1px solid rgba(255, 255, 255, 0.15) !important;
             outline: none;
         }
@@ -512,7 +613,7 @@
             outline: none;
         }
         select:focus, .slicer-btn:focus { border-color: #685BC7 !important; }
-        body.dark option { background-color: #131417; color: #ffffff; }
+        body.dark option { background-color: #131417; color: #e4e4e4; }
         body:not(.dark) option { background-color: #ffffff; color: #0f172a; }
 
         select {
@@ -521,7 +622,7 @@
         }
         
         body.dark select:not(#hp-master-select):not(#hp-floating-select) {
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23ffffff'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E"); 
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23e4e4e4'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E"); 
         }
         body:not(.dark) select:not(#hp-master-select):not(#hp-floating-select) {
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%230f172a'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E"); 
@@ -585,7 +686,7 @@
         body.dark .slicer-panel {
             background: rgba(15, 16, 19, 0.92) !important;
             border: 1px solid rgba(255, 255, 255, 0.08) !important;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.04) inset !important;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255,255,255,0.04) inset !important;
         }
         body:not(.dark) .slicer-panel {
             background: rgba(255, 255, 255, 0.95) !important;
@@ -768,8 +869,8 @@
             border-radius: 24px;
             border: 1px solid rgba(255, 255, 255, 0.08);
             box-shadow: 
-                0 25px 80px rgba(0, 0, 0, 0.55),
-                0 8px 32px rgba(0, 0, 0, 0.3),
+                0 12px 40px rgba(0, 0, 0, 0.3),
+                0 4px 16px rgba(0, 0, 0, 0.15),
                 inset 0 1px 0 rgba(255, 255, 255, 0.06);
             position: relative;
             overflow: hidden;
@@ -872,7 +973,7 @@
         .login-social-row button:hover {
             background: rgba(255,255,255,0.09);
             border-color: rgba(255,255,255,0.15);
-            color: #fff;
+            color: #e4e4e4;
             transform: translateY(-1px);
             box-shadow: 0 4px 20px rgba(0,0,0,0.3);
         }
@@ -884,7 +985,7 @@
             border-radius: 16px;
             border: none;
             background: #685BC7;
-            color: #fff;
+            color: #e4e4e4;
             font-family: 'Archivo', sans-serif;
             font-weight: 700;
             font-size: 13px;
@@ -942,7 +1043,48 @@
             text-shadow: 0 0 12px rgba(104,91,199,0.4);
         }
 
-        /* Responsive */
+        /* =============================================
+           WELCOME WORDS ANIMATION (login background)
+        ============================================= */
+        #welcome-words-container {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+        }
+
+        .welcome-word {
+            position: absolute;
+            font-family: 'Archivo', sans-serif;
+            font-weight: 800;
+            font-stretch: 140%;
+            color: rgba(255, 255, 255, var(--word-opacity, 0.12));
+            text-transform: uppercase;
+            letter-spacing: -0.02em;
+            line-height: 1;
+            white-space: nowrap;
+            will-change: transform;
+            animation: welcomeScroll var(--duration) linear forwards;
+        }
+
+        @keyframes welcomeScroll {
+            0% {
+                transform: translateX(0);
+            }
+            100% {
+                transform: translateX(calc(-100vw - 100%));
+            }
+        }
+
+        /* Responsive: mobile */
+        @media (max-width: 768px) {
+            #login-screen {
+                padding: 16px !important;
+            }
+            .welcome-word {
+                font-size: clamp(20px, 5vw, 40px) !important;
+            }
+        }
+
         @media (max-width: 480px) {
             .login-box { margin: 0 8px; }
             .login-social-row { flex-direction: column; }
@@ -998,6 +1140,7 @@
         body.gpu-lite #float-controls,
         body.gpu-lite #btn-toggle-filters,
         body.gpu-lite .card,
+        body.gpu-lite .kpi-frost,
         body.gpu-lite #floating-ui.scrolled {
             backdrop-filter: none !important;
             -webkit-backdrop-filter: none !important;
@@ -1005,6 +1148,27 @@
         body.gpu-lite.dark #app-box { background-color: #0f1013; }
         body.gpu-lite:not(.dark) #app-box { background-color: #f0f3f8; }
         body.gpu-lite .bg-mesh { animation: none !important; }
+
+        /* =============================================
+           PANEL LIGHT EFFECT
+           Reflexo de luz no canto superior esquerdo das boxes.
+           Toggle: adicione/remova a classe "panel-light" no <body>.
+           Ativo por padrão — para desativar: document.body.classList.remove('panel-light')
+        ============================================= */
+        body.panel-light .glass-panel::before,
+        body.panel-light .kpi-frost::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background: radial-gradient(ellipse 75% 55% at 0% 0%, rgba(255,255,255,0.07) 0%, transparent 65%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        body.panel-light:not(.dark) .glass-panel::before,
+        body.panel-light:not(.dark) .kpi-frost::before {
+            background: radial-gradient(ellipse 75% 55% at 0% 0%, rgba(255,255,255,0.50) 0%, transparent 65%);
+        }
     </style>
 </head>
 <body class="antialiased dark">
@@ -1034,75 +1198,77 @@
     })();
     </script>
 
-    <div id="login-screen" class="font-['Archivo',_sans-serif] bg-mesh fixed inset-0 flex flex-col items-center justify-center p-6 z-[100] transition-opacity duration-500">
-        
+    <div id="login-screen" class="font-['Archivo',_sans-serif] bg-mesh fixed inset-0 flex items-center justify-center p-0 z-[100] transition-opacity duration-500 overflow-hidden">
 
-        <ul class="bg-bubbles" aria-hidden="true">
-            <li></li><li></li><li></li><li></li><li></li>
-            <li></li><li></li><li></li><li></li><li></li>
-        </ul>
+        <!-- FUNDO: Palavras de boas-vindas animadas (passam por trás da login box) -->
+        <div id="welcome-words-container" class="absolute inset-0 overflow-hidden z-[1] pointer-events-none">
+            <!-- As palavras são injetadas via JS -->
+        </div>
 
-        <div class="login-box w-full max-w-[420px] p-10 md:p-12 z-10">
-            
-            <!-- Logo -->
-            <div class="flex flex-col items-center mb-8">
-                <img src="images/login-white.png" alt="ProSolution Logo" class="w-[160px] h-auto mb-5 drop-shadow-sm">
-                <!-- APP + BETA na mesma linha -->
-                <div class="flex items-center gap-3">
-                    <h2 class="ds-login-product text-[22px]">app</h2>
-                    <div class="ds-login-version-pill">
-                        <span class="ds-login-version">BETA 0.94 RC4</span>
+        <!-- LOGIN BOX CENTRALIZADA -->
+        <div class="relative z-10 flex flex-col items-center justify-center p-6 md:p-12">
+            <div class="login-box w-[520px] max-w-[92vw] p-10 md:p-12">
+                
+                <!-- Logo -->
+                <div class="flex flex-col items-center mb-8">
+                    <img src="images/login-white.png" alt="ProSolution Logo" class="w-[160px] h-auto mb-5 drop-shadow-sm">
+                    <!-- APP + BETA na mesma linha -->
+                    <div class="flex items-center gap-3">
+                        <h2 class="ds-login-product text-[22px]">app</h2>
+                        <div class="ds-login-version-pill">
+                            <span class="ds-login-version">BETA 0.96 RC6</span>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Título -->
-            <h3 class="ds-login-title mb-7">Faça seu login</h3>
+                <!-- Título -->
+                <h3 class="ds-login-title mb-7">Faça seu login</h3>
 
-            <!-- Formulário e-mail/senha -->
-            <div class="space-y-3 mb-5">
-                <div class="login-input-group">
-                    <input type="email" id="user" placeholder="E-mail" style="font-stretch: 125%;" class="font-['Archivo',_sans-serif] w-full px-5 py-4 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-white placeholder-white/25 focus:border-[#685BC7] focus:ring-4 focus:ring-[#685BC7]/20 outline-none transition-all text-[13px]">
-                    <span class="login-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                            <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
-                        </svg>
-                    </span>
+                <!-- Formulário e-mail/senha -->
+                <div class="space-y-3 mb-5">
+                    <div class="login-input-group">
+                        <input type="email" id="user" placeholder="E-mail" style="font-stretch: 125%;" class="font-['Archivo',_sans-serif] w-full px-5 py-4 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-white placeholder-white/25 focus:border-[#685BC7] focus:ring-4 focus:ring-[#685BC7]/20 outline-none transition-all text-[13px]">
+                        <span class="login-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                            </svg>
+                        </span>
+                    </div>
+                    <div class="login-input-group">
+                        <input type="password" id="pass" placeholder="Senha" style="font-stretch: 125%;" class="font-['Archivo',_sans-serif] w-full px-5 py-4 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-white placeholder-white/25 focus:border-[#685BC7] focus:ring-4 focus:ring-[#685BC7]/20 outline-none transition-all text-[13px]">
+                        <span class="login-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm9 14H6V10h12v10zm-6-3c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/>
+                            </svg>
+                        </span>
+                    </div>
+                    <button id="btn-email-login" class="login-cta-btn" style="font-stretch: 125%;">Autenticar</button>
                 </div>
-                <div class="login-input-group">
-                    <input type="password" id="pass" placeholder="Senha" style="font-stretch: 125%;" class="font-['Archivo',_sans-serif] w-full px-5 py-4 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-white placeholder-white/25 focus:border-[#685BC7] focus:ring-4 focus:ring-[#685BC7]/20 outline-none transition-all text-[13px]">
-                    <span class="login-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                            <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm9 14H6V10h12v10zm-6-3c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/>
-                        </svg>
-                    </span>
+
+                <!-- Divider -->
+                <div class="login-divider mb-5">
+                    <span>ou entre com</span>
                 </div>
-                <button id="btn-email-login" class="login-cta-btn" style="font-stretch: 125%;">Autenticar</button>
+
+                <!-- Botões sociais lado a lado -->
+                <div class="login-social-row">
+                    <button id="btn-google-login">
+                        <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.73 17.74 9.5 24 9.5z"></path><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path></svg>
+                        <span class="font-['Archivo',_sans-serif] font-medium text-[12px] tracking-[0.02em]" style="font-stretch: 115%;">Google</span>
+                    </button>
+                    <button id="btn-microsoft-login">
+                        <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 21 21"><path fill="#f25022" d="M1 1h9v9H1z"/><path fill="#7fba00" d="M11 1h9v9h-9z"/><path fill="#00a4ef" d="M1 11h9v9H1z"/><path fill="#ffb900" d="M11 11h9v9h-9z"/></svg>
+                        <span class="font-['Archivo',_sans-serif] font-medium text-[12px] tracking-[0.02em]" style="font-stretch: 115%;">Microsoft</span>
+                    </button>
+                </div>
+
+                <!-- IDs mantidos para compatibilidade com app.js (ocultos, sem função visual) -->
+                <div id="login-social-view" style="display:none;"></div>
+                <div id="login-email-view" style="display:none;"></div>
+                <button id="btn-show-email" style="display:none;"></button>
+                <button id="btn-back-social" style="display:none;"></button>
+
             </div>
-
-            <!-- Divider -->
-            <div class="login-divider mb-5">
-                <span>ou entre com</span>
-            </div>
-
-            <!-- Botões sociais lado a lado -->
-            <div class="login-social-row">
-                <button id="btn-google-login">
-                    <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.73 17.74 9.5 24 9.5z"></path><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path></svg>
-                    <span class="font-['Archivo',_sans-serif] font-medium text-[12px] tracking-[0.02em]" style="font-stretch: 115%;">Google</span>
-                </button>
-                <button id="btn-microsoft-login">
-                    <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 21 21"><path fill="#f25022" d="M1 1h9v9H1z"/><path fill="#7fba00" d="M11 1h9v9h-9z"/><path fill="#00a4ef" d="M1 11h9v9H1z"/><path fill="#ffb900" d="M11 11h9v9h-9z"/></svg>
-                    <span class="font-['Archivo',_sans-serif] font-medium text-[12px] tracking-[0.02em]" style="font-stretch: 115%;">Microsoft</span>
-                </button>
-            </div>
-
-            <!-- IDs mantidos para compatibilidade com app.js (ocultos, sem função visual) -->
-            <div id="login-social-view" style="display:none;"></div>
-            <div id="login-email-view" style="display:none;"></div>
-            <button id="btn-show-email" style="display:none;"></button>
-            <button id="btn-back-social" style="display:none;"></button>
-
         </div>
         
         <!-- Footer -->
@@ -1121,17 +1287,6 @@
 
     <div id="app-box">
 
-        <div id="disclaimer-modal" class="hidden absolute inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-6">
-            <div class="bg-[#1c1e22] border border-[#2d3139] p-8 md:p-10 rounded-[2rem] max-w-md w-full shadow-2xl text-center">
-                <div class="w-16 h-16 bg-yellow-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="#eab308" class="w-8 h-8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-                </div>
-                <h2 class="text-xl font-bold text-white mb-4 tracking-wider uppercase font-numbers">Fase de Testes</h2>
-                <p class="text-sm text-gray-400 mb-8 leading-relaxed">Este relatório está em fase de homologação (BETA). Algumas informações, métricas ou gráficos podem apresentar divergências ou inconsistências neste momento.</p>
-                <button id="btn-accept-beta" class="w-full bg-[#685BC7] hover:bg-[#5a4eb3] text-white font-black text-xs py-4 rounded-xl uppercase tracking-[0.2em] transition-all shadow-lg">Estou Ciente</button>
-            </div>
-        </div>
-
         <!-- Modal: Auto-logout por inatividade (movido para fora do app-box) -->
 
         <div id="dash-shell" style="display:none; flex-direction:column; flex:1; overflow:hidden; min-height:0; position:relative;">
@@ -1142,7 +1297,7 @@
 
                     <div id="float-logo">
                         <img src="images/header.png" alt="Logo">
-                        <span id="float-logo-badge">BETA 0.94</span>
+                        <span id="float-logo-badge">BETA 0.96 RC6</span>
                     </div>
 
                     <div id="nav-and-filter-wrapper">
@@ -1183,7 +1338,7 @@
 
                     <div id="float-controls-wrapper">
                         <div id="float-controls">
-                            <span id="topbar-user-email" class="ds-user-email">—</span>
+                            <span id="topbar-user-email" class="ds-user-email" style="cursor:pointer;">—</span>
                             <div class="ctrl-divider"></div>
                             <button class="btn-theme-toggle ctrl-btn" title="Alternar tema">
                                 <span class="theme-icon-dark">🌙</span>
@@ -1199,6 +1354,26 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" style="width:13px;height:13px;"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" /></svg>
                                 Sair
                             </button>
+                            <!-- Floating User Profile Menu -->
+                            <div id="user-profile-menu" class="user-profile-menu" style="display:none;">
+                                <div class="upm-light"></div>
+                                <div class="upm-content">
+                                    <div class="upm-avatar-wrapper">
+                                        <img id="upm-avatar" class="upm-avatar" src="" alt="Avatar" />
+                                    </div>
+                                    <div class="upm-name" id="upm-display-name">—</div>
+                                    <div class="upm-email" id="upm-email">—</div>
+                                    <div class="upm-divider"></div>
+                                    <div class="upm-row">
+                                        <span class="upm-label">PROVIDER</span>
+                                        <span class="upm-value" id="upm-provider">—</span>
+                                    </div>
+                                    <div class="upm-row">
+                                        <span class="upm-label">CRIADO EM</span>
+                                        <span class="upm-value" id="upm-created-at">—</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -1260,10 +1435,6 @@
                         </button>
                         <div id="vis-slicer-panel" class="slicer-panel border rounded-xl shadow-2xl custom-scrollbar p-4" style="position:absolute; top:calc(100% + 8px); left:0; min-width:260px; max-height:350px; overflow-y:auto; z-index:94; color:var(--text-main);"></div>
                     </div>
-                </div>
-
-                <div id="dev-disclaimer-bar">
-                    <p class="ds-dev-disclaimer">VERSÃO DE DESENVOLVIMENTO: Não deve ser utilizada para decisões operacionais</p>
                 </div>
 
             </div>
@@ -1525,16 +1696,169 @@
 
     <!-- Modal: Auto-logout por inatividade (fora do app-box para fixed funcionar corretamente) -->
     <div id="inactivity-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.82); backdrop-filter:blur(6px); z-index:9999; align-items:center; justify-content:center; padding:24px;">
-        <div style="background:#1c1e22; border:1px solid #2d3139; padding:40px 36px; border-radius:2rem; max-width:360px; width:100%; box-shadow:0 25px 60px rgba(0,0,0,0.6); text-align:center; animation: modalPop 0.35s cubic-bezier(0.34,1.56,0.64,1) both;">
+        <div style="background:#1c1e22; border:1px solid #2d3139; padding:40px 36px; border-radius:2rem; max-width:360px; width:100%; box-shadow:0 8px 24px rgba(0,0,0,0.25); text-align:center; animation: modalPop 0.35s cubic-bezier(0.34,1.56,0.64,1) both;">
             <div style="width:64px; height:64px; background:rgba(96,165,250,0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 24px;">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="#60a5fa" style="width:32px;height:32px;">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                 </svg>
             </div>
-            <h2 style="font-family:'Archivo',sans-serif; font-size:16px; font-weight:800; color:#ffffff; margin:0 0 12px; text-transform:uppercase; letter-spacing:0.15em;">Sessão Encerrada</h2>
+            <h2 style="font-family:'Archivo',sans-serif; font-size:16px; font-weight:800; color:#e4e4e4; margin:0 0 12px; text-transform:uppercase; letter-spacing:0.15em;">Sessão Encerrada</h2>
             <p style="font-family:'Archivo',sans-serif; font-size:13px; color:rgba(255,255,255,0.5); margin:0 0 32px; line-height:1.6;">Você foi desconectado por inatividade.<br>Faça login novamente para continuar.</p>
-            <button id="btn-inactivity-ok" style="width:100%; background:#685BC7; color:#fff; font-family:'Archivo',sans-serif; font-size:11px; font-weight:900; text-transform:uppercase; letter-spacing:0.2em; padding:16px; border:none; border-radius:12px; cursor:pointer; transition:background 0.2s;" onmouseover="this.style.background='#5a4eb3'" onmouseout="this.style.background='#685BC7'">Entendido</button>
+            <button id="btn-inactivity-ok" style="width:100%; background:#685BC7; color:#e4e4e4; font-family:'Archivo',sans-serif; font-size:11px; font-weight:900; text-transform:uppercase; letter-spacing:0.2em; padding:16px; border:none; border-radius:12px; cursor:pointer; transition:background 0.2s;" onmouseover="this.style.background='#5a4eb3'" onmouseout="this.style.background='#685BC7'">Entendido</button>
         </div>
     </div>
+
+    <!-- Welcome Words Animation Script -->
+    <script>
+    (function() {
+        const welcomeWords = [
+            'Bem-vindo',      // Português
+            'Welcome',        // Inglês
+            'Bienvenido',     // Espanhol
+            'Bienvenue',      // Francês
+            'Willkommen',     // Alemão
+            'Benvenuto',      // Italiano
+            'Welkom',         // Holandês
+            'Välkommen',      // Sueco
+            'Velkommen',      // Norueguês
+            'Tervetuloa',     // Finlandês
+            'Hoş geldiniz',   // Turco
+            'Witamy',         // Polonês
+            'Vítejte',        // Tcheco
+            'Dobrodošli',     // Croata
+            'Καλώς ήρθατε',   // Grego
+            'ようこそ',         // Japonês
+            '환영합니다',       // Coreano
+            'مرحبا',          // Árabe
+            'स्वागत है',       // Hindi
+            'Chào mừng',      // Vietnamita
+            'Selamat datang', // Malaio
+            'Karibu',         // Suaíli
+            'Fáilte',         // Irlandês
+            'Aloha',          // Havaiano
+            'Mabuhay',        // Filipino
+        ];
+
+        const sizes = [32, 38, 44, 52, 60, 70, 80, 48, 56, 66, 74, 36, 42, 54, 62, 72, 40, 50, 58, 68, 76, 34, 46];
+        const opacityRange = [0.06, 0.08, 0.10, 0.12, 0.15, 0.18, 0.07, 0.09, 0.11, 0.14, 0.16, 0.13];
+
+        const container = document.getElementById('welcome-words-container');
+        if (!container) return;
+
+        // Track occupied vertical lanes to prevent overlap
+        // Each entry: { top, bottom, expiresAt }
+        const occupiedLanes = [];
+
+        function cleanExpiredLanes() {
+            const now = Date.now();
+            for (let i = occupiedLanes.length - 1; i >= 0; i--) {
+                if (now > occupiedLanes[i].expiresAt) {
+                    occupiedLanes.splice(i, 1);
+                }
+            }
+        }
+
+        function isLaneFree(topPercent, heightPercent) {
+            const top = topPercent;
+            const bottom = topPercent + heightPercent;
+            for (const lane of occupiedLanes) {
+                if (top < lane.bottom && bottom > lane.top) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        function findFreeTop(fontSize) {
+            const containerHeight = container.offsetHeight || window.innerHeight;
+            const wordHeightPercent = ((fontSize * 1.2) / containerHeight) * 100;
+            const margin = 1.5; // extra margin between words in %
+
+            // Try up to 30 random positions
+            for (let attempt = 0; attempt < 30; attempt++) {
+                const topPercent = 3 + Math.random() * (90 - wordHeightPercent);
+                if (isLaneFree(topPercent - margin, wordHeightPercent + margin * 2)) {
+                    return topPercent;
+                }
+            }
+            return null; // no free space found
+        }
+
+        // Track active words on screen to prevent duplicates
+        const activeWords = new Set();
+        const PT_WORD = 'Bem-vindo';
+
+        function spawnWord(forceWord) {
+            cleanExpiredLanes();
+
+            let word;
+            if (forceWord) {
+                word = forceWord;
+            } else {
+                // Pick a word that isn't already on screen
+                const available = welcomeWords.filter(w => !activeWords.has(w));
+                if (available.length === 0) return;
+                word = available[Math.floor(Math.random() * available.length)];
+            }
+
+            if (activeWords.has(word)) return; // safety check
+
+            const size = sizes[Math.floor(Math.random() * sizes.length)];
+            const opacity = opacityRange[Math.floor(Math.random() * opacityRange.length)];
+            const duration = 14 + Math.random() * 14; // 14s a 28s
+
+            const topPercent = findFreeTop(size);
+            if (topPercent === null) return; // skip if no free lane
+
+            const containerHeight = container.offsetHeight || window.innerHeight;
+            const wordHeightPercent = ((size * 1.2) / containerHeight) * 100;
+
+            // Reserve this lane for the duration of the animation + buffer
+            occupiedLanes.push({
+                top: topPercent - 1.5,
+                bottom: topPercent + wordHeightPercent + 1.5,
+                expiresAt: Date.now() + (duration * 1000) * 0.4
+            });
+
+            activeWords.add(word);
+
+            const el = document.createElement('div');
+            el.className = 'welcome-word';
+            el.textContent = word;
+            el.style.fontSize = size + 'px';
+            el.style.setProperty('--word-opacity', opacity);
+            el.style.setProperty('--duration', duration + 's');
+            el.style.top = topPercent + '%';
+            el.style.right = '-' + (size * 8) + 'px';
+
+            container.appendChild(el);
+
+            el.addEventListener('animationend', () => {
+                el.remove();
+                activeWords.delete(word);
+                // Re-spawn PT word immediately when it finishes
+                if (word === PT_WORD) {
+                    setTimeout(() => spawnWord(PT_WORD), 500 + Math.random() * 1500);
+                }
+            });
+        }
+
+        // Spawn inicial: PT-BR sempre primeiro
+        spawnWord(PT_WORD);
+        for (let i = 1; i < 4; i++) {
+            setTimeout(() => spawnWord(), i * 1000);
+        }
+
+        // Spawn contínuo em intervalos aleatórios
+        function scheduleNext() {
+            const delay = 2000 + Math.random() * 2500; // 2s a 4.5s entre spawns
+            setTimeout(() => {
+                spawnWord();
+                scheduleNext();
+            }, delay);
+        }
+        scheduleNext();
+    })();
+    </script>
 </body>
 </html>

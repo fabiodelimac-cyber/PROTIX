@@ -67,7 +67,7 @@ export const getPerformanceHTML = () => {
             
             .rank-gold { background: linear-gradient(135deg, #FFD700, #FFA500); color: #000; }
             .rank-silver { background: linear-gradient(135deg, #C0C0C0, #808080); color: #000; }
-            .rank-bronze { background: linear-gradient(135deg, #CD7F32, #8B4513); color: #fff; }
+            .rank-bronze { background: linear-gradient(135deg, #CD7F32, #8B4513); color: #e4e4e4; }
             .rank-default { background: rgba(104, 91, 199, 0.2); color: var(--text-main); }
             
             /* Tabela de Ranking */
@@ -287,7 +287,7 @@ export const getPerformanceHTML = () => {
             body.dark #health-info-toggle:hover {
                 border-color: rgba(104,91,199,0.5);
                 box-shadow: 0 0 15px rgba(104,91,199,0.4);
-                color: #fff;
+                color: #e4e4e4;
             }
             
             body:not(.dark) #health-info-toggle:hover {
@@ -298,7 +298,7 @@ export const getPerformanceHTML = () => {
             
             #health-info-toggle.active {
                 background: var(--ps-blue) !important;
-                color: white !important;
+                color: #e4e4e4 !important;
                 border-color: var(--ps-blue) !important;
                 box-shadow: 0 4px 15px rgba(104,91,199,0.4) !important;
             }
@@ -393,7 +393,7 @@ export const getPerformanceHTML = () => {
                 transform: translateY(-50%);
                 font-size: 10px;
                 font-weight: 600;
-                color: #fff;
+                color: #e4e4e4;
                 white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
@@ -419,7 +419,7 @@ export const getPerformanceHTML = () => {
         <div id="view-performance-wrapper" class="pb-10 overflow-hidden">
             
             <!-- Ranking de PDVs -->
-            <div class="anim-cascade delay-1 glass-panel p-8 md:p-10 rounded-[2.5rem] mb-8">
+            <div class="anim-cascade delay-1 glass-panel p-8 md:p-10 rounded-2xl mb-8">
                 <h4 id="ranking-section-title" class="ds-chart-title mb-6" style="transition: opacity 0.3s ease, transform 0.3s ease;">Ranking de PDVs</h4>
                 
                 <!-- View padrão: Top10 + Bottom10 -->
@@ -499,7 +499,7 @@ export const getPerformanceHTML = () => {
             </div>
                 
             <!-- Eficiência por Aparelho -->
-            <div class="anim-cascade delay-2 glass-panel p-8 md:p-10 rounded-[2.5rem] mb-8">
+            <div class="anim-cascade delay-2 glass-panel p-8 md:p-10 rounded-2xl mb-8">
                 <div class="mb-6">
                     <h4 class="ds-chart-title mb-2">Eficiência por Aparelho</h4>
                     <p class="ds-chart-subtitle text-adaptive-muted">Interações por unidade ativa (ROI de exposição)</p>
@@ -510,7 +510,7 @@ export const getPerformanceHTML = () => {
             </div>
             
             <!-- Tendência de Crescimento -->
-            <div class="anim-cascade delay-3 glass-panel p-8 md:p-10 rounded-[2.5rem] mb-8">
+            <div class="anim-cascade delay-3 glass-panel p-8 md:p-10 rounded-2xl mb-8">
                 <div class="mb-6">
                     <h4 class="ds-chart-title mb-2">Performance Média de Interação</h4>
                     <p class="ds-chart-subtitle text-adaptive-muted">Último dia vs média do período selecionado</p>
@@ -521,7 +521,7 @@ export const getPerformanceHTML = () => {
             </div>
             
             <!-- Score de Saúde do PDV -->
-            <div class="anim-cascade delay-4 glass-panel p-8 md:p-10 rounded-[2.5rem] mb-8 relative">
+            <div class="anim-cascade delay-4 glass-panel p-8 md:p-10 rounded-2xl mb-8 relative">
                 <div class="mb-6">
                     <div class="flex items-center justify-between mb-2">
                         <h4 class="ds-chart-title">Score de Saúde dos PDVs</h4>
@@ -538,21 +538,21 @@ export const getPerformanceHTML = () => {
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 glass-panel rounded-xl">
                             <div class="text-center">
                                 <div class="w-8 h-8 bg-blue-500 rounded-full mx-auto mb-2 flex items-center justify-center">
-                                    <span class="text-white text-sm font-bold">V</span>
+                                    <span class="text-[#e4e4e4] text-sm font-bold">V</span>
                                 </div>
                                 <h6 class="text-xs font-bold text-adaptive mb-1">Volume (40%)</h6>
                                 <p class="text-[10px] text-adaptive-muted">Total de interações da loja normalizado pelo máximo do período</p>
                             </div>
                             <div class="text-center">
                                 <div class="w-8 h-8 bg-purple-500 rounded-full mx-auto mb-2 flex items-center justify-center">
-                                    <span class="text-white text-sm font-bold">D</span>
+                                    <span class="text-[#e4e4e4] text-sm font-bold">D</span>
                                 </div>
                                 <h6 class="text-xs font-bold text-adaptive mb-1">Diversidade (30%)</h6>
                                 <p class="text-[10px] text-adaptive-muted">Quantidade de aparelhos diferentes ativos na loja</p>
                             </div>
                             <div class="text-center">
                                 <div class="w-8 h-8 bg-green-500 rounded-full mx-auto mb-2 flex items-center justify-center">
-                                    <span class="text-white text-sm font-bold">C</span>
+                                    <span class="text-[#e4e4e4] text-sm font-bold">C</span>
                                 </div>
                                 <h6 class="text-xs font-bold text-adaptive mb-1">Consistência (30%)</h6>
                                 <p class="text-[10px] text-adaptive-muted">Regularidade das interações ao longo dos dias (baixa variação = alta consistência)</p>
@@ -601,7 +601,7 @@ export const getPerformanceHTML = () => {
                         <div class="glass-panel p-6 rounded-2xl">
                             <div class="flex items-center gap-3 mb-4">
                                 <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
-                                    <span class="text-white font-bold">V</span>
+                                    <span class="text-[#e4e4e4] font-bold">V</span>
                                 </div>
                                 <div>
                                     <h6 class="text-sm font-bold text-adaptive">Volume</h6>
@@ -633,7 +633,7 @@ export const getPerformanceHTML = () => {
                         <div class="glass-panel p-6 rounded-2xl">
                             <div class="flex items-center gap-3 mb-4">
                                 <div class="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center">
-                                    <span class="text-white font-bold">D</span>
+                                    <span class="text-[#e4e4e4] font-bold">D</span>
                                 </div>
                                 <div>
                                     <h6 class="text-sm font-bold text-adaptive">Diversidade</h6>
@@ -665,7 +665,7 @@ export const getPerformanceHTML = () => {
                         <div class="glass-panel p-6 rounded-2xl">
                             <div class="flex items-center gap-3 mb-4">
                                 <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
-                                    <span class="text-white font-bold">C</span>
+                                    <span class="text-[#e4e4e4] font-bold">C</span>
                                 </div>
                                 <div>
                                     <h6 class="text-sm font-bold text-adaptive">Consistência</h6>
@@ -975,11 +975,11 @@ function renderEfficiencyChart(data) {
                         font: { family: 'Archivo', size: 11, weight: 700 }
                     },
                     grid: { 
-                        color: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)',
+                        color: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
                         drawOnChartArea: true
                     },
                     ticks: { 
-                        color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.4)',
+                        color: isDark ? '#A0A0A0' : 'rgba(0,0,0,0.55)',
                         font: { family: 'Archivo', size: 10, weight: 600 }
                     }
                 },
@@ -991,11 +991,11 @@ function renderEfficiencyChart(data) {
                         font: { family: 'Archivo', size: 11, weight: 700 }
                     },
                     grid: { 
-                        color: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)',
+                        color: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
                         drawOnChartArea: true
                     },
                     ticks: { 
-                        color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.4)',
+                        color: isDark ? '#A0A0A0' : 'rgba(0,0,0,0.55)',
                         font: { family: 'Archivo', size: 10, weight: 600 }
                     }
                 }
@@ -1100,7 +1100,7 @@ function renderGrowthTrends(data) {
                                 <span class="font-numbers">${isPositive ? '+' : ''}${growth.toFixed(1)}%</span>
                             </span>
                         </div>
-                        <div class="text-xs mb-4" style="font-family: 'Archivo', sans-serif; font-weight: 120; color: white;">
+                        <div class="text-xs mb-4" style="font-family: 'Archivo', sans-serif; font-weight: 120; color: #e4e4e4;">
                             <div class="flex justify-between">
                                 <span>Último dia (${formatDate(lastDate)}):</span>
                                 <span class="font-numbers">${Math.round(lastDayValue).toLocaleString('pt-BR')}</span>
@@ -1631,7 +1631,7 @@ function renderXrayHourly(data) {
                 tooltip: {
                     backgroundColor: isDark ? 'rgba(18,19,23,0.9)' : 'rgba(255,255,255,0.9)',
                     titleFont: { family: 'Archivo', size: 10, weight: 800 },
-                    bodyFont: { family: 'Michroma', size: 11 },
+                    bodyFont: { family: 'Geist', size: 11 },
                     padding: 10,
                     cornerRadius: 8,
                     callbacks: {
@@ -1647,8 +1647,8 @@ function renderXrayHourly(data) {
                 },
                 y: {
                     beginAtZero: true,
-                    grid: { color: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)' },
-                    ticks: { color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.4)', font: { family: 'Michroma', size: 9 } },
+                    grid: { color: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' },
+                    ticks: { color: isDark ? '#A0A0A0' : 'rgba(0,0,0,0.55)', font: { family: 'Geist', size: 9 } },
                     border: { display: false }
                 }
             }
@@ -1693,7 +1693,7 @@ function renderXrayWeekday(data) {
                 tooltip: {
                     backgroundColor: isDark ? 'rgba(18,19,23,0.9)' : 'rgba(255,255,255,0.9)',
                     titleFont: { family: 'Archivo', size: 10, weight: 800 },
-                    bodyFont: { family: 'Michroma', size: 11 },
+                    bodyFont: { family: 'Geist', size: 11 },
                     padding: 10,
                     cornerRadius: 8,
                     callbacks: {
@@ -1708,8 +1708,8 @@ function renderXrayWeekday(data) {
                     ticks: { color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.5)', font: { family: 'Archivo', size: 10, weight: 600 } }
                 },
                 y: {
-                    grid: { color: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)' },
-                    ticks: { color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.4)', font: { family: 'Michroma', size: 9 } }
+                    grid: { color: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' },
+                    ticks: { color: isDark ? '#A0A0A0' : 'rgba(0,0,0,0.55)', font: { family: 'Geist', size: 9 } }
                 }
             }
         }
@@ -1809,8 +1809,8 @@ function renderXrayWeektype(data) {
                 },
                 y: {
                     beginAtZero: true,
-                    grid: { color: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)' },
-                    ticks: { color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.4)', font: { family: 'Michroma', size: 9 } },
+                    grid: { color: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' },
+                    ticks: { color: isDark ? '#A0A0A0' : 'rgba(0,0,0,0.55)', font: { family: 'Geist', size: 9 } },
                     border: { display: false }
                 }
             }

@@ -3,7 +3,7 @@
 export function getAboutHTML() {
     return `
     <div id="about-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-4 transition-opacity duration-300 opacity-0">
-        <div class="bg-white dark:bg-[#1c1e22] border border-gray-200 dark:border-[#2d3139] rounded-[2rem] w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col transform scale-95 transition-transform duration-300">
+        <div class="bg-white dark:bg-[#1c1e22] border border-gray-200 dark:border-[#2d3139] rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col transform scale-95 transition-transform duration-300">
             
             <div class="p-8 border-b border-gray-100 dark:border-[#2d3139] flex justify-between items-center bg-gray-50 dark:bg-[#131417]">
                 <div class="flex items-center gap-4">
@@ -13,7 +13,7 @@ export function getAboutHTML() {
                         </svg>
                     </div>
                     <div>
-                        <h2 class="font-['Archivo',_sans-serif] text-xl font-bold text-gray-900 dark:text-white uppercase tracking-wider">Sobre o Sistema</h2>
+                        <h2 class="font-['Archivo',_sans-serif] text-xl font-bold uppercase tracking-wider" style="color:var(--text-main);">Sobre o Sistema</h2>
                         <p class="ds-login-product text-[20px]" style="margin-top: 4px;">APP</p>
                     </div>
                 </div>
@@ -43,14 +43,14 @@ export function getAboutHTML() {
                     <p class="font-['Archivo',_sans-serif] text-sm font-bold text-[#685BC7] uppercase tracking-wide text-center" style="font-stretch: 110%;">
                         Desenvolvido com carinho pelo time de Business Intelligence
                     </p>
-                    <p class="font-['Archivo',_sans-serif] mt-3 text-center text-[10px] font-thin tracking-[0.2em] text-gray-500 dark:text-white uppercase">
-                        Versão 0.94 Build 20260429 RC4
+                    <p class="font-['Archivo',_sans-serif] mt-3 text-center text-[10px] font-thin tracking-[0.2em] uppercase" style="color:var(--text-muted-strong);">
+                        Versão BETA 0.96 Build 20260505 RC6
                     </p>
                 </div>
             </div>
 
             <div class="p-6 border-t border-gray-100 dark:border-[#2d3139] bg-gray-50 dark:bg-[#131417] flex justify-end">
-                <button id="btn-close-about" class="font-['Archivo',_sans-serif] px-8 py-3 bg-[#131417] dark:bg-white text-white dark:text-[#131417] text-xs font-bold uppercase tracking-widest rounded-xl hover:bg-[#685BC7] dark:hover:bg-[#685BC7] hover:text-white dark:hover:text-white transition-colors shadow-sm">
+                <button id="btn-close-about" class="font-['Archivo',_sans-serif] px-8 py-3 text-xs font-bold uppercase tracking-widest rounded-xl transition-colors shadow-sm" style="background:var(--ps-blue); color:#e4e4e4;">
                     Fechar Detalhes
                 </button>
             </div>

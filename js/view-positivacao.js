@@ -51,7 +51,7 @@ export const getPositivacaoHTML = () => {
             
             .coverage-mode-btn.active {
                 background: #685BC7 !important;
-                color: white !important;
+                color: #e4e4e4 !important;
                 box-shadow: 0 2px 8px rgba(104, 91, 199, 0.3);
             }
             
@@ -114,29 +114,65 @@ export const getPositivacaoHTML = () => {
             .delay-1 { animation-delay: 0.1s; }
             .delay-2 { animation-delay: 0.2s; }
             .delay-3 { animation-delay: 0.3s; }
+
+            /* KPI Grid Responsivo */
+            .kpi-grid-pos {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 16px;
+            }
+            @media (min-width: 768px) {
+                .kpi-grid-pos { gap: 24px; }
+            }
+            .kpi-card-pos {
+                flex: 1 1 0%;
+                min-width: 0;
+            }
+            /* Quando apertar, vira coluna única */
+            @media (max-width: 900px) {
+                .kpi-card-pos {
+                    flex: 1 1 calc(50% - 12px);
+                    min-width: calc(50% - 12px);
+                }
+            }
+
+            /* Textos responsivos dos KPIs */
+            .kpi-value-responsive-pos {
+                font-size: clamp(1.25rem, 3vw, 3rem);
+                line-height: 1.1;
+                margin-top: auto;
+            }
+            .kpi-label-responsive-pos {
+                font-size: clamp(8px, 1vw, 11px);
+                letter-spacing: clamp(0.15em, 0.3vw, 0.3em);
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
         </style>
 
         <div id="view-positivacao-wrapper" class="pb-10">
-            <div class="anim-cascade delay-1 glass-panel rounded-[2.5rem] mb-8 flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-adaptive overflow-hidden relative">
-                
-                <div class="flex-1 p-8 flex flex-col justify-start relative z-10">
-                    <p class="ds-kpi-label mb-4">Volume de Lojas Analisadas</p>
-                    <h3 id="kp-lojas" class="ds-kpi-value text-4xl text-glow">0</h3>
+            <div class="anim-cascade delay-1 kpi-grid-pos mb-8 relative">
+                <!-- KPI: Volume de Lojas -->
+                <div class="glass-panel rounded-2xl p-6 md:p-8 flex flex-col justify-between relative z-10 kpi-card-pos">
+                    <h3 id="kp-lojas" class="ds-kpi-value kpi-value-responsive-pos text-glow mb-3 md:mb-4">0</h3>
+                    <p class="ds-kpi-label kpi-label-responsive-pos mt-auto">Volume de Lojas Analisadas</p>
                 </div>
-                
-                <div class="flex-1 p-8 flex flex-col justify-start relative neon-accent z-10">
-                    <p class="ds-kpi-label mb-4 text-[#685BC7]">Aparelho com Maior Capilaridade</p>
-                    <h3 id="kp-cap" class="ds-kpi-value text-2xl text-glow-accent truncate">-</h3>
+
+                <!-- KPI: Aparelhos Únicos -->
+                <div class="glass-panel rounded-2xl p-6 md:p-8 flex flex-col justify-between relative z-10 kpi-card-pos">
+                    <h3 id="kp-mod" class="ds-kpi-value kpi-value-responsive-pos mb-3 md:mb-4">0</h3>
+                    <p class="ds-kpi-label kpi-label-responsive-pos mt-auto">Aparelhos Únicos Identificados</p>
+                </div>
+
+                <!-- KPI: Aparelho com Maior Capilaridade -->
+                <div class="glass-panel rounded-2xl p-6 md:p-8 flex flex-col justify-between relative neon-accent z-10 overflow-hidden kpi-card-pos">
+                    <h3 id="kp-cap" class="ds-kpi-value text-glow-accent relative z-10 mb-3 md:mb-4" style="font-size: clamp(0.9rem, 1.8vw, 1.5rem); line-height: 1.3; word-break: break-word;">-</h3>
+                    <p class="ds-kpi-label kpi-label-responsive-pos text-[#685BC7] relative z-10 mt-auto">Aparelho com Maior Capilaridade</p>
                     <div class="absolute bottom-0 left-0 w-full h-1.5 bg-gradient-to-r from-transparent via-[#685BC7] to-transparent opacity-50"></div>
-                </div>
-                
-                <div class="flex-1 p-8 flex flex-col justify-start relative z-10">
-                    <p class="ds-kpi-label mb-4">Aparelhos Únicos Identificados</p>
-                    <h3 id="kp-mod" class="ds-kpi-value text-4xl">0</h3>
                 </div>
             </div>
 
-            <div class="anim-cascade delay-2 glass-panel p-6 md:p-8 rounded-[2.5rem] flex flex-col mb-8 relative z-10">
+            <div class="anim-cascade delay-2 glass-panel p-6 md:p-8 rounded-2xl flex flex-col mb-8 relative z-10">
                 <div class="mb-6 shrink-0">
                     <h4 class="ds-chart-title">Distribuição Total por Modelo</h4>
                 </div>
@@ -146,7 +182,7 @@ export const getPositivacaoHTML = () => {
                 </div>
             </div>
 
-            <div class="anim-cascade delay-3 glass-panel p-6 md:p-8 rounded-[2.5rem] flex flex-col mb-8 relative z-10">
+            <div class="anim-cascade delay-3 glass-panel p-6 md:p-8 rounded-2xl flex flex-col mb-8 relative z-10">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-6 shrink-0">
                     <div>
                         <h4 class="ds-chart-title mb-2">Taxa de Cobertura por Linha de Produto</h4>
@@ -164,12 +200,12 @@ export const getPositivacaoHTML = () => {
                 </div>
             </div>
 
-            <div class="anim-cascade delay-3 glass-panel p-6 md:p-8 rounded-[2.5rem] flex flex-col relative z-10">
+            <div class="anim-cascade delay-3 glass-panel p-6 md:p-8 rounded-2xl flex flex-col relative z-10">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-6 shrink-0">
                     <h4 class="ds-chart-title">Matriz de Execução e Presença</h4>
                     
                     <div class="flex bg-[var(--input-bg)] p-1 rounded-2xl border border-[var(--glass-border)]">
-                        <button id="mode-store" class="px-5 py-2 ds-mode-btn rounded-xl bg-[#685BC7] text-white shadow-lg transition-all duration-300">
+                        <button id="mode-store" class="px-5 py-2 ds-mode-btn rounded-xl bg-[#685BC7] text-[#e4e4e4] shadow-lg transition-all duration-300">
                             Visão por Loja
                         </button>
                         <button id="mode-device" class="px-5 py-2 ds-mode-btn rounded-xl text-adaptive-strong hover:text-adaptive transition-all duration-300">
@@ -224,12 +260,12 @@ export const renderPositivacao = () => {
     const btnDevice = document.getElementById('mode-device');
 
     const setActive = (btn) => {
-        btn.classList.add('bg-[#685BC7]', 'text-white', 'shadow-lg');
+        btn.classList.add('bg-[#685BC7]', 'text-[#e4e4e4]', 'shadow-lg');
         btn.classList.remove('text-adaptive-strong', 'hover:text-adaptive', 'bg-transparent');
     };
 
     const setInactive = (btn) => {
-        btn.classList.remove('bg-[#685BC7]', 'text-white', 'shadow-lg');
+        btn.classList.remove('bg-[#685BC7]', 'text-[#e4e4e4]', 'shadow-lg');
         btn.classList.add('text-adaptive-strong', 'hover:text-adaptive', 'bg-transparent');
     };
 
@@ -351,7 +387,7 @@ async function executeRenderLogic() {
         updateKPIWithFade('kp-lojas', kpis.total_lojas.toString());
         updateKPIWithFade('kp-mod', kpis.total_aparelhos.toString());
         updateKPIWithFade('kp-cap', kpis.top_capilaridade
-            ? `${kpis.top_capilaridade} <span class="ds-helper-text text-adaptive-muted ml-2 block md:inline">(${kpis.top_capilaridade_lojas} Lojas)</span>`
+            ? `${kpis.top_capilaridade} <span class="ds-helper-text text-adaptive-muted ml-2 inline-flex items-center">(${kpis.top_capilaridade_lojas} Lojas)</span>`
             : '-', true);
 
         // Tabela de produtos
