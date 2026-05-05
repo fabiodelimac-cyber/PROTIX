@@ -4,9 +4,40 @@ PROTIX is a high-performance Business Intelligence platform built for real-time 
 
 ---
 
-## 🔥 Latest Release: v0.94
+## 🔥 Latest Release: v0.96 RC6
 
-**Date**: 04/29/2026  
+**Date**: 05/05/2026
+**Status**: 🧪 Release Candidate
+
+### What's New in v0.96 RC6 — Typography, UI Polish, User Profile Menu & Login Screen
+
+#### Typography
+- 🔤 **Replaced Michroma with Geist** across the entire dashboard for improved readability and a more modern aesthetic
+
+#### UI / Dark Mode Polish
+- 🎨 **Background softened** from `#000000` to `#121212` — reduces eye strain, aligns with Material Design dark surface standards
+- 🎨 **Secondary label contrast improved** to `#A0A0A0`/`#B0B0B0` — meets WCAG AA minimum 4.5:1 contrast ratio
+- 🎨 **Progress bar tracks** updated to `#2A2A2A` for better visual separation from the background
+- 📊 **Subtle grid lines added** to line charts (`rgba(255,255,255,0.05)`) — data no longer "floats" without reference
+- 📊 **X-axis date labels** resized for better readability
+
+#### User Profile Floating Menu
+- 👤 **Clicking the user email pill** opens a glassmorphism floating menu anchored to the top bar
+- Displays user data pulled from Supabase: **Display Name**, **Email**, **Auth Provider**, **Account Created At**
+- ✨ **Top-left light glow effect** on the card for a premium feel
+- Click outside or on the email pill again to dismiss
+
+#### Login Screen
+- 🌍 **Final login screen** with an animated welcome message cycling through multiple languages in the background
+
+#### Database
+- 📄 **Migration added**: `20260505000000_add_previous_period_kpis.sql`
+
+---
+
+## Previous Release: v0.94
+
+**Date**: 04/29/2026
 **Status**: ✅ Production
 
 ### What's New in v0.94 — RLS Hardening + Frontend Fixes
