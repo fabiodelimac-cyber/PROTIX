@@ -4,9 +4,11 @@ import { createFreshClient } from './supabaseClient.js';
 class DataManager {
     constructor() {
         this.rawData = [];
+        this.devicesByLinha = [];
         this.currentFilters = {};
         this.listeners = [];
         this.onReactivation = null; // Callback registrado pelo app.js para re-renderizar a view ativa
+        this._notifyTimer = null;   // Timer do debounce do notify()
 
         // Listener de reativação de aba
         // Quando o Chrome "acorda" a aba, re-renderiza a view ativa do zero.
@@ -142,23 +144,33 @@ class DataManager {
         return this._callRPC('get_store_xray', params);
     }
 
+    /** Busca combinações únicas de filtro + devices_by_linha (substitui select(*)) */
+    async fetchFilterOptionsRPC() {
+        return this._callRPC('get_filter_options', {});
+    }
+
+    /**
+     * Recebe as combinações únicas retornadas pela get_filter_options e
+     * armazena como rawData. Não faz parse de sessions (não existe nesse shape).
+     */
     setRawData(data) {
         if (!data || !Array.isArray(data)) {
             console.error("DataManager: Dados inválidos recebidos.");
             return;
         }
 
-        this.rawData = data.map(row => {
-            let numSessions = 0;
-            if (typeof row.sessions === 'number') {
-                numSessions = row.sessions;
-            } else if (row.sessions) {
-                numSessions = parseFloat(row.sessions.toString().replace(/\./g, '').replace(',', '.')) || 0;
-            }
-            return { ...row, sessions: numSessions };
-        });
+        // Dados de filtro: apenas colunas de dimensão, sem sessions
+        this.rawData = data;
 
         this.notify();
+    }
+
+    /**
+     * Armazena devices_by_linha retornado pela get_filter_options.
+     * Usado pelo tooltip de aparelhos na Overview.
+     */
+    setDevicesByLinha(data) {
+        this.devicesByLinha = Array.isArray(data) ? data : [];
     }
 
     setFilter(key, value) {
@@ -208,18 +220,22 @@ class DataManager {
     }
 
     notify() {
-        try {
-            const filteredData = this.getFilteredData();
-            this.listeners.forEach((callback) => {
-                try {
-                    callback(filteredData);
-                } catch (error) {
-                    console.error('Erro em listener do DataManager:', error);
-                }
-            });
-        } catch (error) {
-            console.error('Erro na função notify do DataManager:', error);
-        }
+        // Debounce de 300ms: evita múltiplas RPCs simultâneas em cliques rápidos nos filtros
+        clearTimeout(this._notifyTimer);
+        this._notifyTimer = setTimeout(() => {
+            try {
+                const filteredData = this.getFilteredData();
+                this.listeners.forEach((callback) => {
+                    try {
+                        callback(filteredData);
+                    } catch (error) {
+                        console.error('Erro em listener do DataManager:', error);
+                    }
+                });
+            } catch (error) {
+                console.error('Erro na função notify do DataManager:', error);
+            }
+        }, 300);
     }
 }
 

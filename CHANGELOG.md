@@ -5,6 +5,47 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.0] - 2026-05-06
+
+### Added
+
+#### Database — Scalability Infrastructure
+- **New RPC `get_filter_options()`**: returns distinct combinations of all 8 filter columns + device count by product line in a single call. Replaces full table scan on login
+- **New table `usage_stats`**: records session start/end, duration, most-used tab, and time per tab (with RLS). Replaces `performance_metrics`
+- **RPC backups**: original versions of all 5 RPCs saved in `sup-perf-bkp/` before modifications
+
+#### Frontend
+- **`usage-stats.js`**: lightweight session tracking module. Saves on explicit logout and on `pagehide` via `fetch keepalive: true`
+- **Offline indicator**: banner that appears when `navigator.onLine` is `false` and auto-dismisses 3s after connection is restored
+- **Welcome manifest (`view-welcome.js`)**: onboarding screen for first-time users
+
+### Changed
+
+#### Database
+- **Fixed `pure_date::text` cast in all 5 RPCs**: changed from `pure_date::text = ANY(p_dates)` to `pure_date = ANY(p_dates::date[])`. Cast moved to the parameter instead of the column, enabling use of `idx_interactions_date` index. Expected 10-30x improvement on date-filtered queries at scale
+- **`get_performance_metrics` optimized**: replaced CROSS JOIN with window functions for health score calculation. Added LIMIT 50 on health scores and LIMIT 30 on efficiency rankings. Eliminates quadratic scaling with 300+ stores
+
+#### Frontend
+- **`initData()` refactored**: replaced `from('interactions').select('*')` (full table, ~13MB) with `fetchFilterOptionsRPC()` (~50KB). Login payload reduced by ~99%
+- **`DataManager`**: added `fetchFilterOptionsRPC()`, `setDevicesByLinha()`, simplified `setRawData()`, added 300ms debounce on `notify()` to prevent multiple simultaneous RPC calls on rapid filter clicks
+- **`app.js`**: updated imports and calls to use `usage-stats.js` instead of performance monitor
+
+### Removed
+- **`performance-monitor.js`**: CPU/GPU monitoring via `requestAnimationFrame` removed
+- **`performance-integration.js`**: integration layer for performance monitor removed
+- **`performance_metrics` table**: dropped from Supabase (replaced by `usage_stats`)
+
+### Security
+- All changes maintain existing RLS policies. `usage_stats` table created with `authenticated`-only policies
+
+### Migration Files
+- `migrations_RT10/20260506000001_fix_pure_date_cast.sql`
+- `migrations_RT10/20260506000002_performance_limit_window.sql`
+- `migrations_RT10/20260506000003_get_filter_options.sql`
+- `migrations_RT10/20260506000004_usage_stats.sql`
+
+---
+
 ## [0.92.1] - 2026-04-27
 
 ### 🐛 Fixed (Hotfix)

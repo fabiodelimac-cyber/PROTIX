@@ -5,8 +5,8 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 // Importando o "Cérebro"
 import { appData } from './services/dataManager.js';
 
-// Importando Performance Monitor
-import { initPerformanceMonitoring, stopPerformanceMonitoring } from './performance-integration.js';
+// Importando Usage Stats
+import { usageStats } from './usage-stats.js';
 
 // Importando os Módulos das Páginas
 import { getOverviewHTML, renderOverviewCharts, destroyOverviewCharts } from "./view-overview.js";
@@ -14,6 +14,7 @@ import { getPositivacaoHTML, renderPositivacao } from "./view-positivacao.js";
 import { getHeatProdutosHTML, renderHeatProdutos, destroyHeatProdutosCharts } from "./view-heat-produtos.js";
 import { getPerformanceHTML, renderPerformance, destroyPerformanceCharts } from "./view-performance.js";
 import { getAboutHTML, initAbout } from "./view-about.js";
+import { showWelcome } from "./view-welcome.js";
 
 const viewSocial = document.getElementById('login-social-view');
 const viewEmail = document.getElementById('login-email-view');
@@ -90,6 +91,64 @@ let isDataLoaded = false;
 let currentRoute = 'view-overview';
 let isLoggingOut = false; // Flag para evitar múltiplos logouts simultâneos
 let loggedOutByInactivity = false; // Flag para exibir o modal de inatividade
+
+// --- INDICADOR DE OFFLINE ---
+(function initOfflineBanner() {
+    const banner = document.getElementById('offline-banner');
+    const icon   = document.getElementById('offline-banner-icon');
+    const title  = document.getElementById('offline-banner-title');
+    const sub    = document.getElementById('offline-banner-sub');
+    if (!banner) return;
+
+    let hideTimer = null;
+
+    function showOffline() {
+        clearTimeout(hideTimer);
+        // Estado: sem conexão
+        banner.style.borderColor = 'rgba(239, 68, 68, 0.35)';
+        banner.style.boxShadow = '0 8px 32px rgba(0,0,0,0.45), 0 0 0 1px rgba(239,68,68,0.1)';
+        icon.textContent  = '📡';
+        title.textContent = 'Sem conexão';
+        title.style.color = 'rgba(255,255,255,0.9)';
+        sub.textContent   = 'Verifique sua internet';
+
+        banner.style.display = 'flex';
+        banner.getBoundingClientRect();
+        banner.style.opacity = '1';
+        banner.style.transform = 'translateX(-50%) translateY(0)';
+    }
+
+    function showOnline() {
+        clearTimeout(hideTimer);
+        // Estado: reconectado
+        banner.style.borderColor = 'rgba(34, 197, 94, 0.35)';
+        banner.style.boxShadow = '0 8px 32px rgba(0,0,0,0.45), 0 0 0 1px rgba(34,197,94,0.1)';
+        icon.textContent  = '✅';
+        title.textContent = 'Conexão reestabelecida';
+        title.style.color = 'rgba(134, 239, 172, 0.95)';
+        sub.textContent   = 'Tudo certo por aqui';
+
+        banner.style.display = 'flex';
+        banner.getBoundingClientRect();
+        banner.style.opacity = '1';
+        banner.style.transform = 'translateX(-50%) translateY(0)';
+
+        // Some automaticamente após 3s
+        hideTimer = setTimeout(hideBanner, 3000);
+    }
+
+    function hideBanner() {
+        banner.style.opacity = '0';
+        banner.style.transform = 'translateX(-50%) translateY(16px)';
+        setTimeout(() => { banner.style.display = 'none'; }, 300);
+    }
+
+    window.addEventListener('offline', showOffline);
+    window.addEventListener('online', showOnline);
+
+    // Checa o estado atual ao carregar (ex: abre o app já sem rede)
+    if (!navigator.onLine) showOffline();
+})();
 
 // --- AUTO-LOGOUT POR INATIVIDADE ---
 const INACTIVITY_TIMEOUT_MS = 10 * 60 * 1000;   // 10 minutos
@@ -287,7 +346,7 @@ supabase.auth.onAuthStateChange(async (event, session) => {
         try {
             const { data, error } = await supabase
                 .from('user_profiles')
-                .select('status')
+                .select('status, has_seen_welcome')
                 .eq('id', session.user.id)
                 .single();
 
@@ -318,13 +377,24 @@ supabase.auth.onAuthStateChange(async (event, session) => {
                 // Popula o menu de perfil do usuário
                 populateUserProfileMenu(session.user);
 
-                // Inicia o monitoramento de performance
-                await initPerformanceMonitoring(session.user);
+                // Inicia o registro de uso da sessão
+                await usageStats.init(session.user);
 
                 // Inicia o timer de inatividade
                 startInactivityTimer();
-                
-                if (!isDataLoaded) initData();
+
+                // Verifica se o usuário já viu a tela de boas-vindas (dado já carregado acima)
+                if (!isDataLoaded) {
+                    if (!data.has_seen_welcome) {
+                        // Pré-carrega os dados em paralelo enquanto o welcome é exibido.
+                        // A renderização dos charts só acontece após o welcome fechar,
+                        // garantindo que o container já está visível e com dimensões reais.
+                        const dataPromise = prefetchData();
+                        showWelcome(() => initData(dataPromise));
+                    } else {
+                        initData();
+                    }
+                }
                 
                 authInProgress = false; // Autenticação concluída
                 
@@ -352,7 +422,7 @@ supabase.auth.onAuthStateChange(async (event, session) => {
         // FLUXO DE SAÍDA (LOGOUT NORMAL)
         isLoggingOut = false; // Reseta a flag de logout
         stopInactivityTimer(); // Para o timer de inatividade
-        stopPerformanceMonitoring();
+        usageStats.reset();    // Reseta para a próxima sessão
         const loginScreen = document.getElementById('login-screen');
         loginScreen.style.display = 'flex';
         loginScreen.style.opacity = '1';
@@ -456,6 +526,12 @@ document.getElementById('app-box').addEventListener('click', async (e) => {
     const aboutOverlay = document.getElementById('about-overlay');
     
     try {
+        // Salva a sessão antes de invalidar o token (timeout de 3s para não travar o logout)
+        await Promise.race([
+            usageStats.save(),
+            new Promise(resolve => setTimeout(resolve, 3000))
+        ]);
+
         // Timeout de 5 segundos para o signOut
         const signOutPromise = supabase.auth.signOut();
         const timeoutPromise = new Promise((_, reject) => 
@@ -554,6 +630,9 @@ navItems.forEach(btn => {
 
         navItems.forEach(n => n.classList.remove('active'));
         btn.classList.add('active');
+
+        // Registra troca de aba para o usage stats
+        usageStats.setTab(target);
 
         appContent.classList.remove('view-visible');
         appContent.classList.add('view-hidden');
@@ -712,7 +791,23 @@ window.addEventListener('bypass-login', () => {
 });
 
 // --- CARGA DE DADOS INICIAL (SUPABASE) ---
-async function initData() {
+
+// Busca os dados do servidor sem renderizar nada.
+// Chamado em paralelo com o welcome para que os dados já estejam prontos
+// quando o usuário fechar o welcome.
+async function prefetchData() {
+    try {
+        return await appData.fetchFilterOptionsRPC();
+    } catch (e) {
+        console.error("Erro no prefetch:", e);
+        return null;
+    }
+}
+
+// Inicializa a dashboard. Aceita uma promise de dados pré-carregados (opcional).
+// Quando chamado após o welcome, os charts são renderizados com o container
+// já visível e com dimensões reais — evitando charts com width:0.
+async function initData(dataPromise = null) {
     isDataLoaded = true;
 
     // Registra o callback de re-renderização para quando a aba acordar
@@ -724,23 +819,24 @@ async function initData() {
     appContent.classList.add('view-visible');
 
     try {
-        // Busca os dados do PostgreSQL
-        const { data, error } = await supabase
-            .from('interactions')
-            .select('*')
-            .order('pure_date', { ascending: false });
+        // Usa dados pré-carregados se disponíveis, senão busca agora
+        const filterOptions = dataPromise ? await dataPromise : await appData.fetchFilterOptionsRPC();
 
-        if (error) throw error;
+        if (filterOptions) {
+            const combinations = filterOptions.combinations || [];
+            const devicesByLinha = filterOptions.devices_by_linha || [];
 
-        if (data) {
-            // Envia para o nosso novo DataManager
-            appData.setRawData(data);
-            
-            // Configura os ouvintes dos selects
+            appData.setRawData(combinations);
+            appData.setDevicesByLinha(devicesByLinha);
             setupGlobalFilters();
-            
-            // Renderiza a tela inicial
-            renderActiveView();
+
+            // Pequeno delay para garantir que o DOM do welcome já saiu e o
+            // container tem dimensões reais antes de renderizar os charts
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    renderActiveView();
+                });
+            });
         }
     } catch (error) {
         console.error("Erro ao carregar dados do Supabase:", error);

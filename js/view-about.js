@@ -25,7 +25,7 @@ export function getAboutHTML() {
 
                 <div class="p-4 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/50">
                     <p class="font-['Archivo',_sans-serif] text-sm leading-relaxed text-blue-900 dark:text-blue-100" style="font-stretch: 100%;">
-                        <span class="font-bold">Telemetria:</span> O APP monitora tempo de sessão e uso de CPU/GPU para otimizar performance e estabilidade do sistema. Esses dados são associados ao seu e-mail de acesso.
+                        <span class="font-bold">Telemetria:</span> O APP monitora seu tempo de sessão e uso das views para otimização do produto.
                     </p>
                 </div>
 
@@ -44,7 +44,7 @@ export function getAboutHTML() {
                         Desenvolvido com carinho pelo time de Business Intelligence
                     </p>
                     <p class="font-['Archivo',_sans-serif] mt-3 text-center text-[10px] font-thin tracking-[0.2em] uppercase" style="color:var(--text-muted-strong);">
-                        Versão BETA 0.96 Build 20260505 RC6
+                        Versão 1.0 Build 20260506_16H23_stableprod
                     </p>
                 </div>
             </div>

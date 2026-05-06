@@ -4,7 +4,36 @@ PROTIX is a high-performance Business Intelligence platform built for real-time 
 
 ---
 
-## 🔥 Latest Release: v0.96 RC6
+## 🚀 Latest Release: v1.0.0 — Production
+
+**Date**: 05/06/2026
+**Status**: ✅ Production
+
+### What's New in v1.0.0 — Scalability Infrastructure & Production Hardening
+
+This release focuses on long-term scalability, eliminating the full table scan on login, optimizing heavy RPCs, and replacing the CPU/GPU performance monitor with lightweight business-relevant session tracking.
+
+#### Database — Scalability
+- ⚡ **Fixed `pure_date::text` cast in all 5 RPCs** — cast moved from column to parameter, enabling use of `idx_interactions_date` index. Expected 10-30x improvement on date-filtered queries at scale
+- ⚡ **`get_performance_metrics` optimized** — replaced CROSS JOIN with window functions for health score. Added LIMIT 50 on health scores and LIMIT 30 on efficiency. Eliminates quadratic scaling with 300+ stores
+- 🆕 **New RPC `get_filter_options()`** — returns distinct filter combinations + device count by product line in a single lightweight call
+- 🆕 **New table `usage_stats`** — records session duration, most-used tab, and time per tab per session (with RLS)
+- 🗑️ **Dropped `performance_metrics` table** — replaced by `usage_stats`
+
+#### Frontend
+- ⚡ **Login payload reduced ~99%** — `initData()` now calls `get_filter_options()` instead of `from('interactions').select('*')`. From ~13MB to ~50KB on login
+- ⚡ **300ms debounce on filters** — rapid checkbox clicks now trigger a single RPC instead of multiple simultaneous calls
+- 🆕 **`usage-stats.js`** — lightweight session tracking. Saves on logout and on `pagehide` via `fetch keepalive`
+- 🆕 **Offline indicator** — banner appears when connection is lost, auto-dismisses 3s after reconnection
+- 🆕 **Welcome screen** — onboarding manifest for first-time users
+- 🗑️ **Removed `performance-monitor.js` and `performance-integration.js`** — CPU/GPU monitoring via `requestAnimationFrame` removed
+
+#### Scalability Projection
+With this release, the architecture supports 3-4 years of growth (300 stores, 365 days/year, ~5-8M rows) without intervention. First expected bottleneck: `get_filter_options()` DISTINCT scan at ~100k unique combinations (~1.5-2 years) — resolved by switching to a materialized view, zero frontend changes required.
+
+---
+
+## Previous Release: v0.96 RC6
 
 **Date**: 05/05/2026
 **Status**: 🧪 Release Candidate
